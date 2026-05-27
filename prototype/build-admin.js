@@ -8,7 +8,7 @@ const path = require('path');
 
 // ── paths ────────────────────────────────────────────────────────────────
 const SRC  = 'C:\\Users\\user\\.claude\\projects\\C--Users-user-Desktop-----\\88f77c6a-2710-4e64-93a6-c396ac87a293\\tool-results\\design_admin\\extracted\\mli-audio\\project\\src';
-const LIBS = 'C:\\Users\\user\\AppData\\Local\\Temp\\mli-libs';
+const LIBS = path.join(__dirname, 'libs');
 const OUT  = 'C:\\Users\\user\\Desktop\\三商美邦\\prototype\\內勤審核後台.html';
 
 // ── Load Babel standalone ─────────────────────────────────────────────────
