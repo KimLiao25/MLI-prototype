@@ -7,9 +7,9 @@ const fs   = require('fs');
 const path = require('path');
 
 // ── paths ────────────────────────────────────────────────────────────────
-const SRC   = 'C:\\Users\\user\\.claude\\projects\\C--Users-user-Desktop-----\\88f77c6a-2710-4e64-93a6-c396ac87a293\\tool-results\\design_v2\\mli-audio\\project\\src';
+const SRC   = path.join(__dirname, 'src');
 const LIBS  = path.join(__dirname, 'libs');
-const OUT   = 'C:\\Users\\user\\Desktop\\三商美邦\\prototype\\業務員錄音前台.html';
+const OUT   = path.join(__dirname, '業務員錄音前台.html');
 
 // ── Load Babel standalone into Node (UMD module, sets module.exports) ───
 console.log('Loading Babel…');
@@ -18,19 +18,23 @@ console.log('Babel loaded, version:', Babel.version || '(unknown)');
 
 // ── Source files in dependency order (frontend only) ─────────────────────
 const SOURCES = [
-  { file: 'data.js',             jsx: false },
-  { file: 'tweaks-panel.jsx',    jsx: true  },
-  { file: 'icons.jsx',           jsx: true  },
-  { file: 'Header.jsx',          jsx: true  },
-  { file: 'Waveform.jsx',        jsx: true  },
-  { file: 'ProductCombobox.jsx', jsx: true  },
-  { file: 'CaseInfoSummary.jsx', jsx: true  },
-  { file: 'CaseListScreen.jsx',  jsx: true  },
-  { file: 'CaseDetailScreen.jsx',jsx: true  },
-  { file: 'EntryScreen.jsx',     jsx: true  },
-  { file: 'RecordingScreen.jsx', jsx: true  },
-  { file: 'UploadScreen.jsx',    jsx: true  },
-  { file: 'app.jsx',             jsx: true  },
+  { file: 'data.js',                jsx: false },
+  { file: 'recProgress.js',         jsx: false },
+  { file: 'tweaks-panel.jsx',       jsx: true  },
+  { file: 'icons.jsx',              jsx: true  },
+  { file: 'Header.jsx',             jsx: true  },
+  { file: 'Waveform.jsx',           jsx: true  },
+  { file: 'ProductCombobox.jsx',    jsx: true  },
+  { file: 'CaseInfoSummary.jsx',    jsx: true  },
+  { file: 'ScriptViews.jsx',        jsx: true  },
+  { file: 'PreRecordModal.jsx',     jsx: true  },
+  { file: 'CaseListScreen.jsx',     jsx: true  },
+  { file: 'CaseDetailScreen.jsx',   jsx: true  },
+  { file: 'EntryScreen.jsx',        jsx: true  },
+  { file: 'RecordingScreen.jsx',    jsx: true  },
+  { file: 'WholeRecordingScreen.jsx',jsx: true },
+  { file: 'UploadScreen.jsx',       jsx: true  },
+  { file: 'app.jsx',                jsx: true  },
 ];
 
 // ── Compile each source file ──────────────────────────────────────────────
@@ -212,7 +216,7 @@ console.log('\nAssembling HTML…');
 
 // We need to get the full CSS from the original file to not miss anything
 // Read the original file CSS section
-const origPath = 'C:\\Users\\user\\Desktop\\三商美邦\\prototype\\業務員錄音前台.html';
+const origPath = OUT;
 const origContent = fs.readFileSync(origPath, 'utf8');
 
 // Extract CSS from original template (everything between <style> and </style>)
