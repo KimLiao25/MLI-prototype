@@ -140,7 +140,7 @@ function ValidateView({ caseInfo, incomplete, questions, totalElapsed, recorded,
             <div>
               <h2 style={{margin:0,font:"700 20px/1.2 'Noto Sans TC'",color:"var(--ink)"}}>所有題目皆已完成</h2>
               <p style={{margin:"4px 0 0",font:"400 13px/1.4 'Noto Sans TC'",color:"var(--ink-3)"}}>
-                點擊「完成送出」後，後端將自動合併分題音檔為整合音檔
+                點擊「完成送出」後，後端將自動合併分題音檔為完整音檔
               </p>
             </div>
           </div>
@@ -187,7 +187,7 @@ function MergingView({ caseInfo, questions }) {
       </div>
       <h2 style={{margin:"0 0 8px",font:"700 22px/1.2 'Noto Sans TC'",color:"var(--ink)"}}>正在合併音檔…</h2>
       <p style={{margin:"0 0 28px",font:"400 14px/1.6 'Noto Sans TC'",color:"var(--ink-3)"}}>
-        後端正將 {questions.filter(q=>q.status==="recorded").length} 段分題音檔合併為單一整合音檔，請稍候
+        後端正將 {questions.filter(q=>q.status==="recorded").length} 段分題音檔合併為單一完整音檔，請稍候
       </p>
 
       <div style={{maxWidth:480, margin:"0 auto"}}>
@@ -234,7 +234,7 @@ function DoneView({ caseInfo, recorded, skipped, totalElapsed, onRestart }) {
       </div>
       <h2 style={{margin:"0 0 8px",font:"700 24px/1.2 'Noto Sans TC'",color:"var(--ink)"}}>送出完成！</h2>
       <p style={{margin:"0 0 32px",font:"400 15px/1.6 'Noto Sans TC'",color:"var(--ink-3)"}}>
-        整合音檔已送出，後端將進行 STT 比對與審核
+        完整音檔已送出，後端將進行 STT 比對與審核
       </p>
 
       <div style={{
@@ -254,7 +254,7 @@ function DoneView({ caseInfo, recorded, skipped, totalElapsed, onRestart }) {
       }}>
         <I.Doc size={28} stroke="var(--primary)"/>
         <div style={{flex:1}}>
-          <div style={{font:"500 14px/1.2 'Noto Sans TC'", color:"var(--ink)"}}>整合音檔識別碼</div>
+          <div style={{font:"500 14px/1.2 'Noto Sans TC'", color:"var(--ink)"}}>完整音檔識別碼</div>
           <div className="ff-mont tabular" style={{font:"600 14px/1 Montserrat",color:"var(--primary)",marginTop:4}}>
             {caseInfo.recordingNo}_merged.wav
           </div>

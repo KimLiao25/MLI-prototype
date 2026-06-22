@@ -1,30 +1,27 @@
-// CaseDetailScreen — 案件內容檢視（F-302）+ 整合音檔播放（F-303）
+// CaseDetailScreen — 案件內容檢視（F-302）+ 完整音檔播放（F-303）
 // + 修改案件（F-305）+ 刪除音檔（F-306）+ 上傳音檔（F-307）
 //
 // 本畫面是 P-3 模組的核心，依案件狀態動態調整可用動作：
 //   draft       → 可進入錄音、可上傳音檔（Web 通路）、可編輯
 //   recording   → 可進入錄音繼續、可上傳音檔（Web 通路）
-//   pending     → 唯讀，可播放整合音檔
-//   reviewing   → 唯讀，可播放整合音檔
-//   approved    → 唯讀，可播放整合音檔
+//   pending     → 唯讀，可播放完整音檔
+//   reviewing   → 唯讀，可播放完整音檔
+//   approved    → 唯讀，可播放完整音檔
 //   returned    → 可重新錄音、可刪除音檔、可上傳新音檔、可修改部分欄位
 
-function CaseDetailScreen({ caseInfo, questions, onBack, onStartRecord, onUpload }) {
+function CaseDetailScreen({ caseInfo, questions, caseProgress, onBack, onStartRecord, onUpload }) {
   const STATUS = window.__MLI_STATUS;
-  const s = STATUS[caseInfo.status];
+  const status = caseProgress ? caseProgress.status : caseInfo.status;
+  const s = STATUS[status];
 
   const isWeb = caseInfo.channel.startsWith("Web");
-  const canRecord  = ["draft", "recording", "returned"].includes(caseInfo.status);
-  const canUpload  = (isWeb && ["draft", "recording"].includes(caseInfo.status)) || caseInfo.status === "returned";
-  const canDelete  = ["returned", "draft"].includes(caseInfo.status) || (caseInfo.status === "recording" && caseInfo.duration > 0);
-  const canEdit    = !["approved"].includes(caseInfo.status);
-  const hasAudio   = caseInfo.duration > 0;
+  const canRecord  = ["draft", "recording", "returned"].includes(status);
+  const canUpload  = (isWeb && ["draft", "recording"].includes(status)) || status === "returned";
+  const canDelete  = ["returned", "draft"].includes(status) || (status === "recording" && caseInfo.duration > 0);
+  const hasAudio   = (caseProgress && caseProgress.status !== "reviewing") ? false : caseInfo.duration > 0;
 
-  const [editing, setEditing] = React.useState(false);
-  const [draft, setDraft] = React.useState({ note: caseInfo.note });
   const [confirm, setConfirm] = React.useState(null); // 'delete' | 'upload'
   const [uploadStage, setUploadStage] = React.useState(null); // null | 'picking' | 'uploading' | 'done'
-  const [menuOpen, setMenuOpen] = React.useState(false);
 
   // Compose the action list — appears in the "..." menu in the header.
   // Order: primary actions first, then edits, then destructive.
@@ -34,34 +31,11 @@ function CaseDetailScreen({ caseInfo, questions, onBack, onStartRecord, onUpload
       list.push({
         key: "record",
         icon: <I.Mic size={16} stroke="var(--primary)"/>,
-        title: caseInfo.status === "draft" ? "進入錄音作業"
-             : caseInfo.status === "returned" ? "重新錄音"
-             : "繼續錄音",
-        desc: "逐題引導，分題上傳",
+        title: status === "returned" ? "重新錄音" : "進入錄音作業",
+        desc: status === "returned" ? "退回補正重錄" : "分題 / 整段 / 上傳，多對象分次錄音",
         fcode: "F-103/F-104",
         primary: true,
         onClick: onStartRecord,
-      });
-    }
-    if (canUpload) {
-      list.push({
-        key: "upload",
-        icon: <I.Upload size={16} stroke="var(--primary)"/>,
-        title: "上傳整合音檔",
-        desc: isWeb ? "Web 通路案件，可直接上傳" : "上傳補錄之新版整合音檔",
-        fcode: "F-307",
-        onClick: () => setUploadStage("picking"),
-      });
-    }
-    if (canEdit) {
-      list.push({
-        key: "edit",
-        icon: <I.Settings size={16} stroke="var(--ink-2)"/>,
-        title: "修改案件資訊",
-        desc: "編輯備註等可修改欄位",
-        fcode: "F-305",
-        onClick: () => setEditing(true),
-        disabled: editing,
       });
     }
     if (canDelete && hasAudio) {
@@ -76,7 +50,7 @@ function CaseDetailScreen({ caseInfo, questions, onBack, onStartRecord, onUpload
       });
     }
     return list;
-  }, [canRecord, canUpload, canEdit, canDelete, hasAudio, isWeb, caseInfo.status, editing, onStartRecord]);
+  }, [canRecord, canUpload, canDelete, hasAudio, isWeb, status, onStartRecord]);
 
   return (
     <div data-screen-label={`02 案件內容 / ${s.label}`} className="fadeup">
@@ -96,22 +70,8 @@ function CaseDetailScreen({ caseInfo, questions, onBack, onStartRecord, onUpload
         {/* ─── LEFT MAIN ─── */}
         <div style={{display:"flex", flexDirection:"column", gap: 20, minWidth:0}}>
 
-          {/* Consolidated case info card */}
-          <CaseInfoCard caseInfo={caseInfo} statusMeta={s}
-            editing={editing} draft={draft} setDraft={setDraft}
-            onSaveEdit={()=>{setEditing(false);}}
-            onCancelEdit={()=>{setEditing(false); setDraft({note: caseInfo.note});}}/>
-
-          {/* Questions list — directly shown below case info */}
-          <section>
-            <div style={{display:"flex", alignItems:"baseline", marginBottom: 12, padding:"0 4px"}}>
-              <h3 style={{margin:0, font:"700 16px/1 'Noto Sans TC'", color:"var(--ink)", letterSpacing:".04em"}}>
-                題目錄音
-              </h3>
-              <span className="meta" style={{marginLeft:10}}>共 {questions.length} 題</span>
-            </div>
-            <QuestionsTab questions={questions} caseInfo={caseInfo}/>
-          </section>
+          {/* 案件重點 + 案件基本資訊 + 退回原因（單一整合卡） */}
+          <CaseDetailCard caseInfo={caseInfo} statusMeta={s}/>
 
           {/* F-code legend */}
           <section style={{padding: "12px 16px", borderRadius: 10,
@@ -121,7 +81,6 @@ function CaseDetailScreen({ caseInfo, questions, onBack, onStartRecord, onUpload
             <span style={{font:"600 12px/1 'Noto Sans TC'", color:"var(--primary)", letterSpacing:".06em"}}>本畫面對應功能</span>
             <FCode code="F-302" label="案件內容"/>
             <FCode code="F-303" label="播放音檔"/>
-            {canEdit  && <FCode code="F-305" label="修改案件資訊"/>}
             {canDelete && <FCode code="F-306" label="刪除音檔"/>}
             {canUpload && <FCode code="F-307" label="上傳音檔"/>}
           </section>
@@ -135,11 +94,9 @@ function CaseDetailScreen({ caseInfo, questions, onBack, onStartRecord, onUpload
           <AudioPlayer caseInfo={caseInfo} hasAudio={hasAudio}
             canDelete={canDelete} onDelete={()=>setConfirm("delete")}/>
 
-          {/* Case basic info block (sidebar) */}
-          <BasicInfoBlock caseInfo={caseInfo}/>
-
-          {/* Metadata block */}
-          <MetaBlock caseInfo={caseInfo}/>
+          {/* 案件歷程（時間軸：狀態里程碑 + 內嵌錄音進度） */}
+          <CaseHistoryCard caseInfo={caseInfo}
+            disp={buildDisplayProgress(caseInfo, caseProgress, questions.length)}/>
         </aside>
       </div>
 
@@ -159,107 +116,223 @@ function CaseDetailScreen({ caseInfo, questions, onBack, onStartRecord, onUpload
 }
 
 // ─────────────────────────────────────────────────────────────
-// Consolidated case info card — three vertically stacked sections:
-//   Upper  : 案件重點（審核狀態 + 錄音編號 + 錄音對象）
-//   Middle : 案件基本資訊（錄音日期 / 商品 / 保單號 / 業務員 / 通訊處）
-//   Lower  : 備註紀錄（退回原因 + 業務員備註）
-function CaseInfoCard({ caseInfo, statusMeta: s, editing, draft, setDraft, onSaveEdit, onCancelEdit }) {
+// CaseDetailCard — 案件基本資訊卡
+//   標題列：icon +「案件基本資訊」+ 錄音編號 + 狀態徽章（比照側欄卡片標題）
+//   錄音對象 → 欄位資訊 → 退回原因（退回補正 / 補件審核 時顯示）
+function CaseDetailCard({ caseInfo, statusMeta: s }) {
   const subjects = window.__MLI_uniqueSubjects(caseInfo);
   const recordDate = (caseInfo.createdAt || "").split(" ")[0].replace(/\//g, "-");
-  const hasReturnReason = caseInfo.status === "returned" && !!caseInfo.note;
-  // 業務員備註與退回原因目前共用 note 欄位；當案件為退回補正時，note 屬於退回原因，
-  // 不重複顯示為業務員備註。
-  const note = hasReturnReason ? "" : caseInfo.note;
-  const draftNote = hasReturnReason ? "" : draft.note;
+  const showReturnReason = ["returned", "resubmit"].includes(caseInfo.status) && !!caseInfo.note;
+  const reasonLabel = caseInfo.status === "resubmit" ? "退回補正原因（業務員已補件）" : "退回原因";
 
   return (
     <section className="card" style={{padding: 0, overflow:"hidden"}}>
 
-      {/* ── 上：案件重點 ── */}
-      <div style={{padding: "22px 28px 24px"}}>
-        {/* Recording no on left, status pill on right */}
-        <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, marginBottom: 22}}>
-          <span className="ff-mont tabular" style={{
-            font:"600 16px/1 Montserrat", color:"var(--ink-2)",
-            letterSpacing:".04em",
-          }}>
-            {caseInfo.recordingNo}
-          </span>
-          <span style={{display:"inline-flex", alignItems:"center", gap:7,
-            padding:"6px 14px", borderRadius:14, background:s.bg, color:s.color,
-            font:"600 13.5px/1 'Noto Sans TC'"}}>
-            <Dot color={s.dot} size={7}/> {s.label}
-          </span>
-        </div>
+      {/* ── 標題列 ── */}
+      <div style={{padding:"15px 22px 15px 26px", borderBottom:"1px solid var(--line-2)",
+        display:"flex", alignItems:"center", gap:10}}>
+        <I.Doc size={17} stroke="var(--primary)"/>
+        <span style={{font:"700 15px/1 'Noto Sans TC'", color:"var(--ink)", letterSpacing:".04em"}}>案件基本資訊</span>
+        <span className="ff-mont tabular" style={{marginLeft:4, font:"600 13px/1 Montserrat", color:"var(--ink-4)", letterSpacing:".04em"}}>
+          {caseInfo.recordingNo}
+        </span>
+        <span style={{marginLeft:"auto", display:"inline-flex", alignItems:"center", gap:7,
+          padding:"6px 14px", borderRadius:14, background:s.bg, color:s.color,
+          font:"600 13px/1 'Noto Sans TC'"}}>
+          <Dot color={s.dot} size={7}/> {s.label}
+        </span>
+      </div>
 
-        {/* Subjects — hero list, no field label, avatar-led for quick scan */}
-        <div style={{display:"flex", flexDirection:"column"}}>
-          {subjects.map((subj, i) => (
-            <SubjectHero key={i} subject={subj} divider={i < subjects.length - 1}/>
-          ))}
+      {/* ── 錄音對象 ── */}
+      <div style={{padding:"8px 28px 20px"}}>
+        {subjects.map((subj, i) => (
+          <SubjectHero key={i} subject={subj} divider={i < subjects.length - 1}/>
+        ))}
+      </div>
+
+      {/* ── 欄位資訊 ── */}
+      <div style={{padding:"22px 28px 24px", borderTop:"1px solid var(--line-2)"}}>
+        <div style={{display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:"22px 32px"}}>
+          <Detail label="商品名稱" value={caseInfo.product} bold/>
+          <Detail label="保單號碼" value={caseInfo.policyNo || "待核發"} mono={!!caseInfo.policyNo} muted={!caseInfo.policyNo}/>
+          <Detail label="案件來源" value={caseInfo.source}/>
+          <Detail label="業務員" value={<>
+            <span>{caseInfo.agent}</span>
+            <span className="ff-mont tabular" style={{marginLeft:6, color:"var(--ink-4)", font:"500 12.5px/1.3 Montserrat"}}>{caseInfo.agentId}</span>
+          </>}/>
+          <Detail label="所屬通訊處" value={caseInfo.branch}/>
+          <Detail label="使用通路" value={caseInfo.channel}/>
+          <Detail label="錄音日期" value={recordDate || "—"} mono/>
+          <Detail label="建立時間" value={caseInfo.createdAt} mono/>
+          <Detail label="更新時間" value={caseInfo.updatedAt} mono/>
         </div>
       </div>
 
-      {/* ── 中：（移除）案件基本資訊已搬至右側「案件基本資訊」區塊 ── */}
-
-      {/* ── 下：備註紀錄 ── */}
-      {(hasReturnReason || editing || note || !hasReturnReason) && (
-        <div style={{padding: "20px 28px 22px", borderTop:"1px solid var(--line-2)",
-          display:"flex", flexDirection:"column", gap: 16}}>
-
-          {hasReturnReason && (
-            <div>
-              <SectionLabel>
-                <I.Warn size={12} stroke="var(--danger)" sw={2.2} style={{verticalAlign:-1, marginRight:4}}/>
-                退回原因
-              </SectionLabel>
-              <div style={{
-                padding:"12px 14px", borderRadius:8,
-                background:"var(--danger-soft)", border:"1px solid rgba(234,82,82,.22)",
-                font:"400 13px/1.65 'Noto Sans TC'", color:"var(--ink-2)",
-              }}>
-                {caseInfo.note}
-              </div>
-            </div>
-          )}
-
-          <div>
-            <div style={{display:"flex", alignItems:"baseline", marginBottom:8}}>
-              <SectionLabel noBottom>業務員備註</SectionLabel>
-              <span className="meta" style={{marginLeft:"auto"}}>
-                {editing ? "可修改" : "如需修改其他欄位需聯繫內勤"}
-              </span>
-            </div>
-            {editing ? (
-              <textarea value={draftNote} onChange={e=>setDraft({...draft, note: e.target.value})}
-                placeholder="輸入備註，例如客戶聽力狀況、客戶要求語言、補錄原因等"
-                style={{
-                  width:"100%", minHeight: 80, resize:"vertical",
-                  padding:"10px 14px", borderRadius: 8, border:"1px solid var(--line)",
-                  font:"400 13px/1.6 'Noto Sans TC'", color:"var(--ink)",
-                  outline:"none",
-                }}/>
-            ) : (
-              <div style={{padding:"12px 14px", borderRadius:8, background:"var(--primary-bg)",
-                border:"1px dashed var(--line)",
-                font:"400 13px/1.6 'Noto Sans TC'", color: note ? "var(--ink-2)" : "var(--ink-4)"}}>
-                {note || "—（無備註）"}
-              </div>
-            )}
+      {/* ── 退回原因 ── */}
+      {showReturnReason && (
+        <div style={{padding: "20px 28px 22px", borderTop:"1px solid var(--line-2)"}}>
+          <SectionLabel>
+            <I.Warn size={12} stroke="var(--danger)" sw={2.2} style={{verticalAlign:-1, marginRight:4}}/>
+            {reasonLabel}
+          </SectionLabel>
+          <div style={{padding:"12px 14px", borderRadius:8,
+            background:"var(--danger-soft)", border:"1px solid rgba(234,82,82,.22)",
+            font:"400 13px/1.65 'Noto Sans TC'", color:"var(--ink-2)"}}>
+            {caseInfo.note}
           </div>
-
-          {editing && (
-            <div style={{display:"flex", gap:10, justifyContent:"flex-end",
-              paddingTop:12, borderTop:"1px solid var(--line-2)"}}>
-              <button className="btn btn-quiet" onClick={onCancelEdit}>取消</button>
-              <button className="btn btn-primary" onClick={onSaveEdit}>
-                <I.Check size={14}/> 儲存變更
-              </button>
-            </div>
-          )}
         </div>
       )}
     </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// 案件歷程（時間軸）— 整併「案件狀態流轉」+「錄音進度」
+// 僅呈現重點里程碑；錄音進度內嵌於「建立案件」節點下方
+// ─────────────────────────────────────────────────────────────
+function tlFmt(dt) {
+  return `${dt.getFullYear()}/${String(dt.getMonth()+1).padStart(2,"0")}/${String(dt.getDate()).padStart(2,"0")}`;
+}
+function tlParse(s) {
+  const p = (s || "").split(" ")[0].split("/").map(Number);
+  return new Date(p[0] || 2026, (p[1] || 1) - 1, p[2] || 1);
+}
+function tlLerp(a, b, t) {
+  return tlFmt(new Date(a.getTime() + (b.getTime() - a.getTime()) * t));
+}
+
+// 依案件狀態組出里程碑序列
+function buildCaseTimeline(caseInfo) {
+  const a = tlParse(caseInfo.createdAt), b = tlParse(caseInfo.updatedAt);
+  const created = tlFmt(a), updated = tlFmt(b);
+  const st = caseInfo.status;
+  const nodes = [{ key:"create", icon:"doc", label:"建立案件", date:created, state: st === "draft" ? "current" : "done", progress:true }];
+
+  if (st === "draft") {
+    nodes.push({ key:"submit", icon:"send", label:"送出審核", date:"尚未送出", state:"pending" });
+  } else if (st === "reviewing") {
+    nodes.push({ key:"submit", icon:"send", label:"送出審核", date:updated, state:"current" });
+  } else if (st === "returned") {
+    nodes.push({ key:"submit", icon:"send", label:"送出審核", date:tlLerp(a,b,0.4), state:"done" });
+    nodes.push({ key:"return", icon:"warn", label:"退回補正", date:updated, state:"current" });
+  } else if (st === "resubmit") {
+    nodes.push({ key:"submit",   icon:"send",  label:"送出審核", date:tlLerp(a,b,0.3),  state:"done" });
+    nodes.push({ key:"return",   icon:"warn",  label:"退回補正", date:tlLerp(a,b,0.55), state:"done" });
+    nodes.push({ key:"resubmit", icon:"send",  label:"重新送出", date:updated,          state:"done" });
+    nodes.push({ key:"review",   icon:"clock", label:"補件審核中", date:"審核中",        state:"current" });
+  } else if (st === "approved") {
+    nodes.push({ key:"submit",  icon:"send",  label:"送出審核", date:tlLerp(a,b,0.5), state:"done" });
+    nodes.push({ key:"approve", icon:"check", label:"審核通過", date:updated,         state:"done" });
+  }
+  return nodes;
+}
+
+function TimelineNodeIcon({ icon, size = 13 }) {
+  const c = "#fff";
+  if (icon === "doc")   return <I.Doc size={size} stroke={c} sw={2}/>;
+  if (icon === "send")  return <I.Upload size={size} stroke={c} sw={2.2}/>;
+  if (icon === "warn")  return <I.Warn size={size} stroke={c} sw={2.2}/>;
+  if (icon === "clock") return <I.Clock size={size} stroke={c} sw={2.2}/>;
+  if (icon === "check") return <I.Check size={size} stroke={c} sw={3}/>;
+  return <I.Doc size={size} stroke={c}/>;
+}
+
+function CaseHistoryCard({ caseInfo, disp }) {
+  const nodes = buildCaseTimeline(caseInfo);
+  const sMeta = window.__MLI_STATUS[caseInfo.status];
+  return (
+    <section className="card" style={{padding:0, overflow:"hidden"}}>
+      <div style={{padding:"13px 16px", borderBottom:"1px solid var(--line-2)", display:"flex", alignItems:"center", gap:8}}>
+        <I.Clock size={15} stroke="var(--primary)"/>
+        <span style={{font:"700 13px/1 'Noto Sans TC'", color:"var(--ink)", letterSpacing:".04em"}}>案件歷程</span>
+        <span className="meta" style={{marginLeft:"auto"}}>重點時間點</span>
+      </div>
+
+      <div style={{padding:"16px 16px 8px"}}>
+        {nodes.map((n, i) => {
+          const last = i === nodes.length - 1;
+          const isPending = n.state === "pending";
+          const isCurrent = n.state === "current";
+          // 節點圈：done=品牌色實心、current=狀態色實心（脈動）、pending=灰空心
+          const dotBg = isPending ? "#fff" : isCurrent ? sMeta.dot : "var(--primary)";
+          const lineColor = (n.state === "done") ? "rgba(73,99,250,.30)" : "var(--line-2)";
+          return (
+            <div key={n.key} style={{display:"flex", gap:13}}>
+              {/* rail */}
+              <div style={{display:"flex", flexDirection:"column", alignItems:"center", width:26, flexShrink:0}}>
+                <span className={isCurrent ? "pulse" : ""} style={{
+                  width:26, height:26, borderRadius:"50%", flexShrink:0,
+                  background: dotBg,
+                  border: isPending ? "1.5px solid var(--line-3)" : "none",
+                  display:"grid", placeItems:"center",
+                }}>
+                  {isPending
+                    ? <span style={{width:6, height:6, borderRadius:"50%", background:"var(--line-3)"}}/>
+                    : <TimelineNodeIcon icon={n.icon}/>}
+                </span>
+                {!last && <span style={{flex:1, width:2, minHeight:18, background:lineColor, marginTop:3, marginBottom:3}}/>}
+              </div>
+              {/* content */}
+              <div style={{flex:1, minWidth:0, paddingBottom: last ? 4 : 16}}>
+                <div style={{display:"flex", alignItems:"baseline", gap:8}}>
+                  <span style={{font:`${isPending ? 500 : 600} 13.5px/1.3 'Noto Sans TC'`,
+                    color: isPending ? "var(--ink-4)" : "var(--ink)"}}>{n.label}</span>
+                  {isCurrent && (
+                    <span style={{padding:"1px 7px", borderRadius:9, background:sMeta.bg, color:sMeta.color,
+                      font:"600 10px/1.5 'Noto Sans TC'"}}>目前狀態</span>
+                  )}
+                </div>
+                <div className="ff-mont tabular" style={{marginTop:3,
+                  font:"500 11.5px/1.4 Montserrat", color: isPending ? "var(--ink-4)" : "var(--ink-3)"}}>
+                  {n.date}
+                </div>
+                {n.progress && <TimelineProgress disp={disp}/>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+// 內嵌於「建立案件」節點下方的精簡錄音進度
+function TimelineProgress({ disp }) {
+  const methodLabel = disp.method === "whole" ? "整段 / 上傳" : "分題錄音";
+  const doneCount = disp.subjects.filter(s => s.complete).length;
+  return (
+    <div style={{marginTop:10, borderRadius:9, background:"var(--primary-bg)", border:"1px solid var(--line-2)", overflow:"hidden"}}>
+      <div style={{padding:"8px 11px", borderBottom:"1px solid var(--line-2)", display:"flex", alignItems:"center", gap:6}}>
+        {disp.method === "whole" ? <I.Headset size={13} stroke="var(--primary)"/> : <I.Wave size={13} stroke="var(--primary)"/>}
+        <span style={{font:"700 11.5px/1 'Noto Sans TC'", color:"var(--ink-2)"}}>錄音進度</span>
+        <span className="tag" style={{marginLeft:2, padding:"1px 6px", fontSize:9.5}}>{methodLabel}</span>
+        <span className="tabular ff-mont" style={{marginLeft:"auto", font:"600 11px/1 Montserrat", color:"var(--primary)"}}>
+          {doneCount}<span style={{color:"var(--ink-4)"}}>/{disp.subjects.length}</span>
+        </span>
+      </div>
+      <div style={{padding:"4px 11px 8px"}}>
+        {disp.subjects.map(s => {
+          const color = s.status === "done" ? "var(--ok)" : s.status === "active" ? "var(--primary)" : "var(--ink-4)";
+          return (
+            <div key={s.key} style={{padding:"7px 0", borderBottom:"1px solid var(--line-2)"}}>
+              <div style={{display:"flex", alignItems:"center", gap:6, marginBottom:5}}>
+                <span style={{width:7, height:7, borderRadius:"50%", background:color, flexShrink:0}}/>
+                <span style={{font:"600 12px/1.2 'Noto Sans TC'", color:"var(--ink)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>{s.name}</span>
+                <span style={{display:"flex", gap:3}}>
+                  {s.roleAbbrs.map(r => <span key={r} className="tag" style={{padding:"0 4px", fontSize:9}}>{r}</span>)}
+                </span>
+                <span className="tabular ff-mont" style={{marginLeft:"auto", font:"600 12px/1 Montserrat", color:"var(--ink-2)"}}>
+                  {s.done}<span style={{color:"var(--ink-4)"}}>/{s.total}</span>
+                </span>
+              </div>
+              <div style={{height:5, borderRadius:3, background:"var(--line-2)", overflow:"hidden"}}>
+                <div style={{width:`${s.total ? s.done / s.total * 100 : 0}%`, height:"100%", background:color, transition:"width .3s"}}/>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -695,7 +768,7 @@ function TimelineTab({ caseInfo }) {
     }
     if (caseInfo.duration > 0) {
       e.push({ time: caseInfo.updatedAt, who: caseInfo.agent, icon: <I.Upload size={14} stroke="#fff"/>, color: "var(--ok)",
-        title: "完成上傳", desc: `已合併為整合音檔 ${caseInfo.recordingNo}_merged.wav · ${fmtDur(caseInfo.duration)}` });
+        title: "完成上傳", desc: `已合併為完整音檔 ${caseInfo.recordingNo}_merged.wav · ${fmtDur(caseInfo.duration)}` });
     }
     if (caseInfo.status === "reviewing") {
       e.push({ time: caseInfo.updatedAt, who: "內勤審核員 王小姐", icon: <I.Headset size={14} stroke="#fff"/>, color: "rgb(53,113,200)",
@@ -743,7 +816,7 @@ function TimelineTab({ caseInfo }) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Audio player (F-303 播放音檔 — 整合音檔)
+// Audio player (F-303 播放音檔 — 完整音檔)
 function AudioPlayer({ caseInfo, hasAudio, canDelete, onDelete }) {
   const [playing, setPlaying] = React.useState(false);
   const [progress, setProgress] = React.useState(0.32);
@@ -767,7 +840,7 @@ function AudioPlayer({ caseInfo, hasAudio, canDelete, onDelete }) {
     <section className="card" style={{padding: 20}}>
       <div style={{display:"flex", alignItems:"center", gap:8, marginBottom:14}}>
         <I.Headset size={16} stroke="var(--primary)"/>
-        <span style={{font:"700 13px/1 'Noto Sans TC'", color:"var(--ink)", letterSpacing:".04em"}}>整合音檔</span>
+        <span style={{font:"700 13px/1 'Noto Sans TC'", color:"var(--ink)", letterSpacing:".04em"}}>完整音檔</span>
       </div>
 
       {hasAudio ? (
@@ -824,7 +897,7 @@ function AudioPlayer({ caseInfo, hasAudio, canDelete, onDelete }) {
           background:"var(--primary-bg)", border:"1px dashed var(--line)"}}>
           <I.Wave size={24} stroke="var(--ink-4)"/>
           <div style={{font:"500 13px/1.4 'Noto Sans TC'", color:"var(--ink-3)", marginTop:8}}>
-            此案件尚無整合音檔
+            此案件尚無完整音檔
           </div>
           <div className="meta" style={{marginTop:4}}>
             {caseInfo.status === "draft" ? "請進入錄音或自行上傳" : "錄音作業進行中"}
@@ -927,7 +1000,7 @@ function ConfirmDeleteModal({ caseInfo, onCancel, onConfirm }) {
           確認刪除音檔？
         </h3>
         <p style={{margin:"0 0 18px", font:"400 13.5px/1.6 'Noto Sans TC'", color:"var(--ink-3)", textAlign:"center"}}>
-          將刪除整合音檔與所有分段音檔，刪除後案件回到「草稿」狀態，需重新進行錄音或上傳。此操作無法復原。
+          將刪除完整音檔與所有分段音檔，刪除後案件回到「草稿」狀態，需重新進行錄音或上傳。此操作無法復原。
         </p>
         <div style={{padding:"10px 14px", borderRadius:8, background:"var(--primary-bg)",
           border:"1px solid var(--line-2)", marginBottom:18, font:"400 12px/1.6 'Noto Sans TC'", color:"var(--ink-2)"}}>
@@ -965,7 +1038,7 @@ function UploadAudioModal({ caseInfo, stage, onStageChange, onClose }) {
         <div style={{display:"flex", alignItems:"center", gap:12, marginBottom:18}}>
           <I.Upload size={22} stroke="var(--primary)"/>
           <div>
-            <h3 style={{margin:0, font:"700 18px/1.2 'Noto Sans TC'", color:"var(--ink)"}}>上傳整合音檔</h3>
+            <h3 style={{margin:0, font:"700 18px/1.2 'Noto Sans TC'", color:"var(--ink)"}}>上傳完整音檔</h3>
             <p style={{margin:"4px 0 0", font:"400 12.5px/1.4 'Noto Sans TC'", color:"var(--ink-3)"}}>
               F-307 · 限 WAV / MP3 格式，檔案大小不超過 100 MB
             </p>

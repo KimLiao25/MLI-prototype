@@ -114,7 +114,7 @@ function EntryScreen({ caseInfo, tts, setTts, entryStep, setEntryStep,
             caseInfo={caseInfo} product={product} customers={customers}
             retrieving={retrieving} retrieved={retrieved}
             tts={tts} setTts={setTts}
-            onBack={backStep1} onNext={onStart}/>
+            onBack={backStep1} onNext={() => onStart(customers)}/>
         )}
       </div>
 
@@ -495,9 +495,10 @@ function Step2Confirm({ source, caseInfo, product, customers,
             display:"flex", alignItems:"center", gap:10, flexWrap:"wrap"}}>
             <I.Script size={18} stroke="var(--primary)"/>
             <div style={{font:"700 15px/1.2 'Noto Sans TC'", color:"var(--ink)"}}>題目文稿</div>
-            {uploadedScript && <span className="tag tag-warn">使用上傳題本</span>}
+            {uploadedScript && source === "integration" && <span className="tag tag-warn">使用上傳題本</span>}
+            {source === "manual" && <span className="tag">上傳 PDF 圖檔 · 不分題</span>}
             <span style={{marginLeft:"auto", display:"flex", alignItems:"center", gap:10}}>
-              {hasScript && (
+              {source === "integration" && (
                 <>
                   <span className="meta">共 {questions.length} 題</span>
                   <span className="meta">·</span>
@@ -552,7 +553,7 @@ function Step2Confirm({ source, caseInfo, product, customers,
             </div>
           )}
 
-          {hasScript ? (
+          {source === "integration" ? (
             <div style={{maxHeight: 680, overflowY:"auto", padding:"8px 0"}}>
               {questions.map((q) => (
                 <div key={q.no} style={{
@@ -584,15 +585,16 @@ function Step2Confirm({ source, caseInfo, product, customers,
                 </div>
               ))}
             </div>
+          ) : uploadedScript ? (
+            <PdfPreview fileName={uploadedScript.name} pages={3} maxHeight={680}/>
           ) : (
             <ScriptEmptyState onUpload={()=>fileInputRef.current?.click()}/>
           )}
         </section>
 
-        {/* RIGHT — 案件摘要 + TTS */}
+        {/* RIGHT — 案件摘要（語音播放設定已移至「開始錄音前設定」彈窗 03） */}
         <div style={{display:"flex", flexDirection:"column", gap:16}}>
           <CaseInfoSummary caseInfo={caseInfo} product={product} customers={customers}/>
-          <TtsPanel tts={tts} setTts={setTts}/>
         </div>
       </div>
 
@@ -648,80 +650,6 @@ function ScriptEmptyState({ onUpload }) {
         支援格式：PDF / DOCX / TXT
       </div>
     </div>
-  );
-}
-
-/* ─────────────────────────────────────────────────────
- * TTS 設定面板
- * ───────────────────────────────────────────────────── */
-function TtsPanel({ tts, setTts }) {
-  const VoiceOption = ({ id, lang, gender, sample, color }) => {
-    const active = tts.voice === id;
-    return (
-      <button onClick={() => setTts(t => ({...t, voice: id}))}
-        style={{
-          padding: "11px 12px", borderRadius: 10,
-          border: `1.5px solid ${active ? "var(--primary)" : "var(--line)"}`,
-          background: active ? "var(--primary-soft)" : "#fff",
-          textAlign: "left", display: "flex", alignItems: "center", gap: 10,
-          transition: "all .15s ease", cursor:"pointer",
-          boxShadow: active ? "0 2px 6px rgba(73,99,250,.08)" : "none",
-        }}>
-        <div style={{
-          width: 30, height: 30, borderRadius: 15,
-          background: color, color: "#fff",
-          display: "grid", placeItems: "center", flexShrink: 0,
-          font: "600 12px/1 Montserrat,sans-serif",
-        }}>{sample}</div>
-        <div style={{flex:1, minWidth:0}}>
-          <div style={{font: "500 13px/1.2 'Noto Sans TC'", color: "var(--ink)"}}>{lang}</div>
-          <div className="meta" style={{fontSize:11}}>{gender}</div>
-        </div>
-        {active && <I.Check size={16} stroke="var(--primary)" sw={2.4}/>}
-      </button>
-    );
-  };
-  return (
-    <section className="card" style={{padding: 20}}>
-      <div style={{display:"flex", alignItems:"baseline", gap: 8, marginBottom: 14}}>
-        <I.Volume size={16} stroke="var(--primary)"/>
-        <div style={{font:"700 14px/1 'Noto Sans TC'", color:"var(--ink)"}}>語音播放設定</div>
-        <span className="ff-mont" style={{marginLeft:"auto", font:"600 10px/1 Montserrat", color:"var(--ink-4)", letterSpacing:".06em"}}>
-          F-202 / F-203
-        </span>
-      </div>
-
-      <div style={{font:"500 12px/1 'Noto Sans TC'", color:"var(--ink-3)", marginBottom:8, display:"flex", alignItems:"center", gap:6}}>
-        <I.Lang size={13} stroke="var(--ink-3)"/> 語言 / 聲音
-      </div>
-      <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap: 6, marginBottom: 16}}>
-        <VoiceOption id="f-tw" lang="國語" gender="女聲" sample="女" color="rgb(167,141,250)"/>
-        <VoiceOption id="m-tw" lang="國語" gender="男聲" sample="男" color="rgb(73,99,250)"/>
-        <VoiceOption id="f-tai" lang="台語" gender="女聲" sample="女" color="rgb(126,200,180)"/>
-        <VoiceOption id="m-tai" lang="台語" gender="男聲" sample="男" color="rgb(91,167,233)"/>
-      </div>
-
-      <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:6}}>
-        <span style={{font:"500 12px/1 'Noto Sans TC'",color:"var(--ink-3)",display:"flex",alignItems:"center",gap:6}}>
-          <I.Speed size={13} stroke="var(--ink-3)"/> 播放語速
-        </span>
-        <span className="tabular ff-mont" style={{font:"600 13px/1 Montserrat",color:"var(--primary)"}}>
-          {tts.speed.toFixed(2)}×
-        </span>
-      </div>
-      <input type="range" className="rng" min="0.5" max="1.5" step="0.05" value={tts.speed}
-        onChange={e=>setTts(t=>({...t, speed: parseFloat(e.target.value)}))}/>
-      <div style={{display:"flex",justifyContent:"space-between",marginTop:4}}>
-        <span className="meta">0.5×</span>
-        <span className="meta">1.0×</span>
-        <span className="meta">1.5×</span>
-      </div>
-      <div style={{marginTop:10, padding:"8px 10px", borderRadius:6, background:"var(--warn-soft)",
-        color:"rgb(151,89,15)", font:"400 11.5px/1.4 'Noto Sans TC'", display:"flex", gap:6}}>
-        <I.Info size={13} stroke="rgb(151,89,15)" style={{flexShrink:0, marginTop:1}}/>
-        建議高齡客戶使用 0.75× 以下語速以提升聆聽舒適度
-      </div>
-    </section>
   );
 }
 

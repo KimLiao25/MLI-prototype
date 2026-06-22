@@ -3,8 +3,10 @@
 // 業務員日常入口。以表格列出案件，標示審核狀態、進度、案件來源、通路。
 // 點擊列開啟 CaseDetailScreen；新增按鈕導向 EntryScreen 取號。
 
-function CaseListScreen({ cases, onOpen, onNew, currentAgent }) {
+function CaseListScreen({ cases, onOpen, onNew, currentAgent, progressMap = {} }) {
   const STATUS = window.__MLI_STATUS;
+  const totalQ = window.__MLI_QUESTIONS.length;
+  const effStatus = (c) => (progressMap[c.recordingNo] ? progressMap[c.recordingNo].status : c.status);
 
   const [keyword, setKeyword] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("all");
@@ -15,7 +17,7 @@ function CaseListScreen({ cases, onOpen, onNew, currentAgent }) {
   const filtered = React.useMemo(() => {
     const kw = keyword.trim().toLowerCase();
     let list = cases.filter(c => {
-      if (statusFilter !== "all" && c.status !== statusFilter) return false;
+      if (statusFilter !== "all" && effStatus(c) !== statusFilter) return false;
       if (channelFilter !== "all" && !c.channel.startsWith(channelFilter)) return false;
       if (!kw) return true;
       const roleNames = c.roles ? Object.values(c.roles).map(r => r.name) : [];
@@ -30,9 +32,9 @@ function CaseListScreen({ cases, onOpen, onNew, currentAgent }) {
   // 統計每個狀態的件數（顯示在 chip 上）
   const statusCounts = React.useMemo(() => {
     const o = {all: cases.length};
-    Object.keys(STATUS).forEach(k => { o[k] = cases.filter(c => c.status === k).length; });
+    Object.keys(STATUS).forEach(k => { o[k] = cases.filter(c => effStatus(c) === k).length; });
     return o;
-  }, [cases]);
+  }, [cases, progressMap]);
 
   return (
     <div data-screen-label="01 案件清單" className="fadeup" style={{padding: "20px 40px 60px"}}>
@@ -100,8 +102,7 @@ function CaseListScreen({ cases, onOpen, onNew, currentAgent }) {
               <tr style={{background:"var(--primary-bg)", borderBottom:"1px solid var(--line-2)"}}>
                 <th style={{...listTh, width: 170}}>錄音編號</th>
                 <th style={{...listTh, width: 280}}>商品 / 保單號</th>
-                <th style={{...listTh, width: 220}}>錄音對象</th>
-                <th style={{...listTh, width: 140}}>進度</th>
+                <th style={{...listTh, width: 300}}>錄音對象</th>
                 <th style={{...listTh, width: 110}}>審核狀態</th>
                 <th style={{...listTh, width: 150}}>更新時間</th>
                 <th style={{...listTh, width: 100, textAlign:"right"}}>操作</th>
@@ -109,11 +110,11 @@ function CaseListScreen({ cases, onOpen, onNew, currentAgent }) {
             </thead>
             <tbody>
               {filtered.map((c) => (
-                <CaseRow key={c.recordingNo} c={c} STATUS={STATUS} onOpen={() => onOpen(c.recordingNo)}/>
+                <CaseRow key={c.recordingNo} c={c} STATUS={STATUS} prog={progressMap[c.recordingNo]} totalQ={totalQ} onOpen={() => onOpen(c.recordingNo)}/>
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} style={{padding:"60px 0", textAlign:"center"}}>
+                  <td colSpan={6} style={{padding:"60px 0", textAlign:"center"}}>
                     <I.Search size={28} stroke="var(--ink-4)" style={{marginBottom:8}}/>
                     <div style={{font:"500 14px/1.4 'Noto Sans TC'", color:"var(--ink-3)"}}>
                       找不到符合條件的案件
@@ -152,10 +153,10 @@ function CaseListScreen({ cases, onOpen, onNew, currentAgent }) {
   );
 }
 
-function CaseRow({ c, STATUS, onOpen }) {
-  const s = STATUS[c.status];
-  const progress = c.progress;
-  const subjects = window.__MLI_uniqueSubjects(c);
+function CaseRow({ c, STATUS, prog, totalQ, onOpen }) {
+  const dispStatus = prog ? prog.status : c.status;
+  const s = STATUS[dispStatus];
+  const disp = buildDisplayProgress(c, prog, totalQ);
 
   return (
     <tr onClick={onOpen} style={{
@@ -178,24 +179,7 @@ function CaseRow({ c, STATUS, onOpen }) {
         )}
       </td>
       <td style={listTd}>
-        <SubjectsCell subjects={subjects}/>
-      </td>
-      <td style={listTd}>
-        {c.status === "draft" ? (
-          <>
-            <div style={{marginBottom:5}}>
-              <span className="ff-mont tabular" style={{font:"600 13.5px/1 Montserrat", color:"var(--ink)"}}>
-                {progress.recorded}/{progress.total}
-              </span>
-            </div>
-            <div style={{height:5, borderRadius:3, background:"var(--line-2)", overflow:"hidden", display:"flex"}}>
-              <div style={{width:`${progress.recorded/progress.total*100}%`, background:"var(--ok)"}}/>
-              <div style={{width:`${progress.skipped/progress.total*100}%`, background:"rgba(140,142,157,.5)"}}/>
-            </div>
-          </>
-        ) : (
-          <span className="meta">—</span>
-        )}
+        <SubjectsWithProgress disp={disp} showProgress={dispStatus === "draft"}/>
       </td>
       <td style={listTd}>
         <span style={{display:"inline-flex", alignItems:"center", gap:6,
@@ -217,7 +201,37 @@ function CaseRow({ c, STATUS, onOpen }) {
   );
 }
 
-// 錄音對象儲存格：去重合併的角色 + 姓名後接關係標籤
+// 錄音對象儲存格：姓名 + 角色 + （僅草稿）進度 X/Y
+function SubjectsWithProgress({ disp, showProgress }) {
+  return (
+    <div style={{display:"flex", flexDirection:"column", gap:7}}>
+      {disp.subjects.map((s) => (
+        <div key={s.key} style={{display:"flex", alignItems:"center", gap:8}}>
+          <span style={{font:"500 13.5px/1 'Noto Sans TC'", color:"var(--ink)"}}>{s.name}</span>
+          <div style={{display:"flex", gap:3}}>
+            {s.roleAbbrs.map(r => (
+              <span key={r} style={{
+                display:"inline-grid", placeItems:"center",
+                width:18, height:18, borderRadius:4,
+                background:"var(--primary-soft)", color:"var(--primary)",
+                font:"600 11px/1 'Noto Sans TC'",
+              }}>{r}</span>
+            ))}
+          </div>
+          {showProgress && (
+            <span className="ff-mont" style={{marginLeft:"auto", paddingLeft:10,
+              font:"500 12px/1 'Noto Sans TC'", color: s.complete ? "var(--ok)" : "var(--ink-3)",
+              whiteSpace:"nowrap"}}>
+              進度 <span className="tabular" style={{font:"600 12.5px/1 Montserrat", color: s.complete ? "var(--ok)" : "var(--ink-2)"}}>{s.done}/{s.total}</span>
+            </span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// 錄音對象儲存格（舊，保留）：去重合併的角色 + 姓名後接關係標籤
 function SubjectsCell({ subjects }) {
   return (
     <div style={{display:"flex", flexDirection:"column", gap:6}}>

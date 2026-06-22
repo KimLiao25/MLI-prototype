@@ -7,8 +7,8 @@
 //   draft        草稿     — 業務員建立但尚未送出審核
 //   reviewing    審核中   — 已送出，等待後台審核
 //   returned     退回補正 — 後台點選退回，需補錄 / 重錄 / 補上傳
+//   resubmit     補件審核 — 退回補正案件補件後重新送出，待內勤複審
 //   approved     審核通過 — 後台點選通過
-//   overdue      逾期     — 超過時間未審核的案件
 //
 // 錄音對象（3 種角色）：
 //   proposer   要保人
@@ -23,8 +23,8 @@ window.__MLI_STATUS = {
   draft:     { label: "草稿",     dot: "rgb(140,142,157)", bg: "rgba(140,142,157,.12)", color: "rgb(98,100,118)" },
   reviewing: { label: "審核中",   dot: "rgb(241,160,40)",  bg: "rgb(255,245,222)",      color: "rgb(178,104,12)" },
   returned:  { label: "退回補正", dot: "rgb(234,82,82)",   bg: "rgb(255,236,236)",      color: "rgb(196,55,55)" },
+  resubmit:  { label: "補件審核", dot: "rgb(20,166,164)",  bg: "rgb(224,246,245)",      color: "rgb(15,128,126)" },
   approved:  { label: "審核通過", dot: "rgb(72,153,61)",   bg: "rgb(231,247,229)",      color: "rgb(58,124,49)" },
-  overdue:   { label: "逾期",     dot: "rgb(91,82,77)",    bg: "rgb(236,232,228)",      color: "rgb(86,68,58)" },
 };
 
 // 高齡錄音門檻
@@ -96,7 +96,7 @@ const QUESTIONS = [
 //   #2 要保 = 繳款，被保不同：父為母投保自繳   — 審核中
 //   #3 三人皆不同：子女繳款給父母                — 退回補正
 //   #4 要保 = 繳款，被保人未達高齡（不需錄音）  — 審核通過（已核發保單）
-//   #5 三人皆同（單一被保人案件）                — 逾期
+//   #5 三人皆同（單一被保人案件）                — 補件審核
 //   #6 要保 = 被保，繳款人為配偶                  — 草稿
 //   #7 要保 = 被保 = 繳款                          — 審核中
 //   #8 三人皆不同                                    — 退回補正
@@ -196,10 +196,10 @@ window.__MLI_CASES = [
     branch:   "台北中山通訊處",
     channel:  "iPad（行銷系統）",
     duration: 582,
-    status:   "overdue",
+    status:   "resubmit",
     source:   "建議書系統",
-    note:     "送審後超過 7 個工作天未審核，列入逾期清單，請聯繫內勤確認。",
-    progress: { total: 14, recorded: 13, skipped: 1 },
+    note:     "原案 Q07 健康告知音檔不清晰退回補正，業務員已補錄並重新送出，待內勤複審。",
+    progress: { total: 14, recorded: 14, skipped: 0 },
   },
   {
     recordingNo: "A202605210003",

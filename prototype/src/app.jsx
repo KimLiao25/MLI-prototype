@@ -8,7 +8,8 @@
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "demoState": "mixed",
   "primaryHue": "indigo",
-  "showFCodes": true
+  "showFCodes": true,
+  "device": "ipad"
 }/*EDITMODE-END*/;
 
 const PRIMARY_PALETTES = {
@@ -25,6 +26,19 @@ function applyPalette(hue) {
   r.style.setProperty("--primary-2", p.p2);
   r.style.setProperty("--primary-soft", p.soft);
   r.style.setProperty("--primary-bg", p.bg);
+}
+
+// 案件 roles → 標準化錄音對象（同人合併多角色，key 以身分證/姓名為主）
+function subjectsFromCase(c) {
+  const map = new Map();
+  ["proposer", "insured", "payer"].forEach(k => {
+    const r = c.roles && c.roles[k];
+    if (!r) return;
+    const key = (r.idNo && r.idNo.trim()) ? r.idNo.trim().toUpperCase() : r.name;
+    if (map.has(key)) map.get(key).roleKeys.push(k);
+    else map.set(key, { key, name: r.name, idNo: r.idNo || "", roleKeys: [k], age: r.age });
+  });
+  return [...map.values()];
 }
 
 function App() {
@@ -44,6 +58,14 @@ function App() {
   // Recording flow state
   const [uploadMode, setUploadMode] = React.useState("validate");
   const [tts, setTts] = React.useState(data.tts);
+
+  // ── 多對象 / 多場次錄音流程（進度以 recordingNo 為 key 持久化於 app 狀態）──
+  const [progressMap, setProgressMap] = React.useState({});
+  const [recSubjects, setRecSubjects] = React.useState(() => subjectsFromCase(cases[0]));
+  const [sessionKeys, setSessionKeys] = React.useState(() => subjectsFromCase(cases[0]).map(s => s.key));
+  const [recMethod, setRecMethod] = React.useState("segmented"); // segmented | whole
+  const [preRecOpen, setPreRecOpen] = React.useState(false);
+  const [methodLocked, setMethodLocked] = React.useState(false);
 
   // Entry screen state
   const [entryStep, setEntryStep] = React.useState(1);          // 1: 案件資訊 / 2: 確認題稿
@@ -79,6 +101,10 @@ function App() {
   const goToList = () => setScreen("list");
   const goToDetail = (no) => { setActiveCaseNo(no); setScreen("detail"); };
   const goToEntry = () => {
+    // demo：預設帶出雙錄音對象案件，並重置該案進度（全新起案）
+    const twoSub = cases.find(c => subjectsFromCase(c).length >= 2) || activeCase;
+    setActiveCaseNo(twoSub.recordingNo);
+    setProgressMap(pm => { const n = { ...pm }; delete n[twoSub.recordingNo]; return n; });
     setScreen("entry");
     setEntryStep(1);
     setRecQuestions(buildQuestions("fresh"));
@@ -86,12 +112,104 @@ function App() {
   const goToRecording = () => { setScreen("recording"); setUploadMode("validate"); };
   const goToUpload = () => { setScreen("upload"); setUploadMode("validate"); };
 
+  // 開始錄音：彈出「開始錄音前設定」（對象 + 方式）；若案件已有進度則續錄
+  const startRecordingFlow = (subs) => {
+    const no = activeCaseNo;
+    let prog = progressMap[no];
+    const list = (prog && prog.subjects && prog.subjects.length)
+      ? prog.subjects
+      : ((subs && subs.length) ? subs : subjectsFromCase(activeCase));
+    if (!prog) {
+      prog = progInit(list);
+      setProgressMap(pm => ({ ...pm, [no]: prog }));
+    }
+    setRecSubjects(list);
+    setMethodLocked(!!(prog && prog.method));
+    setRecMethod(prog && prog.method ? prog.method : "segmented");
+    const dm = progDoneMap(prog, questions.length);
+    setSessionKeys(list.filter(s => !dm[s.key]).map(s => s.key));
+    setPreRecOpen(true);
+  };
+
+  const confirmPreRec = ({ keys, method }) => {
+    const no = activeCaseNo;
+    setSessionKeys(keys);
+    setRecMethod(method);
+    setPreRecOpen(false);
+    // 鎖定案件錄音方式（首場決定）
+    setProgressMap(pm => {
+      const prog = pm[no] || progInit(recSubjects);
+      return { ...pm, [no]: { ...prog, method: prog.method || method } };
+    });
+    if (method === "segmented") {
+      // 載入該場首位對象已存的題目狀態（題級續錄）
+      const prog = progressMap[no];
+      const saved = (prog && prog.q && prog.q[keys[0]]) || {};
+      setRecQuestions(questions.map(q => {
+        const st = saved[q.no] || "pending";
+        return { ...q, status: st, duration: st === "recorded" ? 30 : 0 };
+      }));
+      setScreen("recording");
+    } else {
+      setScreen("whole");
+    }
+  };
+
+  // 錄音中（分題）：每次題目變動即時寫回進度，離開也不會掉
+  React.useEffect(() => {
+    if (screen !== "recording") return;
+    setProgressMap(pm => {
+      const prog = pm[activeCaseNo];
+      if (!prog) return pm;
+      const np = progWriteSegmented(prog, sessionKeys, recQuestions);
+      np.method = prog.method || "segmented";
+      np.status = progAllDone(np, questions.length) ? np.status : "draft";
+      return { ...pm, [activeCaseNo]: np };
+    });
+  }, [recQuestions, screen, sessionKeys, activeCaseNo]);
+
+  // 完成本場 → 標記本場對象完成；全部對象完成則送出(審核中)，否則續錄下一位
+  const completeSession = (wholeMode) => {
+    const no = activeCaseNo;
+    let np = { ...(progressMap[no] || progInit(recSubjects)) };
+    np.method = np.method || recMethod;
+    if (recMethod === "whole") {
+      const whole = { ...np.whole };
+      sessionKeys.forEach(k => { whole[k] = wholeMode === "upload" ? "uploaded" : "recorded"; });
+      np.whole = whole;
+    } else {
+      np = progWriteSegmented(np, sessionKeys, recQuestions);
+      np.method = np.method || recMethod;
+    }
+    np.sessions = [ ...np.sessions, { keys: sessionKeys, method: recMethod } ];
+    const allDone = progAllDone(np, questions.length);
+    np.status = allDone ? "reviewing" : "draft";
+    setProgressMap(pm => ({ ...pm, [no]: np }));
+    if (allDone) {
+      setScreen("upload"); setUploadMode("validate");
+    } else {
+      setMethodLocked(true);
+      const dm = progDoneMap(np, questions.length);
+      setSessionKeys(np.subjects.filter(s => !dm[s.key]).map(s => s.key));
+      setPreRecOpen(true);
+    }
+  };
+
   const tweaksDomNode = document.getElementById("tweaks-root");
 
   // Toggle F-code legend visibility via CSS class on root
   React.useEffect(() => {
     document.documentElement.classList.toggle("hide-fcodes", !t.showFCodes);
   }, [t.showFCodes]);
+
+  // 計算衍生狀態
+  const activeProg = progressMap[activeCaseNo] || null;
+  const subjectDone = progDoneMap(activeProg, questions.length);
+  const completedSessions = activeProg ? activeProg.sessions : [];
+  const hasSegmented = entrySource === "integration";          // API 同步分題題稿 → 方式一可選
+  const canWholeRecord = t.device === "ipad";                  // 整段錄音僅 iPad
+  const preRecDefaultKeys = recSubjects.filter(s => !subjectDone[s.key]).map(s => s.key);
+  const isLastSession = recSubjects.filter(s => !subjectDone[s.key] && !sessionKeys.includes(s.key)).length === 0;
 
   return (
     <>
@@ -104,21 +222,23 @@ function App() {
           {screen === "list" && (
             <CaseListScreen cases={cases}
               currentAgent={{agent: activeCase.agent, agentId: activeCase.agentId}}
+              progressMap={progressMap}
               onOpen={goToDetail}
               onNew={goToEntry}/>
           )}
 
           {screen === "detail" && (
             <CaseDetailScreen caseInfo={activeCase} questions={questions}
+              caseProgress={activeProg}
               onBack={goToList}
-              onStartRecord={goToRecording}/>
+              onStartRecord={() => startRecordingFlow(subjectsFromCase(activeCase))}/>
           )}
 
           {screen === "entry" && (
             <EntryScreen caseInfo={activeCase} tts={tts} setTts={setTts}
               entryStep={entryStep} setEntryStep={setEntryStep}
               entrySource={entrySource} setEntrySource={setEntrySource}
-              onStart={goToRecording}
+              onStart={(customers) => startRecordingFlow(customersToSubjects(customers))}
               onCancel={goToList}/>
           )}
 
@@ -127,7 +247,18 @@ function App() {
               questions={recQuestions} setQuestions={setRecQuestions}
               onFinish={goToUpload} tweaks={t}
               onBackToList={goToList}
-              onBackToCase={() => goToDetail(activeCaseNo)}/>
+              onBackToCase={() => goToDetail(activeCaseNo)}
+              subjects={recSubjects} sessionKeys={sessionKeys} subjectDone={subjectDone}
+              completedSessions={completedSessions} isLastSession={isLastSession}
+              onSessionComplete={completeSession}/>
+          )}
+
+          {screen === "whole" && (
+            <WholeRecordingScreen caseInfo={activeCase}
+              subjects={recSubjects} sessionKeys={sessionKeys} subjectDone={subjectDone}
+              scriptSource={entrySource} device={t.device} questions={questions}
+              completedSessions={completedSessions} isLastSession={isLastSession}
+              onSessionComplete={completeSession} onBackToList={goToList}/>
           )}
 
           {screen === "upload" && (
@@ -141,6 +272,13 @@ function App() {
         </div>
       </div>
 
+      <PreRecordModal open={preRecOpen}
+        subjects={recSubjects} subjectDone={subjectDone}
+        defaultKeys={preRecDefaultKeys}
+        methodAvailable={hasSegmented} methodLocked={methodLocked} lockedMethod={recMethod}
+        canWholeRecord={canWholeRecord} tts={tts} setTts={setTts}
+        onCancel={() => setPreRecOpen(false)} onConfirm={confirmPreRec}/>
+
       {tweaksDomNode && ReactDOM.createPortal(
         <TweaksPanel title="Tweaks">
 
@@ -150,14 +288,27 @@ function App() {
               {value:"list",      label:"P-3 · 案件清單"},
               {value:"detail",    label:"P-3 · 案件內容"},
               {value:"entry",     label:"P-1 · 建立錄音案件"},
-              {value:"recording", label:"P-1 · 錄音作業"},
+              {value:"recording", label:"P-1 · 錄音作業（分題）"},
+              {value:"whole",     label:"P-1 · 錄音作業（整段/上傳）"},
               {value:"upload",    label:"P-1 · 完成送出"},
             ]}
             onChange={(v) => {
               if (v === "upload") setUploadMode("validate");
               if (v === "entry") setEntryStep(1);
+              if ((v === "recording" || v === "whole") && recSubjects.length === 0) {
+                const s = subjectsFromCase(activeCase);
+                setRecSubjects(s); setSessionKeys(s.map(x => x.key));
+              }
               setScreen(v);
             }}/>
+
+          <TweakSection label="通路 / 裝置"/>
+          <TweakRadio label="裝置（影響整段錄音）" value={t.device}
+            options={[
+              {value:"ipad",    label:"iPad"},
+              {value:"desktop", label:"桌機瀏覽器"},
+            ]}
+            onChange={(v) => setTweak('device', v)}/>
 
           {screen === "entry" && (
             <>

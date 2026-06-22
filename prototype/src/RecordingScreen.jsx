@@ -407,10 +407,11 @@ function ActiveQuestionCard({ q, onUpdate, onPrev, onNext, hasNext, hasPrev, onC
 // ─────────────────────────────────────────────────────────────
 // Right-side case info sidebar (compact)
 // ─────────────────────────────────────────────────────────────
-function CaseSidebar({ caseInfo, tts, onChangeTts, questions, onFinish, onBackToCase }) {
+function CaseSidebar({ caseInfo, subjects, sessionKeys, subjectDone, completedSessions, isLastSession,
+                      questions, onSessionComplete, onBackToCase }) {
   const total = questions.length;
   const done = questions.filter(q => q.status === "recorded" || q.status === "skipped").length;
-  const allComplete = done === total;
+  const sessionComplete = done === total;
 
   // Aggregated elapsed
   const totalElapsed = questions.reduce((sum, q) => sum + (q.duration || 0), 0);
@@ -420,12 +421,13 @@ function CaseSidebar({ caseInfo, tts, onChangeTts, questions, onFinish, onBackTo
       alignSelf:"flex-start", position:"sticky", top: 20, maxHeight:"calc(100vh - 130px)", overflowY:"auto"}}>
 
       {/* Case info card — 與 STEP 02 共用同一摘要組件 */}
-      <CaseInfoSummary caseInfo={caseInfo}/>
+      <CaseInfoSummary caseInfo={caseInfo}
+        customers={subjects && subjects.length ? subjects.map(s => ({ name: s.name, idNo: s.idNo, roles: s.roleKeys })) : undefined}/>
 
       {/* Summary + finish */}
       <section className="card" style={{padding: 20}}>
         <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:14}}>
-          <span style={{font:"700 14px/1 'Noto Sans TC'",color:"var(--ink)",letterSpacing:".04em"}}>本次錄音</span>
+          <span style={{font:"700 14px/1 'Noto Sans TC'",color:"var(--ink)",letterSpacing:".04em"}}>本場錄音</span>
           <span className="tabular ff-mont" style={{font:"600 13px/1 Montserrat",color:"var(--ink-3)"}}>{fmtTime(totalElapsed)}</span>
         </div>
 
@@ -435,14 +437,26 @@ function CaseSidebar({ caseInfo, tts, onChangeTts, questions, onFinish, onBackTo
         </div>
 
         <button className="btn btn-primary" style={{width:"100%"}}
-          onClick={onFinish}>
-          <I.Upload size={16}/> 完成並送出
+          disabled={!sessionComplete} onClick={onSessionComplete}>
+          {isLastSession
+            ? <><I.Upload size={16}/> 完成本場並送出</>
+            : <><I.User size={16}/> 完成本場，錄製下一位</>}
         </button>
-        {!allComplete && (
+        {!sessionComplete ? (
           <div className="meta" style={{textAlign:"center",marginTop:8, color:"var(--warn)"}}>
-            尚有 {total - done} 題未完成，點擊將進行檢核
+            本場尚有 {total - done} 題未完成
           </div>
-        )}
+        ) : !isLastSession ? (
+          <div className="meta" style={{textAlign:"center",marginTop:8}}>
+            本場已錄滿，尚有對象未錄音，送出已鎖定
+          </div>
+        ) : null}
+      </section>
+
+      {/* 音檔彙整 */}
+      <section className="card" style={{padding: 20}}>
+        <div style={{font:"700 14px/1 'Noto Sans TC'",color:"var(--ink)",marginBottom:12}}>音檔彙整</div>
+        <FileCountSummary completedSessions={completedSessions || []} subjects={subjects || []}/>
       </section>
     </aside>
   );
@@ -493,7 +507,7 @@ function ConfirmModal({ kind, onConfirm, onCancel }) {
     },
   };
   const c = configs[kind];
-  return (
+  return ReactDOM.createPortal((
     <div style={{position:"fixed",inset:0,zIndex:200,background:"rgba(41,47,84,.35)",
       display:"grid",placeItems:"center",animation:"fadeup .2s ease-out"}}>
       <div className="card fadeup" style={{padding: 32, width: 420, textAlign:"center"}}>
@@ -509,15 +523,18 @@ function ConfirmModal({ kind, onConfirm, onCancel }) {
         </div>
       </div>
     </div>
-  );
+  ), document.body);
 }
 
 // ─────────────────────────────────────────────────────────────
 // Main recording screen
 // ─────────────────────────────────────────────────────────────
-function RecordingScreen({ caseInfo, tts, setTts, questions, setQuestions, onFinish, tweaks, onBackToCase, onBackToList }) {
+function RecordingScreen({ caseInfo, tts, setTts, questions, setQuestions, onFinish, tweaks, onBackToCase, onBackToList,
+                          subjects = [], sessionKeys = [], subjectDone = {}, completedSessions = [], isLastSession = true, onSessionComplete }) {
   const [active, setActive] = React.useState(1);
   const [modal, setModal] = React.useState(null); // {kind, qNo}
+
+  const sessionSubjects = subjects.filter(s => sessionKeys.includes(s.key));
 
   const activeQ = questions.find(q => q.no === active);
 
@@ -550,25 +567,32 @@ function RecordingScreen({ caseInfo, tts, setTts, questions, setQuestions, onFin
           </button>
         }/>
 
-      <div data-screen-label="03 錄音作業" style={{padding: "20px 40px 40px", display:"flex", gap: 20, alignItems:"flex-start"}}>
-        <QuestionList questions={questions} active={active} onJump={setActive} tweaks={tweaks}/>
+      <div data-screen-label="03 錄音作業" style={{padding: "20px 40px 40px"}}>
+        {subjects.length > 0 && (
+          <SubjectProgressBar subjects={subjects} sessionKeys={sessionKeys} subjectDone={subjectDone}
+            note={`本次錄音對象：${sessionSubjects.map(s=>s.name).join("、") || "—"}　·　分題方式完成 ${questions.length} 題即產生 ${questions.length} 個小音檔`}/>
+        )}
+        <div style={{display:"flex", gap: 20, alignItems:"flex-start"}}>
+          <QuestionList questions={questions} active={active} onJump={setActive} tweaks={tweaks}/>
 
-        <main style={{flex: 1, minWidth: 0}}>
-          <ActiveQuestionCard
-            key={activeQ.no /* re-mount to reset local timer state */}
-            q={activeQ}
-            onUpdate={updateQ}
-            onPrev={goPrev} onNext={goNext}
-            hasPrev={active > 1} hasNext={active < questions.length}
-            onConfirmRetake={confirmRetake}
-            onConfirmSkip={confirmSkip}
-            onUnskip={unskip}
-            tts={tts}
-          />
-        </main>
+          <main style={{flex: 1, minWidth: 0}}>
+            <ActiveQuestionCard
+              key={activeQ.no /* re-mount to reset local timer state */}
+              q={activeQ}
+              onUpdate={updateQ}
+              onPrev={goPrev} onNext={goNext}
+              hasPrev={active > 1} hasNext={active < questions.length}
+              onConfirmRetake={confirmRetake}
+              onConfirmSkip={confirmSkip}
+              onUnskip={unskip}
+              tts={tts}
+            />
+          </main>
 
-        <CaseSidebar caseInfo={caseInfo} tts={tts} onChangeTts={setTts}
-          questions={questions} onFinish={onFinish} onBackToCase={onBackToCase}/>
+          <CaseSidebar caseInfo={caseInfo} subjects={subjects} sessionKeys={sessionKeys}
+            subjectDone={subjectDone} completedSessions={completedSessions} isLastSession={isLastSession}
+            questions={questions} onSessionComplete={onSessionComplete} onBackToCase={onBackToCase}/>
+        </div>
       </div>
 
       {/* F-code legend */}
