@@ -540,8 +540,8 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
 //   draft        草稿     — 業務員建立但尚未送出審核
 //   reviewing    審核中   — 已送出，等待後台審核
 //   returned     退回補正 — 後台點選退回，需補錄 / 重錄 / 補上傳
+//   resubmit     補件審核 — 退回補正案件補件後重新送出，待內勤複審
 //   approved     審核通過 — 後台點選通過
-//   overdue      逾期     — 超過時間未審核的案件
 //
 // 錄音對象（3 種角色）：
 //   proposer   要保人
@@ -556,8 +556,8 @@ window.__MLI_STATUS = {
   draft:     { label: "草稿",     dot: "rgb(140,142,157)", bg: "rgba(140,142,157,.12)", color: "rgb(98,100,118)" },
   reviewing: { label: "審核中",   dot: "rgb(241,160,40)",  bg: "rgb(255,245,222)",      color: "rgb(178,104,12)" },
   returned:  { label: "退回補正", dot: "rgb(234,82,82)",   bg: "rgb(255,236,236)",      color: "rgb(196,55,55)" },
+  resubmit:  { label: "補件審核", dot: "rgb(20,166,164)",  bg: "rgb(224,246,245)",      color: "rgb(15,128,126)" },
   approved:  { label: "審核通過", dot: "rgb(72,153,61)",   bg: "rgb(231,247,229)",      color: "rgb(58,124,49)" },
-  overdue:   { label: "逾期",     dot: "rgb(91,82,77)",    bg: "rgb(236,232,228)",      color: "rgb(86,68,58)" },
 };
 
 // 高齡錄音門檻
@@ -629,7 +629,7 @@ const QUESTIONS = [
 //   #2 要保 = 繳款，被保不同：父為母投保自繳   — 審核中
 //   #3 三人皆不同：子女繳款給父母                — 退回補正
 //   #4 要保 = 繳款，被保人未達高齡（不需錄音）  — 審核通過（已核發保單）
-//   #5 三人皆同（單一被保人案件）                — 逾期
+//   #5 三人皆同（單一被保人案件）                — 補件審核
 //   #6 要保 = 被保，繳款人為配偶                  — 草稿
 //   #7 要保 = 被保 = 繳款                          — 審核中
 //   #8 三人皆不同                                    — 退回補正
@@ -729,10 +729,10 @@ window.__MLI_CASES = [
     branch:   "台北中山通訊處",
     channel:  "iPad（行銷系統）",
     duration: 582,
-    status:   "overdue",
+    status:   "resubmit",
     source:   "建議書系統",
-    note:     "送審後超過 7 個工作天未審核，列入逾期清單，請聯繫內勤確認。",
-    progress: { total: 14, recorded: 13, skipped: 1 },
+    note:     "原案 Q07 健康告知音檔不清晰退回補正，業務員已補錄並重新送出，待內勤複審。",
+    progress: { total: 14, recorded: 14, skipped: 0 },
   },
   {
     recordingNo: "A202605210003",
@@ -872,7 +872,7 @@ window.__MLI_DATA = {
     {region:"北一區", reviewer:REVIEWERS[1], sla: 2,  riskScore: 58, riskLevel:"mid",  sttFlags:{diff:6,  negation:1, lowConf:4 }, reviewStage:"in_review"},
     {region:"北一區", reviewer:REVIEWERS[0], sla: 1,  riskScore: 84, riskLevel:"high", sttFlags:{diff:12, negation:3, lowConf:8 }, reviewStage:"returned"},
     {region:"北一區", reviewer:REVIEWERS[0], sla: 7,  riskScore: 18, riskLevel:"low",  sttFlags:{diff:0,  negation:0, lowConf:1 }, reviewStage:"verified"},
-    {region:"北二區", reviewer:REVIEWERS[2], sla:-2,  riskScore: 71, riskLevel:"high", sttFlags:{diff:9,  negation:2, lowConf:6 }, reviewStage:"overdue"},
+    {region:"北二區", reviewer:REVIEWERS[2], sla: 2,  riskScore: 71, riskLevel:"high", sttFlags:{diff:9,  negation:2, lowConf:6 }, reviewStage:"resubmit"},
     {region:"北一區", reviewer:null,         sla: 5,  riskScore: 12, riskLevel:"low",  sttFlags:{diff:0,  negation:0, lowConf:0 }, reviewStage:"unassigned"},
     {region:"北二區", reviewer:REVIEWERS[2], sla: 3,  riskScore: 44, riskLevel:"mid",  sttFlags:{diff:4,  negation:1, lowConf:2 }, reviewStage:"waiting"},
     {region:"中區",   reviewer:REVIEWERS[3], sla: 0,  riskScore: 67, riskLevel:"mid",  sttFlags:{diff:7,  negation:0, lowConf:5 }, reviewStage:"returned"},
@@ -890,7 +890,7 @@ window.__MLI_DATA = {
     {recordingNo:"A202605200007", agent:"潘宇翔", agentId:"A0913", branch:"台南東區通訊處", region:"南區",   product:"論重病讓你安心重大傷病終身險",     proposer:"洪美鳳",  age:69, status:"returned",  risk:"high", score:76, sla:1, stage:"returned",   reviewer:REVIEWERS[4]},
     {recordingNo:"A202605200008", agent:"鄧家瑋", agentId:"A1024", branch:"高雄左營通訊處", region:"南區",   product:"高齡躍雨康復醫療健康保險附約",     proposer:"古天賜",  age:74, status:"reviewing", risk:"mid",  score:48, sla:4, stage:"waiting",    reviewer:null},
     {recordingNo:"A202605190005", agent:"林佩君", agentId:"A0427", branch:"台北中山通訊處", region:"北一區", product:"新康健終身醫療健康保險",           proposer:"曾文聰",  age:70, status:"approved",  risk:"low",  score:9,  sla:12,stage:"verified",   reviewer:REVIEWERS[0]},
-    {recordingNo:"A202605190006", agent:"林佩君", agentId:"A0427", branch:"台北中山通訊處", region:"北一區", product:"鑫美鑫多元利率變動型終身壽險",     proposer:"邱永福",  age:77, status:"reviewing", risk:"high", score:73, sla:-1,stage:"overdue",    reviewer:REVIEWERS[1]},
+    {recordingNo:"A202605190006", agent:"林佩君", agentId:"A0427", branch:"台北中山通訊處", region:"北一區", product:"鑫美鑫多元利率變動型終身壽險",     proposer:"邱永福",  age:77, status:"reviewing", risk:"high", score:73, sla:-1,stage:"in_review",    reviewer:REVIEWERS[1]},
   ];
 
   EXTRA.forEach(x => {
@@ -929,7 +929,7 @@ window.__MLI_DATA = {
     in_review:  { label:"審核中",  color:"rgb(73,99,250)",  bg:"rgb(238,242,255)"     },
     returned:   { label:"已退回",  color:"rgb(196,55,55)",  bg:"rgb(255,236,236)"     },
     verified:   { label:"已通過",  color:"rgb(58,124,49)",  bg:"rgb(231,247,229)"     },
-    overdue:    { label:"逾期",    color:"rgb(196,55,55)",  bg:"rgba(234,82,82,.10)"  },
+    resubmit:   { label:"補件審核",  color:"rgb(15,128,126)", bg:"rgb(224,246,245)"     },
   };
 
   // 五種說話人角色（後台核心 — F-204）
@@ -2864,8 +2864,8 @@ function ReviewListScreen({
     return {
       reviewing: by("reviewing"),
       returned: by("returned"),
-      overdue: by("overdue"),
-      highRisk: cases.filter(c => c.riskLevel === "high" && ["reviewing", "overdue"].includes(c.status)).length
+      resubmit: by("resubmit"),
+      highRisk: cases.filter(c => c.riskLevel === "high" && ["reviewing", "resubmit"].includes(c.status)).length
     };
   }, [cases]);
 
@@ -2919,10 +2919,9 @@ function ReviewListScreen({
     value: kpis.returned,
     color: "rgb(196,55,55)"
   }), /*#__PURE__*/React.createElement(KpiInline, {
-    label: "\u903E\u671F",
-    value: kpis.overdue,
-    color: "rgb(86,68,58)",
-    alert: kpis.overdue > 0
+    label: "\u88DC\u4EF6\u5BE9\u6838",
+    value: kpis.resubmit,
+    color: "rgb(15,128,126)"
   }), /*#__PURE__*/React.createElement(KpiInline, {
     label: "\u9AD8\u98A8\u96AA",
     value: kpis.highRisk,
@@ -3504,11 +3503,11 @@ function StageTabs({
     v: "returned",
     label: STATUS.returned.label
   }, {
+    v: "resubmit",
+    label: STATUS.resubmit.label
+  }, {
     v: "approved",
     label: STATUS.approved.label
-  }, {
-    v: "overdue",
-    label: STATUS.overdue.label
   }, {
     v: "draft",
     label: STATUS.draft.label
@@ -3612,8 +3611,8 @@ function ReviewRow({
   // 建立日期：僅顯示 YYYY-MM-DD
   const createdDate = (c.createdAt || "").split(" ")[0].replace(/\//g, "-");
 
-  // AI 通過率：從詳情資料取得 — 僅 reviewing / overdue 顯示
-  const showAiPass = c.status === "reviewing" || c.status === "returned";
+  // AI 通過率：從詳情資料取得 — 僅 reviewing / 補件審核 顯示
+  const showAiPass = c.status === "reviewing" || c.status === "returned" || c.status === "resubmit";
   const detail = (window.__MLI_REVIEW_DETAIL || {})[c.recordingNo];
   let aiPass = null;
   if (showAiPass && detail) {
@@ -3994,7 +3993,7 @@ function SlaPill({
   }, /*#__PURE__*/React.createElement(I.Warn, {
     size: 10,
     stroke: "var(--danger)"
-  }), " \u903E\u671F ", -days, " \u5929");
+  }), " SLA \u8D85\u6642 ", -days, " \u5929");
   if (days === 0) return /*#__PURE__*/React.createElement("span", {
     style: {
       display: "inline-flex",
@@ -4254,7 +4253,7 @@ window.SlaPill = SlaPill;
 //   ├─────────────────────────────────────────────────┬──────────────────┤
 //   │ Tab：[AI 審核比對(預設)] [逐字稿]                 │ 案件資訊           │
 //   │ ────────────────────────────────────────────── │ ──────────────── │
-//   │ AI 摘要｜分數｜通過題數                           │ 整合音檔（播放器） │
+//   │ AI 摘要｜分數｜通過題數                           │ 完整音檔（播放器） │
 //   │ ────────────────────────────────────────────── │ ──────────────── │
 //   │ 逐題比對表格：[題號][題目文稿][逐字稿][AI 判斷]   │ 退回補正 / 通過    │
 //   └─────────────────────────────────────────────────┴──────────────────┘
@@ -4370,8 +4369,8 @@ function ReviewDetailScreen({
     const stage = caseInfo.reviewStage;
     const isVerified = stage === "verified";
     const isReturned = stage === "returned";
-    // 「草稿」（尚未開始）= waiting / unassigned；「審核中」= in_review / overdue
-    const isEditable = ["waiting", "unassigned", "in_review", "overdue"].includes(stage);
+    // 「草稿」（尚未開始）= waiting / unassigned；「審核中 / 補件審核」= in_review / resubmit
+    const isEditable = ["waiting", "unassigned", "in_review", "resubmit"].includes(stage);
     const list = [];
 
     // 1. 修改案件資訊 — 僅草稿 / 審核中
@@ -4395,7 +4394,7 @@ function ReviewDetailScreen({
         stroke: isEditable ? "var(--primary)" : "var(--ink-4)"
       }),
       title: "上傳音檔",
-      desc: isEditable ? "補上傳整合音檔或補充音檔，於整合音檔下方獨立播放" : "案件已結案，無法上傳音檔",
+      desc: isEditable ? "補上傳完整音檔或補充音檔，於完整音檔下方獨立播放" : "案件已結案，無法上傳音檔",
       disabled: !isEditable,
       onClick: () => setModal("upload")
     });
@@ -4408,7 +4407,7 @@ function ReviewDetailScreen({
         stroke: isVerified || isReturned ? "var(--ink-4)" : "var(--primary)"
       }),
       title: "重新合併音檔",
-      desc: isVerified || isReturned ? "音檔已定版，無法重新合併" : "重新合併分題上傳的分段音檔，產生新版整合音檔",
+      desc: isVerified || isReturned ? "音檔已定版，無法重新合併" : "重新合併分題上傳的分段音檔，產生新版完整音檔",
       disabled: isVerified || isReturned,
       onClick: () => setModal("remerge")
     });
@@ -4421,7 +4420,7 @@ function ReviewDetailScreen({
         stroke: isVerified ? "var(--ink-4)" : "var(--primary)"
       }),
       title: "重新觸發 STT",
-      desc: isVerified ? "案件已通過，無法重新比對" : "重新將整合音檔送至 STT 引擎產生比對報告",
+      desc: isVerified ? "案件已通過，無法重新比對" : "重新將完整音檔送至 STT 引擎產生比對報告",
       disabled: isVerified,
       onClick: () => setModal("retriggerStt")
     });
@@ -4434,7 +4433,7 @@ function ReviewDetailScreen({
         stroke: "var(--primary)"
       }),
       title: "下載檔案",
-      desc: "下載整合音檔與 STT 比對報告 PDF",
+      desc: "下載完整音檔與 STT 比對報告 PDF",
       onClick: () => setModal("download")
     });
 
@@ -5563,7 +5562,7 @@ function RecordingView({
       marginLeft: 6,
       whiteSpace: "nowrap"
     }
-  }, "\u5171 ", detail.questions.length, " \u984C\u30FB\u6574\u5408\u97F3\u6A94\u7E3D\u9577 ", fmtDur(detail.totalDuration))), /*#__PURE__*/React.createElement("table", {
+  }, "\u5171 ", detail.questions.length, " \u984C\u30FB\u5B8C\u6574\u97F3\u6A94\u7E3D\u9577 ", fmtDur(detail.totalDuration))), /*#__PURE__*/React.createElement("table", {
     style: {
       width: "100%",
       borderCollapse: "collapse"
@@ -5906,7 +5905,7 @@ function AudioPlayerAdmin({
       color: "var(--ink-3)",
       letterSpacing: ".08em"
     }
-  }, "\u6574\u5408\u97F3\u6A94"), /*#__PURE__*/React.createElement("span", {
+  }, "\u5B8C\u6574\u97F3\u6A94"), /*#__PURE__*/React.createElement("span", {
     style: {
       flex: 1
     }
@@ -6550,7 +6549,7 @@ function RetriggerSttModal({
       font: "400 13px/1.65 'Noto Sans TC'",
       color: "var(--ink-2)"
     }
-  }, "\u5C07\u91CD\u65B0\u5C07\u6574\u5408\u97F3\u6A94\u9001\u81F3 STT \u5F15\u64CE\uFF0C\u7522\u751F\u65B0\u7684\u6BD4\u5C0D\u5831\u544A\u3002", /*#__PURE__*/React.createElement("br", null), "\u539F\u6BD4\u5C0D\u5831\u544A\u5C07\u88AB\u8986\u5BEB\uFF0C\u820A\u7248\u672C\u53EF\u5728\u300C\u7248\u672C\u6B77\u7A0B\u300D\u4E2D\u67E5\u770B\u3002"), /*#__PURE__*/React.createElement("div", {
+  }, "\u5C07\u91CD\u65B0\u5C07\u5B8C\u6574\u97F3\u6A94\u9001\u81F3 STT \u5F15\u64CE\uFF0C\u7522\u751F\u65B0\u7684\u6BD4\u5C0D\u5831\u544A\u3002", /*#__PURE__*/React.createElement("br", null), "\u539F\u6BD4\u5C0D\u5831\u544A\u5C07\u88AB\u8986\u5BEB\uFF0C\u820A\u7248\u672C\u53EF\u5728\u300C\u7248\u672C\u6B77\u7A0B\u300D\u4E2D\u67E5\u770B\u3002"), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: "10px 14px",
       borderRadius: 8,
@@ -6632,7 +6631,7 @@ function RemergeModal({
       font: "400 13px/1.65 'Noto Sans TC'",
       color: "var(--ink-2)"
     }
-  }, "\u5C07\u91CD\u65B0\u5408\u4F75\u672C\u6848\u4EF6\u5206\u984C\u4E0A\u50B3\u7684\u5206\u6BB5\u97F3\u6A94\uFF0C\u7522\u751F\u65B0\u7248\u6574\u5408\u97F3\u6A94\u3002"), /*#__PURE__*/React.createElement("div", {
+  }, "\u5C07\u91CD\u65B0\u5408\u4F75\u672C\u6848\u4EF6\u5206\u984C\u4E0A\u50B3\u7684\u5206\u6BB5\u97F3\u6A94\uFF0C\u7522\u751F\u65B0\u7248\u5B8C\u6574\u97F3\u6A94\u3002"), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: "10px 14px",
       borderRadius: 8,
@@ -6744,7 +6743,7 @@ function DownloadModal({
       margin: "14px 0 18px"
     }
   }, [{
-    l: "整合音檔（WAV）",
+    l: "完整音檔（WAV）",
     d: `${caseInfo.recordingNo}_merged.wav · ${fmtDur(caseInfo.duration)}`
   }, {
     l: "分段音檔（ZIP）",
@@ -6806,8 +6805,8 @@ function DownloadModal({
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// UploadedAudioPlayer — 內勤補上傳的音檔，位於整合音檔下方
-// 獨立播放器，與整合音檔互不干擾
+// UploadedAudioPlayer — 內勤補上傳的音檔，位於完整音檔下方
+// 獨立播放器，與完整音檔互不干擾
 // ════════════════════════════════════════════════════════════════════════════
 function UploadedAudioPlayer({
   audio,
@@ -7246,7 +7245,7 @@ function Field({
 
 // ════════════════════════════════════════════════════════════════════════════
 // UploadAudioModal — 上傳音檔（草稿 / 審核中 才可使用）
-// 內勤補件用，上傳完成後音檔顯示於右側「整合音檔」下方獨立區塊
+// 內勤補件用，上傳完成後音檔顯示於右側「完整音檔」下方獨立區塊
 // ════════════════════════════════════════════════════════════════════════════
 function UploadAudioModal({
   caseInfo,
@@ -7348,7 +7347,7 @@ function UploadAudioModal({
       font: "400 12px/1.4 'Noto Sans TC'",
       color: "var(--ink-3)"
     }
-  }, stage === "done" ? "上傳完成，音檔已加入此案件" : "音檔將存於整合音檔下方獨立區塊，可單獨播放與下載")), /*#__PURE__*/React.createElement("button", {
+  }, stage === "done" ? "上傳完成，音檔已加入此案件" : "音檔將存於完整音檔下方獨立區塊，可單獨播放與下載")), /*#__PURE__*/React.createElement("button", {
     onClick: onCancel,
     style: {
       marginLeft: "auto",
@@ -7564,7 +7563,7 @@ function UploadAudioModal({
       textAlign: "center",
       maxWidth: 340
     }
-  }, "\u97F3\u6A94\u5C07\u986F\u793A\u65BC\u53F3\u5074\u300C\u6574\u5408\u97F3\u6A94\u300D\u4E0B\u65B9\u7368\u7ACB\u7684\u300C\u4E0A\u50B3\u97F3\u6A94\u300D\u5340\u584A\uFF0C\u53EF\u55AE\u7368\u64AD\u653E\u3002"))), /*#__PURE__*/React.createElement("div", {
+  }, "\u97F3\u6A94\u5C07\u986F\u793A\u65BC\u53F3\u5074\u300C\u5B8C\u6574\u97F3\u6A94\u300D\u4E0B\u65B9\u7368\u7ACB\u7684\u300C\u4E0A\u50B3\u97F3\u6A94\u300D\u5340\u584A\uFF0C\u53EF\u55AE\u7368\u64AD\u653E\u3002"))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: "16px 28px",
       borderTop: "1px solid var(--line-2)",
@@ -7893,11 +7892,11 @@ function QualityReportScreen({
       color: STAGE.verified.color,
       bg: STAGE.verified.bg
     }, {
-      key: "overdue",
-      label: STAGE.overdue.label,
-      value: stats.byStage.overdue,
-      color: STAGE.overdue.color,
-      bg: STAGE.overdue.bg
+      key: "resubmit",
+      label: STAGE.resubmit.label,
+      value: stats.byStage.resubmit,
+      color: STAGE.resubmit.color,
+      bg: STAGE.resubmit.bg
     }].filter(s => s.value > 0)
   }), /*#__PURE__*/React.createElement(DonutCard, {
     title: "\u98A8\u96AA\u7B49\u7D1A\u5206\u4F48",
@@ -7966,7 +7965,7 @@ function QualityReportScreen({
 // 計算統計
 // ════════════════════════════════════════════════════════════════════════════
 function computeStats(cases, detailMap) {
-  const stages = ["unassigned", "waiting", "in_review", "returned", "verified", "overdue"];
+  const stages = ["unassigned", "waiting", "in_review", "returned", "verified", "resubmit"];
   const byStage = Object.fromEntries(stages.map(s => [s, 0]));
   const byRisk = {
     high: 0,
@@ -8087,7 +8086,7 @@ function KPIStrip({
   stats
 }) {
   const STAGE = window.__MLI_REVIEW_STAGE;
-  const pending = stats.byStage.unassigned + stats.byStage.waiting + stats.byStage.in_review + stats.byStage.overdue;
+  const pending = stats.byStage.unassigned + stats.byStage.waiting + stats.byStage.in_review + stats.byStage.resubmit;
   const kpis = [{
     label: "總案件數",
     value: stats.total,
@@ -8099,7 +8098,7 @@ function KPIStrip({
   }, {
     label: "待處理",
     value: pending,
-    sub: `含 ${stats.byStage.overdue} 件逾期`,
+    sub: `含 ${stats.byStage.resubmit} 件補件審核`,
     color: "var(--primary)",
     trend: "-12%",
     trendUp: true,
@@ -8746,7 +8745,7 @@ function ReviewerWorkloadCard({
       ...tableTh,
       textAlign: "right"
     }
-  }, "\u903E\u671F"), /*#__PURE__*/React.createElement("th", {
+  }, "SLA\u8D85\u6642"), /*#__PURE__*/React.createElement("th", {
     style: tableTh
   }, "\u5E73\u5747\u98A8\u96AA"), /*#__PURE__*/React.createElement("th", {
     style: tableTh
@@ -10368,7 +10367,7 @@ function AdminApp() {
   }, [t.showFCodes]);
 
   // KPI counts (for rail nav badge)
-  const pendingCount = cases.filter(c => ["waiting", "unassigned", "in_review", "overdue"].includes(c.reviewStage)).length;
+  const pendingCount = cases.filter(c => ["waiting", "unassigned", "in_review", "resubmit"].includes(c.reviewStage)).length;
   const goOpen = no => {
     setActiveCaseNo(no);
     setPage("review_detail");
