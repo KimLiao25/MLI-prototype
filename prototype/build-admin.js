@@ -20,6 +20,7 @@ console.log('Babel loaded, version:', Babel.version || '(unknown)');
 // Note: data.js must come first (admin-data.js extends window.__MLI_CASES from data.js)
 const SOURCES = [
   { file: 'data.js',                jsx: false },
+  { file: 'correction.js',          jsx: false },
   { file: 'admin-data.js',          jsx: false },
   { file: 'tweaks-panel.jsx',       jsx: true  },
   { file: 'icons.jsx',              jsx: true  },
