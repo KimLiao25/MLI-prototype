@@ -1,6 +1,6 @@
 // recProgress.js — 案件錄音進度的狀態模型與純函式助手
 //
-// 進度物件（以 recordingNo 為 key 存於 app 狀態）：
+// 進度物件（以 caseNo 為 key 存於 app 狀態）：
 //   {
 //     method: "segmented" | "whole" | null,   // 首場決定後鎖定，不可中途變更
 //     subjects: [ {key, name, idNo, roleKeys} ],   // 排序固定
@@ -13,7 +13,7 @@
 function progInit(subjects) {
   const q = {}, whole = {};
   (subjects || []).forEach(s => { q[s.key] = {}; whole[s.key] = "pending"; });
-  return { method: null, subjects: subjects || [], q, whole, sessions: [], status: "draft" };
+  return { method: null, subjects: subjects || [], q, whole, sessions: [], groupOf: {}, status: "draft" };
 }
 
 // 單一對象是否完成
@@ -83,6 +83,26 @@ function progWriteSegmented(prog, keys, recQuestions) {
   return { ...prog, q };
 }
 
+// 送出前的「總錄音數」（小音檔數）：同組（同場一起錄）共用音檔只計一次，跳過不計
+//   例：14 題、2 人分開錄、各跳過 1 題 → 13+13 = 26
+//   例：14 題、2 人同場一起錄、各跳過 1 題 → 13（共用）
+function progClipCount(prog, totalQ) {
+  if (!prog || !prog.subjects) return 0;
+  if (prog.method === "whole") {
+    return prog.subjects.filter(s => prog.whole[s.key] && prog.whole[s.key] !== "pending").length;
+  }
+  const groupOf = prog.groupOf || {};
+  const seen = {};
+  let clips = 0;
+  prog.subjects.forEach(s => {
+    const g = groupOf[s.key] || s.key;   // 未知分組＝自成一組
+    if (seen[g]) return;
+    seen[g] = true;
+    clips += progSubjectCount(prog, s.key, totalQ).rec;   // 只計已錄（skipped 不產生音檔）
+  });
+  return clips;
+}
+
 // 統一「錄音進度」顯示：不論動態（新流程）或靜態（示範案）都輸出一致結構
 //   回傳 { method:'segmented'|'whole', subjects:[{key,name,roleAbbrs,done,total,complete,status}], dynamic }
 function buildDisplayProgress(caseInfo, prog, totalQ) {
@@ -119,7 +139,18 @@ function buildDisplayProgress(caseInfo, prog, totalQ) {
   return { method, subjects, dynamic: false };
 }
 
+// 案件層級單一進度（一案一進度，供清單/簡易呈現用）
+//   回傳 { method, done, total, complete, status }
+function buildCaseProgress(caseInfo, prog, totalQ) {
+  const disp = buildDisplayProgress(caseInfo, prog, totalQ);
+  const total = disp.method === "whole" ? 1 : totalQ;
+  const done = disp.subjects.length ? Math.max(...disp.subjects.map(s => s.done)) : 0;
+  const complete = total ? done >= total : false;
+  return { method: disp.method, done, total, complete, status: complete ? "done" : done > 0 ? "active" : "pending" };
+}
+
 Object.assign(window, {
   progInit, progSubjectDone, progSubjectCount, progSubjectStarted,
-  progAllDone, progDoneMap, progSubjectSummary, progWriteSegmented, buildDisplayProgress,
+  progAllDone, progDoneMap, progSubjectSummary, progWriteSegmented, progClipCount,
+  buildDisplayProgress, buildCaseProgress,
 });

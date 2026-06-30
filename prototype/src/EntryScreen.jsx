@@ -1,21 +1,17 @@
-// Entry screen — 建立錄音案件
+// EntryScreen — 建立錄音案件（v7 重構：單頁「建殼」）
 //
-// 流程重構（依保險業務邏輯）：
-//   STEP 01 輸入案件資訊
-//     ─ 依「起案通路」判斷是否由建議書 APP 帶入：
-//        • iPad（建議書 APP）→ 整合帶入，可確認 / 微調
-//        • Web（桌機瀏覽器）→ 業務員手動輸入
-//     ─ 欄位：商品 / 客戶（姓名、身分證、關係多選）
-//     ─ 通過驗證 → 點「下一步：確認題目文稿」進 STEP 02
+// 設計理念（斷開流程）：
+//   建立案件 ≠ 錄音。本頁只負責「建好錄音案件的殼」並取得錄音編號。
+//   一個錄音案件 = 一個錄音場次。同一張保單若分多次錄音（不同人不同天），
+//   就用每位客戶的「場次」欄位拆成多筆案件（多個錄音編號）。
 //
-//   STEP 02 確認題目文稿
-//     ─ 此步驟才會將 STEP 01 資料送後端，取得「錄音編號」（F-402）
-//     ─ 同時依商品呼叫「題目文稿」（F-201）供業務員確認
-//     ─ 右側可調 TTS 語音設定（F-202 / F-203）
-//     ─ 點「下一步：開始錄音」進 STEP 03
-//
-//   STEP 03 錄音作業
-//     ─ 由 RecordingScreen 承接
+//   流程：
+//     ① 起案通路（自動帶入 / 手動輸入）
+//     ② 投保商品
+//     ③ 客戶資料（姓名 / 身分證 / 本案關係多選 + 場次）
+//     ④ 自動帶入：頁面最下方一併顯示題目文稿（無 STEP 2）
+//        手動輸入：不顯示文稿，改於「進入錄音作業」前自行上傳 PDF
+//     ⑤「確認建立」→ 依場次拆案、產生錄音編號 → 成功視窗 →「回到錄音清單」
 
 const ROLE_MAP = {
   proposer: { abbr: "要", full: "要保人" },
@@ -32,7 +28,7 @@ function rolesToCustomers(roles) {
     if (!r) return;
     const key = `${r.name}__${r.age}`;
     if (map.has(key)) map.get(key).roles.push(k);
-    else map.set(key, { name: r.name, idNo: r.idNo || maskId(r.name, r.age), age: r.age, roles: [k] });
+    else map.set(key, { name: r.name, idNo: r.idNo || maskId(r.name, r.age), age: r.age, roles: [k], sessionNo: 1 });
   });
   return [...map.values()];
 }
@@ -44,8 +40,7 @@ function maskId(name, age) {
   return letters[seed] + String(yy).slice(-2) + String((seed*7919) % 1000000).padStart(6,"0").slice(0,7);
 }
 
-function EntryScreen({ caseInfo, tts, setTts, entryStep, setEntryStep,
-                       entrySource, setEntrySource, onStart, onCancel }) {
+function EntryScreen({ caseInfo, entrySource, setEntrySource, onCreate, onCancel }) {
 
   // ─── 由「資料來源」決定初始狀態 ───────────────────────
   const initial = React.useMemo(() => {
@@ -57,148 +52,25 @@ function EntryScreen({ caseInfo, tts, setTts, entryStep, setEntryStep,
     }
     return {
       product: "",
-      customers: [{ name: "", idNo: "", roles: ["proposer"] }],
+      customers: [{ name: "", idNo: "", roles: ["proposer"], sessionNo: 1 }],
     };
   }, [entrySource, caseInfo]);
 
   const [product, setProduct] = React.useState(initial.product);
   const [customers, setCustomers] = React.useState(initial.customers);
 
-  // 切換資料來源時重設 STEP 01 內容
+  // 切換資料來源時重設內容
   React.useEffect(() => {
     setProduct(initial.product);
     setCustomers(initial.customers);
   }, [initial]);
 
-  // STEP 02 取得錄音編號 + 題本（模擬非同步）
-  const [retrieving, setRetrieving] = React.useState(false);
-  const [retrieved, setRetrieved] = React.useState(false);
-
-  const goStep2 = () => {
-    setEntryStep(2);
-    setRetrieving(true);
-    setRetrieved(false);
-    setTimeout(() => { setRetrieving(false); setRetrieved(true); }, 900);
-  };
-  const backStep1 = () => { setEntryStep(1); setRetrieved(false); };
-
-  // STEP 01 驗證
-  const isStep1Valid = product && customers.length > 0 &&
-    customers.every(c => c.name.trim() && c.idNo.trim().length >= 8 && c.roles.length > 0);
-
-  return (
-    <>
-      <SubHeader title="建立錄音案件"
-        crumbs={["我的案件", "新建錄音"]}
-        right={
-          <button className="btn btn-quiet" onClick={onCancel}>
-            <I.ChevronL size={14}/> 返回案件清單
-          </button>
-        }/>
-
-      {/* 步驟指示器 */}
-      <StepIndicator current={entryStep}/>
-
-      <div data-screen-label="04 建立錄音案件" className="fadeup" style={{padding: "8px 40px 60px"}}>
-        {entryStep === 1 && (
-          <Step1Form
-            source={entrySource} setSource={setEntrySource}
-            product={product} setProduct={setProduct}
-            customers={customers} setCustomers={setCustomers}
-            valid={isStep1Valid}
-            onCancel={onCancel} onNext={goStep2}/>
-        )}
-        {entryStep === 2 && (
-          <Step2Confirm
-            source={entrySource}
-            caseInfo={caseInfo} product={product} customers={customers}
-            retrieving={retrieving} retrieved={retrieved}
-            tts={tts} setTts={setTts}
-            onBack={backStep1} onNext={() => onStart(customers)}/>
-        )}
-      </div>
-
-      <div className="fcode-legend" style={{margin: "0 40px 28px", padding:"12px 16px", borderRadius:10,
-        background:"var(--primary-soft-2)", border:"1px dashed rgba(73,99,250,.25)",
-        font:"400 12px/1.5 'Noto Sans TC'", color:"var(--ink-3)",
-        display:"flex", alignItems:"center", gap: 8, flexWrap:"wrap"}}>
-        <span style={{font:"600 12px/1 'Noto Sans TC'", color:"var(--primary)", letterSpacing:".06em"}}>本畫面對應功能</span>
-        <FCode code="F-101" label="建立錄音案件"/>
-        <FCode code="F-402" label="錄音編號取得（STEP 02 觸發）"/>
-        <FCode code="F-201" label="題本取得（STEP 02 觸發）"/>
-        <FCode code="F-202" label="多語言 TTS"/>
-        <FCode code="F-203" label="語速調整"/>
-      </div>
-    </>
-  );
-}
-
-/* ─────────────────────────────────────────────────────
- * 步驟指示器
- * ───────────────────────────────────────────────────── */
-function StepIndicator({ current }) {
-  const steps = [
-    { n: 1, label: "輸入案件資訊", icon: <I.User size={16}/> },
-    { n: 2, label: "確認題目文稿", icon: <I.Script size={16}/> },
-    { n: 3, label: "錄音作業",     icon: <I.Mic size={16}/> },
-  ];
-  return (
-    <div style={{padding: "20px 40px 4px", display:"flex", alignItems:"center", gap: 0,
-                 background:"#fff", borderBottom:"1px solid var(--line-2)"}}>
-      <div style={{flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap: 0, padding:"4px 0 18px"}}>
-        {steps.map((s, i) => {
-          const state = s.n < current ? "done" : s.n === current ? "active" : "todo";
-          const dotBg = state === "active" ? "var(--primary)" :
-                        state === "done"   ? "var(--primary-2)" : "#fff";
-          const dotColor = state === "todo" ? "var(--ink-4)" : "#fff";
-          const dotBorder = state === "todo" ? "1.5px solid var(--line-3)" : "0";
-          return (
-            <React.Fragment key={s.n}>
-              <div style={{display:"flex", alignItems:"center", gap: 10}}>
-                <div style={{
-                  width: 36, height: 36, borderRadius: 18, background: dotBg, color: dotColor,
-                  border: dotBorder, display:"grid", placeItems:"center",
-                  font:"700 13px/1 Montserrat,sans-serif", letterSpacing:".02em",
-                  boxShadow: state==="active" ? "0 0 0 4px rgba(73,99,250,.16)" : "none",
-                  transition:"all .2s ease",
-                }}>
-                  {state === "done" ? <I.Check size={18} stroke="#fff" sw={2.5}/> : `0${s.n}`}
-                </div>
-                <div style={{display:"flex", flexDirection:"column", gap:3}}>
-                  <span className="ff-mont" style={{font:`${state==="active"?700:500} 10.5px/1 Montserrat`,
-                    color: state==="todo" ? "var(--ink-4)" : "var(--primary)", letterSpacing:".14em"}}>
-                    STEP 0{s.n}
-                  </span>
-                  <span style={{font:`${state==="active"?700:500} 14px/1 'Noto Sans TC'`,
-                    color: state==="todo" ? "var(--ink-3)" : "var(--ink)", letterSpacing:".04em"}}>
-                    {s.label}
-                  </span>
-                </div>
-              </div>
-              {i < steps.length - 1 && (
-                <div style={{flexShrink:0, width: 90, height: 2, margin: "0 26px",
-                  background: s.n < current ? "var(--primary-2)" : "var(--line)"}}/>
-              )}
-            </React.Fragment>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────────────────
- * STEP 01 — 輸入案件資訊
- * ───────────────────────────────────────────────────── */
-function Step1Form({ source, setSource, product, setProduct,
-                     customers, setCustomers, valid, onCancel, onNext }) {
-
   const updateCustomer = (idx, patch) =>
     setCustomers(cs => cs.map((c,i) => i===idx ? {...c, ...patch} : c));
   const removeCustomer = (idx) =>
-    setCustomers(cs => cs.filter((_,i) => i!==idx));
+    setCustomers(cs => cs.filter((_,i) => i!==idx).map(c => ({...c, sessionNo: Math.min(c.sessionNo || 1, Math.max(1, cs.length-1))})));
   const addCustomer = () =>
-    setCustomers(cs => [...cs, { name:"", idNo:"", roles:["proposer"] }]);
+    setCustomers(cs => [...cs, { name:"", idNo:"", roles:["proposer"], sessionNo: 1 }]);
   const toggleRole = (idx, role) => {
     const cur = customers[idx].roles;
     const next = cur.includes(role) ? cur.filter(r => r!==role) : [...cur, role];
@@ -213,108 +85,163 @@ function Step1Form({ source, setSource, product, setProduct,
   }));
   const conflicts = Object.entries(roleOwners).filter(([_, owners]) => owners.length > 1);
 
+  // 依場次分組（供「將建立 N 筆」預覽與送出）
+  const groups = React.useMemo(() => {
+    const m = new Map();
+    customers.forEach(c => {
+      const n = c.sessionNo || 1;
+      if (!m.has(n)) m.set(n, []);
+      m.get(n).push(c);
+    });
+    return [...m.entries()].sort((a,b)=>a[0]-b[0]).map(([sessionNo, cs]) => ({ sessionNo, customers: cs }));
+  }, [customers]);
+
+  const isValid = product && customers.length > 0 &&
+    customers.every(c => c.name.trim() && c.idNo.trim().length >= 8 && c.roles.length > 0) &&
+    conflicts.length === 0;
+
+  const submit = () => {
+    if (!isValid) return;
+    // 場次編號重新壓縮成連續（1,2,3…），避免出現「只有場次1與場次3」
+    const renum = groups.map((g, i) => ({ sessionNo: i + 1, customers: g.customers }));
+    onCreate({ product, source: entrySource, groups: renum });
+  };
+
   return (
-    <div style={{maxWidth: 980, margin:"0 auto", padding:"24px 0"}}>
-
-      {/* 提醒文字 */}
-      <div style={{display:"flex", alignItems:"center", gap:10, padding:"14px 20px", borderRadius:12,
-        background:"var(--primary-soft-2)", border:"1px solid rgba(73,99,250,.18)", marginBottom: 20}}>
-        <I.Info size={20} stroke="var(--primary)"/>
-        <div style={{flex:1, font:"600 14px/1.3 'Noto Sans TC'", color:"var(--ink)"}}>
-          請確認客戶身分並選擇本次投保商品
-        </div>
-      </div>
-
-      {/* 資料來源 / 通路平台 */}
-      <section className="card" style={{padding: 22, marginBottom: 20}}>
-        <div style={{display:"flex", alignItems:"center", marginBottom: 14}}>
-          <div style={{font:"600 14px/1 'Noto Sans TC'", color:"var(--ink)"}}>起案通路平台</div>
-        </div>
-        <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap: 12}}>
-          <SourceCard active={source==="integration"} onClick={()=>setSource("integration")}
-            icon={<I.Tablet size={22} stroke={source==="integration"?"var(--primary)":"var(--ink-3)"}/>}
-            title="iPad · 建議書 APP" desc="已介接通路，將自動帶入客戶資料"
-            badge="自動帶入"/>
-          <SourceCard active={source==="manual"} onClick={()=>setSource("manual")}
-            icon={<I.Globe size={22} stroke={source==="manual"?"var(--primary)":"var(--ink-3)"}/>}
-            title="Web · 桌機瀏覽器" desc="未介接通路，請業務員手動輸入"
-            badge="手動輸入"/>
-        </div>
-      </section>
-
-      {/* 商品名稱 — Combobox */}
-      <section className="card" style={{padding: 22, marginBottom: 20, overflow:"visible"}}>
-        <div style={{display:"flex", alignItems:"baseline", gap: 8, marginBottom: 14}}>
-          <I.Doc size={18} stroke="var(--primary)"/>
-          <div style={{font:"600 14px/1 'Noto Sans TC'", color:"var(--ink)"}}>投保商品</div>
-          <span style={{color:"var(--danger)"}}>*</span>
-          <span className="meta" style={{marginLeft:"auto"}}>
-            共 {PRODUCTS.length} 個商品，可輸入商品名稱或代碼搜尋
-          </span>
-        </div>
-        <ProductCombobox value={product} onChange={setProduct}/>
-      </section>
-
-      {/* 客戶資料 */}
-      <section className="card" style={{padding: 22, marginBottom: 20}}>
-        <div style={{display:"flex", alignItems:"center", marginBottom: 16}}>
-          <I.User size={18} stroke="var(--primary)"/>
-          <div style={{font:"600 14px/1 'Noto Sans TC'", color:"var(--ink)", marginLeft: 8}}>
-            客戶資料
-          </div>
-          <span style={{color:"var(--danger)", marginLeft:6}}>*</span>
-          <span className="meta" style={{marginLeft:10}}>
-            同一人若兼任多個角色，請於一張卡片中複選；不同角色為不同人時請新增客戶
-          </span>
-        </div>
-
-        <div style={{display:"flex", flexDirection:"column", gap: 14}}>
-          {customers.map((c, i) => (
-            <CustomerCard key={i} index={i} customer={c}
-              onChange={(patch)=>updateCustomer(i, patch)}
-              onToggleRole={(r)=>toggleRole(i, r)}
-              onRemove={customers.length > 1 ? ()=>removeCustomer(i) : null}
-              source={source}
-              conflictRoles={Object.fromEntries(conflicts)}/>
-          ))}
-        </div>
-
-        <button className="btn btn-soft" onClick={addCustomer}
-          style={{marginTop: 14, width:"100%", height: 44, borderRadius: 8,
-            border:"1.5px dashed rgba(73,99,250,.4)", background:"var(--primary-soft-2)"}}>
-          <I.Plus size={16}/> 新增客戶
-        </button>
-
-        {conflicts.length > 0 && (
-          <div style={{marginTop:12, padding:"10px 14px", borderRadius:8,
-            background:"var(--danger-soft)", color:"var(--danger)",
-            font:"500 13px/1.4 'Noto Sans TC'", display:"flex", alignItems:"center", gap:8}}>
-            <I.Warn size={16} stroke="var(--danger)"/>
-            角色重複指定：{conflicts.map(([r])=>ROLE_MAP[r].full).join("、")}　·　每個角色僅能由一位客戶擔任
-          </div>
-        )}
-      </section>
-
-      {/* 動作列 */}
-      <div style={{display:"flex", alignItems:"center", justifyContent:"space-between",
-        marginTop: 24, padding:"16px 20px", background:"#fff", borderRadius: 12,
-        boxShadow:"var(--shadow-sm)", border:"1px solid var(--line-2)"}}>
-        <div className="meta" style={{display:"flex", alignItems:"center", gap:8}}>
-          <I.Info size={14} stroke="var(--ink-4)"/>
-          欄位完成後即可進入下一步，由系統正式建立案件並取得錄音編號
-        </div>
-        <div style={{display:"flex", gap:10}}>
-          <button className="btn btn-quiet" onClick={onCancel}>取消</button>
-          <button className="btn btn-primary btn-lg" disabled={!valid || conflicts.length>0}
-            onClick={onNext}>
-            下一步：確認題目文稿 <I.Chevron size={16}/>
+    <>
+      <SubHeader title="建立錄音案件"
+        crumbs={["我的案件", "新建錄音案件"]}
+        right={
+          <button className="btn btn-quiet" onClick={onCancel}>
+            <I.ChevronL size={14}/> 返回案件清單
           </button>
+        }/>
+
+      <div data-screen-label="04 建立錄音案件" className="fadeup" style={{padding: "0 40px 60px"}}>
+        <div style={{maxWidth: 1080, margin:"0 auto", padding:"24px 0"}}>
+
+          {/* 提醒文字 */}
+          <div style={{display:"flex", alignItems:"center", gap:12, padding:"14px 20px", borderRadius:12,
+            background:"var(--primary-soft-2)", border:"1px solid rgba(73,99,250,.18)", marginBottom: 20}}>
+            <I.Info size={20} stroke="var(--primary)"/>
+            <div style={{flex:1, font:"500 13.5px/1.6 'Noto Sans TC'", color:"var(--ink-2)", textWrap:"pretty"}}>
+              本步驟僅<b style={{color:"var(--ink)"}}>建立錄音案件並取得錄音編號</b>，尚不會開始錄音。
+              一個案件代表一個<b style={{color:"var(--ink)"}}>錄音場次</b>；若同一保單需分多次（不同人 / 不同天）錄音，
+              請於各客戶設定不同<b style={{color:"var(--ink)"}}>場次</b>，系統將拆成多筆案件。建立後請回清單，分別點入案件進行錄音。
+            </div>
+          </div>
+
+          {/* 起案通路平台 */}
+          <section className="card" style={{padding: 22, marginBottom: 20}}>
+            <div style={{display:"flex", alignItems:"center", marginBottom: 14}}>
+              <div style={{font:"600 14px/1 'Noto Sans TC'", color:"var(--ink)"}}>起案通路平台</div>
+            </div>
+            <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap: 12}}>
+              <SourceCard active={entrySource==="integration"} onClick={()=>setEntrySource("integration")}
+                icon={<I.Tablet size={22} stroke={entrySource==="integration"?"var(--primary)":"var(--ink-3)"}/>}
+                title="iPad · 建議書 APP" desc="已介接通路，自動帶入客戶資料與題目文稿"
+                badge="自動帶入"/>
+              <SourceCard active={entrySource==="manual"} onClick={()=>setEntrySource("manual")}
+                icon={<I.Globe size={22} stroke={entrySource==="manual"?"var(--primary)":"var(--ink-3)"}/>}
+                title="Web · 桌機瀏覽器" desc="未介接通路，手動輸入；題目文稿於錄音前上傳"
+                badge="手動輸入"/>
+            </div>
+          </section>
+
+          {/* 投保商品 */}
+          <section className="card" style={{padding: 22, marginBottom: 20, overflow:"visible"}}>
+            <div style={{display:"flex", alignItems:"baseline", gap: 8, marginBottom: 14}}>
+              <I.Doc size={18} stroke="var(--primary)"/>
+              <div style={{font:"600 14px/1 'Noto Sans TC'", color:"var(--ink)"}}>投保商品</div>
+              <span style={{color:"var(--danger)"}}>*</span>
+              <span className="meta" style={{marginLeft:"auto"}}>
+                共 {PRODUCTS.length} 個商品，可輸入商品名稱或代碼搜尋
+              </span>
+            </div>
+            <ProductCombobox value={product} onChange={setProduct}/>
+          </section>
+
+          {/* 客戶資料 */}
+          <section className="card" style={{padding: 22, marginBottom: 20}}>
+            <div style={{display:"flex", alignItems:"center", marginBottom: 16, flexWrap:"wrap", gap:6}}>
+              <I.User size={18} stroke="var(--primary)"/>
+              <div style={{font:"600 14px/1 'Noto Sans TC'", color:"var(--ink)", marginLeft: 8}}>
+                客戶資料
+              </div>
+              <span style={{color:"var(--danger)", marginLeft:6}}>*</span>
+              <span className="meta" style={{marginLeft:10}}>
+                同一人兼多角色請於一張卡片複選；不同人請新增客戶。以「場次」決定誰一起錄音。
+              </span>
+            </div>
+
+            <div style={{display:"flex", flexDirection:"column", gap: 14}}>
+              {customers.map((c, i) => (
+                <CustomerCard key={i} index={i} customer={c}
+                  sessionCount={customers.length}
+                  multiCustomer={customers.length > 1}
+                  onChange={(patch)=>updateCustomer(i, patch)}
+                  onToggleRole={(r)=>toggleRole(i, r)}
+                  onRemove={customers.length > 1 ? ()=>removeCustomer(i) : null}
+                  conflictRoles={Object.fromEntries(conflicts)}/>
+              ))}
+            </div>
+
+            <button className="btn btn-soft" onClick={addCustomer}
+              style={{marginTop: 14, width:"100%", height: 44, borderRadius: 8,
+                border:"1.5px dashed rgba(73,99,250,.4)", background:"var(--primary-soft-2)"}}>
+              <I.Plus size={16}/> 新增客戶
+            </button>
+
+            {conflicts.length > 0 && (
+              <div style={{marginTop:12, padding:"10px 14px", borderRadius:8,
+                background:"var(--danger-soft)", color:"var(--danger)",
+                font:"500 13px/1.4 'Noto Sans TC'", display:"flex", alignItems:"center", gap:8}}>
+                <I.Warn size={16} stroke="var(--danger)"/>
+                角色重複指定：{conflicts.map(([r])=>ROLE_MAP[r].full).join("、")}　·　每個角色僅能由一位客戶擔任
+              </div>
+            )}
+          </section>
+
+          {/* 題目文稿 — 僅「自動帶入」顯示（手動輸入於錄音前上傳） */}
+          <ScriptBlock source={entrySource}/>
+
+          {/* 將建立的案件預覽 */}
+          <CreatePreview groups={groups} multiSession={groups.length > 1}/>
+
+          {/* 動作列 */}
+          <div style={{display:"flex", alignItems:"center", justifyContent:"space-between",
+            marginTop: 20, padding:"16px 20px", background:"#fff", borderRadius: 12,
+            boxShadow:"var(--shadow-sm)", border:"1px solid var(--line-2)"}}>
+            <div className="meta" style={{display:"flex", alignItems:"center", gap:8}}>
+              <I.Info size={14} stroke="var(--ink-4)"/>
+              確認建立後，系統將給整組一個<b style={{color:"var(--ink)"}}>錄音編號</b>，並依場次拆出各自的<b style={{color:"var(--ink)"}}>案件編號</b>
+            </div>
+            <div style={{display:"flex", gap:10}}>
+              <button className="btn btn-quiet" onClick={onCancel}>取消</button>
+              <button className="btn btn-primary btn-lg" disabled={!isValid} onClick={submit}>
+                <I.Check size={16}/> 確認建立{groups.length > 1 ? `（${groups.length} 筆）` : ""}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="fcode-legend" style={{margin: "8px auto 0", maxWidth:1080, padding:"12px 16px", borderRadius:10,
+          background:"var(--primary-soft-2)", border:"1px dashed rgba(73,99,250,.25)",
+          font:"400 12px/1.5 'Noto Sans TC'", color:"var(--ink-3)",
+          display:"flex", alignItems:"center", gap: 8, flexWrap:"wrap"}}>
+          <span style={{font:"600 12px/1 'Noto Sans TC'", color:"var(--primary)", letterSpacing:".06em"}}>本畫面對應功能</span>
+          <FCode code="F-101" label="建立錄音案件（建殼）"/>
+          <FCode code="F-402" label="錄音編號取得（確認建立時）"/>
+          <FCode code="F-201" label="題本帶入（自動帶入）"/>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
+/* ─────────────────────────────────────────────────────
+ * 起案通路卡
+ * ───────────────────────────────────────────────────── */
 function SourceCard({ active, onClick, icon, title, desc, badge }) {
   return (
     <button onClick={onClick} style={{
@@ -345,22 +272,47 @@ function SourceCard({ active, onClick, icon, title, desc, badge }) {
   );
 }
 
-function CustomerCard({ index, customer, onChange, onToggleRole, onRemove, source, conflictRoles }) {
-  const fromIntegration = source === "integration";
+/* ─────────────────────────────────────────────────────
+ * 客戶卡（含場次下拉）
+ * ───────────────────────────────────────────────────── */
+const SESSION_TINT = ["", "rgb(73,99,250)", "rgb(72,153,61)", "rgb(178,104,12)"];
+
+function CustomerCard({ index, customer, sessionCount, multiCustomer, onChange, onToggleRole, onRemove, conflictRoles }) {
+  const tint = SESSION_TINT[customer.sessionNo] || "var(--primary)";
   return (
     <div style={{padding:"16px 18px 18px", borderRadius:10,
       background:"var(--primary-bg)", border:"1px solid var(--line-2)"}}>
-      <div style={{display:"flex", alignItems:"center", marginBottom: 14}}>
+      <div style={{display:"flex", alignItems:"center", gap:10, marginBottom: 14}}>
         <div style={{
           width:24, height:24, borderRadius:6, background:"var(--primary)", color:"#fff",
           font:"600 12px/1 Montserrat,sans-serif", display:"grid", placeItems:"center"}}>
           {String(index+1).padStart(2,"0")}
         </div>
-        <span style={{marginLeft:10, font:"600 14px/1 'Noto Sans TC'", color:"var(--ink)"}}>
+        <span style={{font:"600 14px/1 'Noto Sans TC'", color:"var(--ink)"}}>
           客戶 {index+1}
         </span>
+
+        {/* 場次下拉 */}
+        <div style={{marginLeft:"auto", display:"flex", alignItems:"center", gap:8}}>
+          <span style={{font:"500 12.5px/1 'Noto Sans TC'", color:"var(--ink-3)"}}>場次</span>
+          <div style={{position:"relative", display:"flex", alignItems:"center"}}>
+            <span style={{position:"absolute", left:10, width:8, height:8, borderRadius:"50%",
+              background: tint, pointerEvents:"none"}}/>
+            <select className="input" value={customer.sessionNo || 1}
+              onChange={(e)=>onChange({sessionNo: parseInt(e.target.value,10)})}
+              style={{height:34, padding:"0 30px 0 24px", borderRadius:8, font:"600 13px/1 Montserrat",
+                border:`1.5px solid ${tint}`, color: tint, minWidth: 86, appearance:"none",
+                background:"#fff"}}>
+              {Array.from({length: Math.max(1, sessionCount)}, (_,i)=>i+1).map(n => (
+                <option key={n} value={n}>場次 {n}</option>
+              ))}
+            </select>
+            <I.Chevron size={13} stroke={tint} style={{position:"absolute", right:10, pointerEvents:"none", transform:"rotate(90deg)"}}/>
+          </div>
+        </div>
+
         {onRemove && (
-          <button className="btn btn-quiet btn-sm" onClick={onRemove} style={{marginLeft:"auto"}}>
+          <button className="btn btn-quiet btn-sm" onClick={onRemove}>
             <I.Delete size={14}/> 刪除
           </button>
         )}
@@ -421,236 +373,219 @@ function CustomerCard({ index, customer, onChange, onToggleRole, onRemove, sourc
 }
 
 /* ─────────────────────────────────────────────────────
- * STEP 02 — 確認題目文稿
+ * 題目文稿區塊 — 自動帶入顯示 14 題；手動輸入顯示「錄音前上傳」說明
  * ───────────────────────────────────────────────────── */
-function Step2Confirm({ source, caseInfo, product, customers,
-                        retrieving, retrieved, tts, setTts, onBack, onNext }) {
+function ScriptBlock({ source }) {
   const questions = window.__MLI_QUESTIONS;
-  const [uploadedScript, setUploadedScript] = React.useState(null); // {name, size, uploadedAt}
-  const fileInputRef = React.useRef(null);
+  const [open, setOpen] = React.useState(true);
 
-  // WEB 起案需自行上傳題目文稿；上傳前不予預覽、也不能進下一步
-  const hasScript = source === "integration" || !!uploadedScript;
+  if (source === "manual") {
+    return (
+      <section className="card" style={{padding:0, marginBottom:20, overflow:"hidden"}}>
+        <div style={{padding:"16px 22px", display:"flex", alignItems:"center", gap:10}}>
+          <I.Script size={18} stroke="var(--ink-4)"/>
+          <div style={{font:"600 14px/1 'Noto Sans TC'", color:"var(--ink)"}}>題目文稿</div>
+          <span className="tag tag-gray">手動輸入 · 錄音前上傳</span>
+        </div>
+        <div style={{padding:"0 22px 20px"}}>
+          <div style={{padding:"16px 18px", borderRadius:10, background:"var(--primary-bg)",
+            border:"1px dashed var(--line)", display:"flex", alignItems:"flex-start", gap:12}}>
+            <I.Info size={18} stroke="var(--ink-4)" style={{flexShrink:0, marginTop:1}}/>
+            <div style={{font:"400 13px/1.7 'Noto Sans TC'", color:"var(--ink-2)", textWrap:"pretty"}}>
+              手動輸入通路未介接題本，<b style={{color:"var(--ink)"}}>此處不顯示文稿</b>。
+              題目文稿（PDF）將於日後從清單點入案件、選擇「進入錄音作業」時再行上傳，且僅能使用<b style={{color:"var(--ink)"}}>整段錄音</b>。
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
-  const handleFileSelect = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setUploadedScript({
-        name: file.name,
-        size: file.size,
-        uploadedAt: new Date().toLocaleString("zh-TW", {hour12:false}).slice(5),
-      });
-    }
-    e.target.value = ""; // 重設以便重複上傳同一檔案
-  };
+  const ttsN = questions.filter(q=>q.type==="tts").length;
+  const selfN = questions.filter(q=>q.type==="self").length;
 
   return (
-    <div style={{maxWidth: 1280, margin:"0 auto", padding:"24px 0"}}>
-
-      {/* 案件建立結果 — 一行文字提示 */}
-      <div className="card" style={{
-        marginBottom: 20, padding:"14px 20px",
-        background: retrieving ? "var(--primary-soft-2)" : "linear-gradient(to right, rgba(73,99,250,.05), rgba(73,99,250,.02))",
-        border: "1px solid rgba(73,99,250,.18)",
-        display:"flex", alignItems:"center", gap: 12}}>
-        {retrieving ? (
-          <>
-            <svg className="spin" width={20} height={20} viewBox="0 0 24 24" fill="none"
-              stroke="var(--primary)" strokeWidth="2.5" style={{flexShrink:0}}>
-              <path d="M12 3a9 9 0 1 1-6.4 2.6" strokeLinecap="round"/>
-            </svg>
-            <span style={{font:"500 14px/1.5 'Noto Sans TC'", color:"var(--ink-2)"}}>
-              正在建立案件並取得錄音編號{source === "integration" ? " / 題目文稿" : ""}…
-            </span>
-          </>
-        ) : (
-          <>
-            <div style={{width:24, height:24, borderRadius:12, background:"var(--primary)",
-              color:"#fff", display:"grid", placeItems:"center", flexShrink:0}}>
-              <I.Check size={14} stroke="#fff" sw={3}/>
-            </div>
-            <div style={{flex:1, font:"500 14.5px/1.5 'Noto Sans TC'", color:"var(--ink)", letterSpacing:".01em"}}>
-              案件已建立，錄音編號
-              <span className="tabular ff-mont" style={{
-                font:"700 15px/1 Montserrat,sans-serif", color:"var(--primary)",
-                letterSpacing:".04em", margin:"0 8px",
-              }}>{caseInfo.recordingNo}</span>
-              {source === "integration" ? (
-                <>，題本已就緒，確認下一步開始錄音。</>
-              ) : uploadedScript ? (
-                <>，題本已上傳，確認下一步開始錄音。</>
-              ) : (
-                <>，請自行上傳錄音題目文稿，上傳後下一步開始錄音。</>
-              )}
-            </div>
-          </>
-        )}
+    <section className="card" style={{padding:0, marginBottom:20, overflow:"hidden"}}>
+      <div style={{padding:"16px 22px", borderBottom: open ? "1px solid var(--line-2)" : "none",
+        display:"flex", alignItems:"center", gap:10, flexWrap:"wrap"}}>
+        <I.Script size={18} stroke="var(--primary)"/>
+        <div style={{font:"700 15px/1.2 'Noto Sans TC'", color:"var(--ink)"}}>題目文稿</div>
+        <span className="tag">建議書帶入 · 分題題本</span>
+        <span style={{marginLeft:"auto", display:"flex", alignItems:"center", gap:10}}>
+          <span className="meta">共 {questions.length} 題</span>
+          <span className="meta">·</span>
+          <span className="meta">自動播稿 {ttsN}</span>
+          <span className="meta">·</span>
+          <span className="meta">業務員自錄 {selfN}</span>
+          <button className="btn btn-quiet btn-sm" onClick={()=>setOpen(o=>!o)} style={{marginLeft:6}}>
+            {open ? "收合" : "展開"} <I.Chevron size={12} style={{transform: open?"rotate(-90deg)":"rotate(90deg)"}}/>
+          </button>
+        </span>
       </div>
-
-      <div style={{display:"grid", gridTemplateColumns:"minmax(0, 1fr) 400px", gap: 20}}>
-
-        {/* LEFT — 題目文稿 */}
-        <section className="card" style={{padding:0, overflow:"hidden"}}>
-          <div style={{padding:"18px 24px", borderBottom:"1px solid var(--line-2)",
-            display:"flex", alignItems:"center", gap:10, flexWrap:"wrap"}}>
-            <I.Script size={18} stroke="var(--primary)"/>
-            <div style={{font:"700 15px/1.2 'Noto Sans TC'", color:"var(--ink)"}}>題目文稿</div>
-            {uploadedScript && source === "integration" && <span className="tag tag-warn">使用上傳題本</span>}
-            {source === "manual" && <span className="tag">上傳 PDF 圖檔 · 不分題</span>}
-            <span style={{marginLeft:"auto", display:"flex", alignItems:"center", gap:10}}>
-              {source === "integration" && (
-                <>
-                  <span className="meta">共 {questions.length} 題</span>
-                  <span className="meta">·</span>
-                  <span className="meta">自動播稿 {questions.filter(q=>q.type==="tts").length}</span>
-                  <span className="meta">·</span>
-                  <span className="meta">業務員自錄 {questions.filter(q=>q.type==="self").length}</span>
-                </>
-              )}
-              {(source === "manual" || uploadedScript) && (
-                <button className="btn btn-soft btn-sm" onClick={()=>fileInputRef.current?.click()}
-                  style={{marginLeft:6}}>
-                  <I.Upload size={13}/> {uploadedScript ? "重新上傳題本" : "上傳題目文稿"}
-                </button>
-              )}
-              {source === "integration" && (
-                <button className="btn btn-soft btn-sm" onClick={()=>fileInputRef.current?.click()}
-                  style={{marginLeft:6}}>
-                  <I.Upload size={13}/> 自行上傳題本
-                </button>
-              )}
-              <input ref={fileInputRef} type="file" accept=".pdf,.docx,.txt"
-                style={{display:"none"}} onChange={handleFileSelect}/>
-            </span>
-          </div>
-
-          {/* 上傳狀態橫幅 */}
-          {uploadedScript && (
-            <div style={{padding:"12px 24px", background:"var(--warn-soft)",
-              borderBottom:"1px solid rgb(244,220,168)",
-              display:"flex", alignItems:"center", gap:12}}>
-              <div style={{width:32, height:32, borderRadius:6, background:"#fff",
-                display:"grid", placeItems:"center", flexShrink:0,
-                border:"1px solid rgb(244,220,168)"}}>
-                <I.Doc size={16} stroke="rgb(178,104,12)"/>
+      {open && (
+        <div style={{maxHeight: 460, overflowY:"auto", padding:"8px 0"}}>
+          {questions.map((q) => (
+            <div key={q.no} style={{
+              padding:"14px 24px", borderBottom:"1px solid var(--line-2)",
+              display:"flex", gap: 14}}>
+              <div style={{
+                width:32, height:32, borderRadius:6, flexShrink:0,
+                background: q.type==="self" ? "rgb(53,150,253)" : "var(--primary)",
+                color:"#fff", display:"grid", placeItems:"center",
+                font:"700 12px/1 Montserrat,sans-serif"}}>
+                {String(q.no).padStart(2,"0")}
               </div>
               <div style={{flex:1, minWidth:0}}>
-                <div style={{font:"600 13px/1.3 'Noto Sans TC'", color:"rgb(151,89,15)"}}>
-                  {source === "manual" ? "已上傳題目文稿：" : "已上傳自訂題本："}{uploadedScript.name}
+                <div style={{display:"flex", alignItems:"center", gap:8, marginBottom:6}}>
+                  <span style={{font:"600 14px/1.2 'Noto Sans TC'", color:"var(--ink)"}}>{q.title}</span>
+                  <span className="tag" style={q.type==="self" ? {background:"rgb(238,246,255)", color:"rgb(53,150,253)"} : undefined}>
+                    {q.tag}
+                  </span>
+                  {q.skippable && <span className="tag tag-gray">可跳過</span>}
                 </div>
-                <div className="meta" style={{color:"rgb(151,89,15)", marginTop:2, opacity:.85}}>
-                  {(uploadedScript.size/1024).toFixed(1)} KB · 上傳時間 {uploadedScript.uploadedAt}
-                  {source === "manual"
-                    ? " · 下方為您上傳之題目文稿預覽"
-                    : " · 下方預覽為原系統標準題本，錄音時將使用您上傳之題本"}
+                <div style={{font:"400 13.5px/1.65 'Noto Sans TC'", color:"var(--ink-2)", textWrap:"pretty"}}>
+                  {q.script}
                 </div>
               </div>
-              {source === "integration" && (
-                <button className="btn btn-quiet btn-sm" onClick={()=>setUploadedScript(null)}>
-                  <I.X size={12} sw={2}/> 還原系統題本
-                </button>
-              )}
             </div>
-          )}
-
-          {source === "integration" ? (
-            <div style={{maxHeight: 680, overflowY:"auto", padding:"8px 0"}}>
-              {questions.map((q) => (
-                <div key={q.no} style={{
-                  padding:"14px 24px", borderBottom:"1px solid var(--line-2)",
-                  display:"flex", gap: 14}}>
-                  <div style={{
-                    width:32, height:32, borderRadius:6, flexShrink:0,
-                    background: q.type==="self" ? "rgb(53,150,253)" : "var(--primary)",
-                    color:"#fff", display:"grid", placeItems:"center",
-                    font:"700 12px/1 Montserrat,sans-serif"}}>
-                    {String(q.no).padStart(2,"0")}
-                  </div>
-                  <div style={{flex:1, minWidth:0}}>
-                    <div style={{display:"flex", alignItems:"center", gap:8, marginBottom:6}}>
-                      <span style={{font:"600 14px/1.2 'Noto Sans TC'", color:"var(--ink)"}}>
-                        {q.title}
-                      </span>
-                      <span className="tag" style={q.type==="self" ? {background:"rgb(238,246,255)", color:"rgb(53,150,253)"} : undefined}>
-                        {q.tag}
-                      </span>
-                      {q.skippable && <span className="tag tag-gray">可跳過</span>}
-                    </div>
-                    <div style={{
-                      font:"400 13.5px/1.65 'Noto Sans TC'",
-                      color:"var(--ink-2)", textWrap:"pretty"}}>
-                      {q.script}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : uploadedScript ? (
-            <PdfPreview fileName={uploadedScript.name} pages={3} maxHeight={680}/>
-          ) : (
-            <ScriptEmptyState onUpload={()=>fileInputRef.current?.click()}/>
-          )}
-        </section>
-
-        {/* RIGHT — 案件摘要（語音播放設定已移至「開始錄音前設定」彈窗 03） */}
-        <div style={{display:"flex", flexDirection:"column", gap:16}}>
-          <CaseInfoSummary caseInfo={caseInfo} product={product} customers={customers}/>
+          ))}
         </div>
-      </div>
-
-      {/* 動作列 */}
-      <div style={{display:"flex", alignItems:"center", justifyContent:"space-between",
-        marginTop: 24, padding:"16px 20px", background:"#fff", borderRadius: 12,
-        boxShadow:"var(--shadow-sm)", border:"1px solid var(--line-2)"}}>
-        <button className="btn btn-quiet" onClick={onBack}>
-          <I.ChevronL size={14}/> 上一步：修改案件資訊
-        </button>
-        <div className="meta" style={{display:"flex", alignItems:"center", gap:8}}>
-          <I.Info size={14} stroke="var(--ink-4)"/>
-          {hasScript ? "確認題目文稿無誤後，即可進入錄音作業" : "請先上傳題目文稿才能進入錄音作業"}
-        </div>
-        <button className="btn btn-primary btn-lg" onClick={onNext} disabled={retrieving || !hasScript}>
-          <I.Mic size={18} stroke="#fff"/> 下一步：開始錄音
-        </button>
-      </div>
-    </div>
+      )}
+    </section>
   );
 }
 
 /* ─────────────────────────────────────────────────────
- * 題目文稿空狀態 — WEB 起案、尚未上傳時顯示
+ * 將建立的案件預覽（依場次）
  * ───────────────────────────────────────────────────── */
-function ScriptEmptyState({ onUpload }) {
+function CreatePreview({ groups, multiSession }) {
   return (
-    <div style={{
-      padding:"56px 40px", display:"flex", flexDirection:"column",
-      alignItems:"center", justifyContent:"center", textAlign:"center", gap: 18,
-      minHeight: 420,
-    }}>
-      <div style={{
-        width: 72, height: 72, borderRadius: 16,
-        background: "var(--primary-soft)",
-        display:"grid", placeItems:"center",
-      }}>
-        <I.Upload size={28} stroke="var(--primary)" sw={1.8}/>
+    <section className="card" style={{padding:0, marginBottom:0, overflow:"hidden",
+      border:"1px solid rgba(73,99,250,.22)"}}>
+      <div style={{padding:"14px 22px", borderBottom:"1px solid var(--line-2)", background:"var(--primary-soft-2)",
+        display:"flex", alignItems:"center", gap:10}}>
+        <I.Doc size={16} stroke="var(--primary)"/>
+        <span style={{font:"700 14px/1 'Noto Sans TC'", color:"var(--ink)"}}>將建立的錄音案件</span>
+        <span className="tag" style={{marginLeft:4}}>{groups.length} 筆</span>
+        {multiSession && <span className="meta" style={{marginLeft:"auto"}}>同一錄音編號 · 不同場次 = 不同案件編號</span>}
       </div>
-      <div style={{display:"flex", flexDirection:"column", gap: 6, maxWidth: 420}}>
-        <div style={{font:"600 16px/1.4 'Noto Sans TC'", color:"var(--ink)"}}>
-          請先上傳錄音題目文稿
-        </div>
-        <div style={{font:"400 13.5px/1.7 'Noto Sans TC'", color:"var(--ink-3)", textWrap:"pretty"}}>
-          Web 起案需由業務員自行上傳題目文稿，上傳後將於此處預覽題目順序，確認無誤後即可進入錄音。
-        </div>
+      <div style={{padding:"6px 22px 14px"}}>
+        {groups.map((g, i) => {
+          const tint = SESSION_TINT[g.sessionNo] || "var(--primary)";
+          const named = g.customers.filter(c => c.name.trim());
+          return (
+            <div key={g.sessionNo} style={{padding:"12px 0",
+              borderBottom: i < groups.length-1 ? "1px dashed var(--line-2)" : "none",
+              display:"flex", alignItems:"center", gap:14}}>
+              <span style={{display:"inline-flex", alignItems:"center", gap:7, flexShrink:0,
+                padding:"6px 12px", borderRadius:14, background:"#fff", border:`1.5px solid ${tint}`,
+                color: tint, font:"700 12px/1 Montserrat"}}>
+                <span style={{width:8, height:8, borderRadius:"50%", background:tint}}/> 場次 {g.sessionNo}
+              </span>
+              <div style={{flex:1, minWidth:0, display:"flex", flexWrap:"wrap", gap:8, alignItems:"center"}}>
+                {named.length === 0 ? (
+                  <span className="meta">（尚未輸入客戶姓名）</span>
+                ) : named.map((c, j) => (
+                  <span key={j} style={{display:"inline-flex", alignItems:"center", gap:6,
+                    padding:"5px 10px", borderRadius:8, background:"var(--primary-bg)", border:"1px solid var(--line-2)"}}>
+                    <span style={{font:"600 13px/1 'Noto Sans TC'", color:"var(--ink)"}}>{c.name}</span>
+                    <span style={{display:"flex", gap:3}}>
+                      {c.roles.map(r => (
+                        <span key={r} style={{display:"inline-grid", placeItems:"center", width:17, height:17,
+                          borderRadius:4, background:"var(--primary-soft)", color:"var(--primary)",
+                          font:"600 10.5px/1 'Noto Sans TC'"}}>{ROLE_MAP[r].abbr}</span>
+                      ))}
+                    </span>
+                  </span>
+                ))}
+              </div>
+              <span className="meta" style={{flexShrink:0}}>{named.length} 位對象</span>
+            </div>
+          );
+        })}
       </div>
-      <button className="btn btn-primary" onClick={onUpload} style={{marginTop:4}}>
-        <I.Upload size={14}/> 上傳題目文稿
-      </button>
-      <div className="meta" style={{display:"flex", alignItems:"center", gap:6, color:"var(--ink-4)"}}>
-        <I.Info size={12} stroke="var(--ink-4)"/>
-        支援格式：PDF / DOCX / TXT
-      </div>
-    </div>
+    </section>
   );
 }
 
+/* ─────────────────────────────────────────────────────
+ * 建立成功視窗 — 列出本次建立的錄音編號，僅「回到錄音清單」
+ * ───────────────────────────────────────────────────── */
+function CreatedCasesModal({ created, onBackToList }) {
+  if (!created || !created.cases || !created.cases.length) return null;
+  const list = created.cases;
+  const groupNo = created.groupNo;
+  return ReactDOM.createPortal((
+    <div style={{position:"fixed", inset:0, zIndex:220, background:"rgba(41,47,84,.42)",
+      display:"grid", placeItems:"center", padding:24, animation:"fadeup .2s ease-out"}}>
+      <div className="card fadeup" style={{padding:0, width:520, maxHeight:"86vh",
+        display:"flex", flexDirection:"column", overflow:"hidden"}}>
+        <div style={{padding:"28px 30px 18px", textAlign:"center"}}>
+          <div style={{width:60, height:60, borderRadius:"50%", background:"var(--ok-soft)",
+            display:"grid", placeItems:"center", margin:"0 auto 14px"}}>
+            <I.Check size={30} stroke="var(--ok)" sw={2.6}/>
+          </div>
+          <h3 style={{margin:"0 0 6px", font:"700 20px/1.3 'Noto Sans TC'", color:"var(--ink)"}}>
+            已建立 {list.length} 筆錄音案件
+          </h3>
+          <p style={{margin:0, font:"400 13.5px/1.6 'Noto Sans TC'", color:"var(--ink-3)", textWrap:"pretty"}}>
+            本次建立共用一個<b style={{color:"var(--ink)"}}>錄音編號</b>，依場次拆成多個<b style={{color:"var(--ink)"}}>案件編號</b>，狀態為「草稿」。請回清單分別點入各案件進行錄音。
+          </p>
+        </div>
+
+        {/* 錄音編號（群組母號）—— 一對多的「一」 */}
+        <div style={{margin:"0 30px 14px", padding:"12px 16px", borderRadius:10,
+          background:"var(--primary)", color:"#fff", display:"flex", alignItems:"center", gap:12}}>
+          <span style={{font:"500 12px/1 'Noto Sans TC'", letterSpacing:".06em", opacity:.85}}>錄音編號</span>
+          <span className="ff-mont tabular" style={{font:"700 20px/1 Montserrat", letterSpacing:".04em"}}>{groupNo}</span>
+          <span style={{marginLeft:"auto", font:"400 12px/1 'Noto Sans TC'", opacity:.85}}>勾稽 {list.length} 個案件編號</span>
+        </div>
+
+        <div style={{padding:"0 30px", overflowY:"auto"}}>
+          {list.map((c) => {
+            const subs = window.__MLI_uniqueSubjects(c);
+            return (
+              <div key={c.caseNo} style={{padding:"14px 16px", marginBottom:10, borderRadius:10,
+                background:"var(--primary-bg)", border:"1px solid var(--line-2)"}}>
+                <div style={{display:"flex", alignItems:"center", gap:10, marginBottom:8}}>
+                  <span style={{display:"inline-flex", alignItems:"center", gap:6, padding:"4px 10px",
+                    borderRadius:12, background:"var(--primary)", color:"#fff",
+                    font:"600 12px/1 Montserrat", letterSpacing:".02em"}} className="tabular">
+                    {c.caseNo}
+                  </span>
+                  <span className="tag" style={{background:"var(--primary-soft)", color:"var(--primary)"}}>場次 {c.sessionNo}</span>
+                  <span className="meta" style={{marginLeft:"auto"}}>{subs.length} 位對象</span>
+                </div>
+                <div style={{display:"flex", flexWrap:"wrap", gap:8}}>
+                  {subs.map((s, i) => (
+                    <span key={i} style={{display:"inline-flex", alignItems:"center", gap:6,
+                      padding:"4px 9px", borderRadius:8, background:"#fff", border:"1px solid var(--line-2)"}}>
+                      <span style={{font:"600 12.5px/1 'Noto Sans TC'", color:"var(--ink)"}}>{s.name}</span>
+                      <span style={{display:"flex", gap:3}}>
+                        {s.roles.map(r => (
+                          <span key={r} style={{display:"inline-grid", placeItems:"center", width:16, height:16,
+                            borderRadius:4, background:"var(--primary-soft)", color:"var(--primary)",
+                            font:"600 10px/1 'Noto Sans TC'"}}>{r}</span>
+                        ))}
+                      </span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{padding:"16px 30px 22px", borderTop:"1px solid var(--line-2)", marginTop:8,
+          display:"flex", justifyContent:"center"}}>
+          <button className="btn btn-primary btn-lg" onClick={onBackToList}>
+            回到錄音清單 <I.Chevron size={16}/>
+          </button>
+        </div>
+      </div>
+    </div>
+  ), document.body);
+}
+
 window.EntryScreen = EntryScreen;
+window.CreatedCasesModal = CreatedCasesModal;

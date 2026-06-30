@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 
+
   :root{
     --primary:rgb(73,99,250);
     --primary-2:rgb(131,143,249);
@@ -182,6 +183,7 @@
   html.hide-fcodes .fcode-legend{display:none !important}
 
   /* hide tweaks button area */
+
 
 </style>
 <script>
@@ -514,8 +516,10 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
 // ── data.js ──
 // 案件範例資料 + 題目腳本
 //
-// 編碼邏輯：
-//   錄音編號 = A + YYYYMMDD + XXXX(4 碼流水號)，例：A202605210001
+// 編碼邏輯（兩層）：
+//   recordingNo（錄音編號）= 整組建立母體，一張保單一次建立共用一個群組號，例：A0001
+//   caseNo（案件編號）     = 群組下的個別案件（一場次一個），格式 {recordingNo}-{場次}，例：A0001-1、A0001-2
+//   一個 recordingNo 可勾稽多個 caseNo（一對多）；caseNo 為系統內部唯一鍵。
 //
 // 審核狀態（v2 — 對齊 v1 待確認 #4 結論，5 種）：
 //   draft        草稿     — 業務員建立但尚未送出審核
@@ -615,8 +619,53 @@ const QUESTIONS = [
 //   #7 要保 = 被保 = 繳款                          — 審核中
 //   #8 三人皆不同                                    — 退回補正
 window.__MLI_CASES = [
+  // ── 範例群組 A0001：同一保單 3 位錄音對象、分 2 場次 → 1 個錄音編號、2 個案件編號 ──
+  //    場次1：陳志明(要)＋陳麗華(被) → A0001-1　／　場次2：陳國強(繳) → A0001-2
   {
-    recordingNo: "A202605210001",
+    recordingNo: "A0001",
+    caseNo:      "A0001-1",
+    sessionNo:   1,
+    createdAt:   "2026/05/22 10:05",
+    updatedAt:   "2026/05/22 10:05",
+    policyNo:    null,
+    product:     "鑫美鑫多元利率變動型終身壽險",
+    roles: {
+      proposer: { name: "陳志明", age: 73, idNo: "C168294017" },
+      insured:  { name: "陳麗華", age: 71, idNo: "C279305128" },
+    },
+    agent:    "林佩君",  agentId: "A0427",
+    branch:   "台北中山通訊處",
+    channel:  "iPad（行銷系統）",
+    duration: 0,
+    status:   "draft",
+    source:   "建議書系統",
+    note:     "",
+    progress: { total: 14, recorded: 0, skipped: 0 },
+  },
+  {
+    recordingNo: "A0001",
+    caseNo:      "A0001-2",
+    sessionNo:   2,
+    createdAt:   "2026/05/22 10:05",
+    updatedAt:   "2026/05/22 10:05",
+    policyNo:    null,
+    product:     "鑫美鑫多元利率變動型終身壽險",
+    roles: {
+      payer:    { name: "陳國強", age: 69, idNo: "C381426239" },
+    },
+    agent:    "林佩君",  agentId: "A0427",
+    branch:   "台北中山通訊處",
+    channel:  "iPad（行銷系統）",
+    duration: 0,
+    status:   "draft",
+    source:   "建議書系統",
+    note:     "",
+    progress: { total: 14, recorded: 0, skipped: 0 },
+  },
+  {
+    recordingNo: "A0002",
+    caseNo:      "A0002-1",
+    sessionNo:   1,
     createdAt:   "2026/05/21 14:08",
     updatedAt:   "2026/05/21 14:46",
     policyNo:    null,
@@ -633,10 +682,12 @@ window.__MLI_CASES = [
     status:   "draft",
     source:   "建議書系統",
     note:     "",
-    progress: { total: 14, recorded: 3, skipped: 0 },
+    progress: { total: 14, recorded: 7, skipped: 0 },
   },
   {
-    recordingNo: "A202605210002",
+    recordingNo: "A0003",
+    caseNo:      "A0003-1",
+    sessionNo:   1,
     createdAt:   "2026/05/21 11:23",
     updatedAt:   "2026/05/21 13:08",
     policyNo:    null,
@@ -656,7 +707,9 @@ window.__MLI_CASES = [
     progress: { total: 14, recorded: 14, skipped: 0 },
   },
   {
-    recordingNo: "A202605200003",
+    recordingNo: "A0004",
+    caseNo:      "A0004-1",
+    sessionNo:   1,
     createdAt:   "2026/05/20 16:42",
     updatedAt:   "2026/05/21 09:18",
     policyNo:    null,
@@ -676,7 +729,9 @@ window.__MLI_CASES = [
     progress: { total: 14, recorded: 14, skipped: 0 },
   },
   {
-    recordingNo: "A202605190001",
+    recordingNo: "A0005",
+    caseNo:      "A0005-1",
+    sessionNo:   1,
     createdAt:   "2026/05/19 10:11",
     updatedAt:   "2026/05/19 15:33",
     policyNo:    "P-2026-0048120",     // 已通過 + 核保成功，後端已核發保單號
@@ -696,7 +751,9 @@ window.__MLI_CASES = [
     progress: { total: 14, recorded: 14, skipped: 0 },
   },
   {
-    recordingNo: "A202605180001",
+    recordingNo: "A0006",
+    caseNo:      "A0006-1",
+    sessionNo:   1,
     createdAt:   "2026/05/18 14:55",
     updatedAt:   "2026/05/19 11:02",
     policyNo:    null,
@@ -716,7 +773,9 @@ window.__MLI_CASES = [
     progress: { total: 14, recorded: 14, skipped: 0 },
   },
   {
-    recordingNo: "A202605210003",
+    recordingNo: "A0007",
+    caseNo:      "A0007-1",
+    sessionNo:   1,
     createdAt:   "2026/05/21 09:02",
     updatedAt:   "2026/05/21 09:02",
     policyNo:    null,
@@ -736,7 +795,9 @@ window.__MLI_CASES = [
     progress: { total: 14, recorded: 0, skipped: 0 },
   },
   {
-    recordingNo: "A202605170002",
+    recordingNo: "A0008",
+    caseNo:      "A0008-1",
+    sessionNo:   1,
     createdAt:   "2026/05/17 13:20",
     updatedAt:   "2026/05/18 10:44",
     policyNo:    null,
@@ -756,7 +817,9 @@ window.__MLI_CASES = [
     progress: { total: 14, recorded: 14, skipped: 0 },
   },
   {
-    recordingNo: "A202605150001",
+    recordingNo: "A0009",
+    caseNo:      "A0009-1",
+    sessionNo:   1,
     createdAt:   "2026/05/15 15:48",
     updatedAt:   "2026/05/16 14:21",
     policyNo:    null,
@@ -779,9 +842,11 @@ window.__MLI_CASES = [
 
 // 向後相容：把 roles 攤平成舊欄位（proposer / insured / insuredAge）給其他畫面使用
 window.__MLI_CASES.forEach(c => {
-  c.proposer   = c.roles.proposer.name;
-  c.insured    = c.roles.insured.name;
-  c.insuredAge = c.roles.insured.age;
+  const r = c.roles || {};
+  const any = r.proposer || r.insured || r.payer || {};
+  c.proposer   = (r.proposer || any).name;
+  c.insured    = (r.insured  || any).name;
+  c.insuredAge = (r.insured  || any).age;
 });
 
 window.__MLI_QUESTIONS = QUESTIONS;
@@ -816,7 +881,7 @@ window.__MLI_DATA = {
 // ── recProgress.js ──
 // recProgress.js — 案件錄音進度的狀態模型與純函式助手
 //
-// 進度物件（以 recordingNo 為 key 存於 app 狀態）：
+// 進度物件（以 caseNo 為 key 存於 app 狀態）：
 //   {
 //     method: "segmented" | "whole" | null,   // 首場決定後鎖定，不可中途變更
 //     subjects: [ {key, name, idNo, roleKeys} ],   // 排序固定
@@ -829,7 +894,7 @@ window.__MLI_DATA = {
 function progInit(subjects) {
   const q = {}, whole = {};
   (subjects || []).forEach(s => { q[s.key] = {}; whole[s.key] = "pending"; });
-  return { method: null, subjects: subjects || [], q, whole, sessions: [], status: "draft" };
+  return { method: null, subjects: subjects || [], q, whole, sessions: [], groupOf: {}, status: "draft" };
 }
 
 // 單一對象是否完成
@@ -899,6 +964,26 @@ function progWriteSegmented(prog, keys, recQuestions) {
   return { ...prog, q };
 }
 
+// 送出前的「總錄音數」（小音檔數）：同組（同場一起錄）共用音檔只計一次，跳過不計
+//   例：14 題、2 人分開錄、各跳過 1 題 → 13+13 = 26
+//   例：14 題、2 人同場一起錄、各跳過 1 題 → 13（共用）
+function progClipCount(prog, totalQ) {
+  if (!prog || !prog.subjects) return 0;
+  if (prog.method === "whole") {
+    return prog.subjects.filter(s => prog.whole[s.key] && prog.whole[s.key] !== "pending").length;
+  }
+  const groupOf = prog.groupOf || {};
+  const seen = {};
+  let clips = 0;
+  prog.subjects.forEach(s => {
+    const g = groupOf[s.key] || s.key;   // 未知分組＝自成一組
+    if (seen[g]) return;
+    seen[g] = true;
+    clips += progSubjectCount(prog, s.key, totalQ).rec;   // 只計已錄（skipped 不產生音檔）
+  });
+  return clips;
+}
+
 // 統一「錄音進度」顯示：不論動態（新流程）或靜態（示範案）都輸出一致結構
 //   回傳 { method:'segmented'|'whole', subjects:[{key,name,roleAbbrs,done,total,complete,status}], dynamic }
 function buildDisplayProgress(caseInfo, prog, totalQ) {
@@ -935,10 +1020,156 @@ function buildDisplayProgress(caseInfo, prog, totalQ) {
   return { method, subjects, dynamic: false };
 }
 
+// 案件層級單一進度（一案一進度，供清單/簡易呈現用）
+//   回傳 { method, done, total, complete, status }
+function buildCaseProgress(caseInfo, prog, totalQ) {
+  const disp = buildDisplayProgress(caseInfo, prog, totalQ);
+  const total = disp.method === "whole" ? 1 : totalQ;
+  const done = disp.subjects.length ? Math.max(...disp.subjects.map(s => s.done)) : 0;
+  const complete = total ? done >= total : false;
+  return { method: disp.method, done, total, complete, status: complete ? "done" : done > 0 ? "active" : "pending" };
+}
+
 Object.assign(window, {
   progInit, progSubjectDone, progSubjectCount, progSubjectStarted,
-  progAllDone, progDoneMap, progSubjectSummary, progWriteSegmented, buildDisplayProgress,
+  progAllDone, progDoneMap, progSubjectSummary, progWriteSegmented, progClipCount,
+  buildDisplayProgress, buildCaseProgress,
 });
+
+
+// ── correction.js ──
+// correction.js — 退回補正「多輪」資料層（業務員前台 + 內勤後台 共用）
+//
+// 設計原則（依客戶議題確認）：
+//   • 一筆案件 = 同一個錄音編號；退回補正後仍是同案。
+//   • 補正音檔一律與「原始完整音檔」獨立，不合併、不覆蓋。
+//   • 多輪退回：每一輪都是 append-only，新一輪不動到前面已上傳/已生成的內容。
+//   • 前台補正只走「整段 / 上傳」（不分題），故每一輪 = 1 個完整補正音檔。
+//
+// 流轉：審核中 → 退回補正(returned) → 〔業務補正錄音→送出〕→ 補件審核(resubmit)
+//        → 審核通過 / 再退回(returned, 進入下一輪)
+//
+// 結構：window.__MLI_CORRECTION[caseNo] = { rounds: [ round, ... ] }  （round 由舊到新）
+//   round = {
+//     round:        Number,                第幾輪退回（1-based）
+//     returnedAt:   String,                退回時間
+//     reviewer:     String,                退回的審核員
+//     reasonType:   key of __MLI_REASON_TYPES,
+//     reasonText:   String,                退回說明（通知業務員的文字）
+//     qNos:         [Number],              需重錄的題目
+//     subjectNames: [String],              需重錄的對象
+//     status:       'awaiting' | 'submitted',
+//                   // awaiting  = 已退回、等待業務員補正中（補正音檔/逐字稿/AI 尚未產生）
+//                   // submitted = 業務已補正送出、後端已跑完 STT + AI，待內勤複審
+//     audio:        null | { name, durationSec, sizeMB, uploadedAt, method },
+//     transcript:   [ { speaker, startSec, asr, confidence } ],   // STT 重跑結果
+//     ai:           null | { passRate, summary, items:[ { title, pass, note } ] },  // LLM 補正質檢
+//   }
+
+(function(){
+  // 退回原因類別（前後台共用文字）
+  window.__MLI_REASON_TYPES = {
+    audio_quality:   "音檔不清晰",
+    incomplete:      "錄音缺漏",
+    negation:        "客戶回應未明確",
+    script_mismatch: "與原稿差異過大",
+    other:           "其他",
+  };
+
+  const C = {};
+  window.__MLI_CORRECTION = C;
+
+  // ── Demo 1：A0004-1（returned）— 已退回、等待業務員補正中（尚無補正音檔）──
+  C["A0004-1"] = {
+    rounds: [
+      {
+        round: 1,
+        returnedAt: "2026/05/21 09:18",
+        reviewer: "王怡萱",
+        reasonType: "audio_quality",
+        reasonText: "Q07 健康告知音檔不清晰、背景雜訊干擾；Q10 自動墊繳客戶回應「應該可以吧」屬未明確回應，請就上述題目重新錄製並取得客戶明確答覆。",
+        qNos: [7, 10],
+        subjectNames: ["李美玲"],
+        status: "awaiting",
+        audio: null,
+        transcript: [],
+        ai: null,
+      },
+    ],
+  };
+
+  // ── Demo 2：A0006-1（resubmit）— 業務已補正送出、待內勤複審（補正資料齊全）──
+  C["A0006-1"] = {
+    rounds: [
+      {
+        round: 1,
+        returnedAt: "2026/05/18 16:30",
+        reviewer: "王怡萱",
+        reasonType: "audio_quality",
+        reasonText: "Q07 健康告知音檔不清晰、客戶回應「應該…沒有吧」屬模糊回應，請重新錄製並取得明確答覆。",
+        qNos: [7],
+        subjectNames: ["吳秀英"],
+        status: "submitted",
+        audio: { name: "A0006-1_correction_r1.wav", durationSec: 86, sizeMB: 1.4, uploadedAt: "2026/05/19 10:48", method: "whole" },
+        transcript: [
+          { speaker: "agent",   startSec: 0,  asr: "吳女士您好，這邊針對健康告知事項，我們重新錄製一次，請您聽完每一項後明確回答「有」或「沒有」。", confidence: 0.97 },
+          { speaker: "agent",   startSec: 14, asr: "第一項，最近兩個月內，是否曾因接受醫師治療、診療或用藥？", confidence: 0.96 },
+          { speaker: "insured", startSec: 24, asr: "沒有，這兩個月都沒有看醫生。", confidence: 0.95 },
+          { speaker: "agent",   startSec: 32, asr: "第二項，過去五年內是否曾因受傷或生病接受手術、住院七日以上，或健康檢查發現異常？", confidence: 0.95 },
+          { speaker: "insured", startSec: 47, asr: "沒有，都沒有。", confidence: 0.96 },
+          { speaker: "agent",   startSec: 54, asr: "第三項，目前是否懷孕中？", confidence: 0.94 },
+          { speaker: "insured", startSec: 60, asr: "沒有。", confidence: 0.97 },
+          { speaker: "agent",   startSec: 64, asr: "好的，謝謝您的明確回答，本段補正錄音到此結束。", confidence: 0.96 },
+        ],
+        ai: {
+          passRate: 100,
+          summary: "補正音檔針對 Q07 既往症告知事項重新錄製，音質清晰、無雜訊；客戶就三項告知事項皆明確回應「沒有」，未再出現否定或模糊語意，原退回問題已修正，建議審核通過。",
+          items: [
+            { title: "Q07 既往症告知事項", pass: true, note: "客戶逐項明確回答「沒有」，無「應該」「不太確定」等模糊語意；STT 辨識信心平均 0.96，音檔清晰。" },
+          ],
+        },
+      },
+    ],
+  };
+
+  // ── 工具函式 ──────────────────────────────────────────────────────────
+
+  // 取得案件的所有補正輪（由舊到新）
+  window.mliCorrectionRounds = function(caseNo) {
+    const e = C[caseNo];
+    return e && e.rounds ? e.rounds : [];
+  };
+
+  // 取得「最新一輪」退回（前台 banner / 後台 reason 用）
+  window.mliLatestRound = function(caseNo) {
+    const r = window.mliCorrectionRounds(caseNo);
+    return r.length ? r[r.length - 1] : null;
+  };
+
+  // 退回原因的可讀類別文字
+  window.mliReasonLabel = function(reasonType) {
+    return window.__MLI_REASON_TYPES[reasonType] || "其他";
+  };
+
+  // 後台「確認退回」時，把一輪結構化退回 append 進案件（多輪 append-only）
+  // 回傳新輪物件
+  window.mliPushReturn = function(caseNo, { reasonType, reasonText, qNos, subjectNames, reviewer, returnedAt }) {
+    if (!C[caseNo]) C[caseNo] = { rounds: [] };
+    const rounds = C[caseNo].rounds;
+    const round = {
+      round: rounds.length + 1,
+      returnedAt: returnedAt || "",
+      reviewer: reviewer || "",
+      reasonType, reasonText,
+      qNos: qNos || [],
+      subjectNames: subjectNames || [],
+      status: "awaiting",
+      audio: null, transcript: [], ai: null,
+    };
+    rounds.push(round);
+    return round;
+  };
+})();
 
 
 // ── tweaks-panel.jsx ──
@@ -2013,7 +2244,7 @@ function SubHeader({
   title,
   crumbs = [],
   right = null,
-  recordingNo,
+  caseNo,
   time
 }) {
   return /*#__PURE__*/React.createElement("div", {
@@ -2031,7 +2262,7 @@ function SubHeader({
     style: {
       color: "var(--ink-4)"
     }
-  }, "/")))), recordingNo && /*#__PURE__*/React.createElement("div", {
+  }, "/")))), caseNo && /*#__PURE__*/React.createElement("div", {
     className: "meta tabular",
     style: {
       marginLeft: "auto",
@@ -2048,7 +2279,7 @@ function SubHeader({
   }, /*#__PURE__*/React.createElement(I.Hash, {
     size: 14,
     stroke: "var(--ink-4)"
-  }), " ", recordingNo), /*#__PURE__*/React.createElement("span", {
+  }), " ", caseNo), /*#__PURE__*/React.createElement("span", {
     style: {
       width: 1,
       height: 14,
@@ -2065,7 +2296,7 @@ function SubHeader({
     stroke: "var(--ink-4)"
   }), " ", time)), right && /*#__PURE__*/React.createElement("div", {
     style: {
-      marginLeft: recordingNo ? 16 : "auto",
+      marginLeft: caseNo ? 16 : "auto",
       display: "flex",
       gap: 10,
       alignItems: "center"
@@ -2493,7 +2724,7 @@ window.ProductCombobox = ProductCombobox;
 // 確保使用者在錄音流程中看到的案件資訊一致延續。
 //
 // Props：
-//   caseInfo  必填，包含 recordingNo / createdAt / agent / agentId / branch / roles / product
+//   caseInfo  必填，包含 caseNo / createdAt / agent / agentId / branch / roles / product
 //   product   可選，覆寫 caseInfo.product（STEP 02 使用業務員 STEP 01 選定的商品）
 //   customers 可選，覆寫由 caseInfo.roles 推導出來的錄音對象（STEP 02 使用編輯後的客戶清單）
 //   title     可選，卡片標題，預設「案件資訊摘要」
@@ -2597,7 +2828,7 @@ function CaseInfoSummary({
     }
   }, /*#__PURE__*/React.createElement(SummaryLine, {
     label: "\u9304\u97F3\u7DE8\u865F",
-    value: caseInfo.recordingNo,
+    value: caseInfo.caseNo,
     mono: true
   }), /*#__PURE__*/React.createElement(SummaryLine, {
     label: "\u5EFA\u7ACB\u6642\u9593",
@@ -3810,46 +4041,51 @@ Object.assign(window, {
 });
 
 // ── PreRecordModal.jsx ──
-// PreRecordModal — STEP 2 → STEP 3 之間的「開始錄音前設定」彈窗
+// PreRecordModal — 「進入錄音作業」閘門（v7 重構）
 //
-// 兩段合一：
-//   ① 本次錄音對象（勾選，可單勾＝分開錄音 / 複勾＝同場一起錄）
-//   ② 錄音方式（僅「API 同步分題題稿」通路出現；自行上傳 PDF 通路只走方式二）
-//
-// 規則：
-//   • 方式一 分題：需有分題題稿（integration）才出現
-//   • 方式二 整段/上傳：恆可選；其中「整段錄音」需 iPad 裝置，桌機僅能上傳（於方式二頁面內判斷）
-//   • 已完成的對象顯示「已完成」、預設不勾、不可重複選
+// 不再選擇錄音對象：「誰一起錄」已在建立案件時用「場次」決定，
+// 本案件的所有對象即為本場一起錄音的對象。本彈窗只負責：
+//   ① 顯示本場錄音對象（唯讀）
+//   ② 依通路決定錄音方式
+//        • 自動帶入（integration）：可選 分題錄音 / 整段錄音
+//        • 手動輸入（manual）：只能整段錄音，且需先上傳題目文稿（PDF）
+//   ③ 分題錄音時提供語音播放設定（TTS）
 
 function PreRecordModal({
   open,
   subjects,
-  subjectDone,
-  defaultKeys,
-  methodAvailable,
-  methodLocked,
-  lockedMethod,
+  scriptMode,
   canWholeRecord,
   tts,
   setTts,
   onCancel,
   onConfirm
 }) {
-  const [selKeys, setSelKeys] = React.useState(defaultKeys || []);
-  const [method, setMethod] = React.useState(methodLocked ? lockedMethod : methodAvailable ? "segmented" : "whole");
+  const isManual = scriptMode === "manual";
+  const [method, setMethod] = React.useState(isManual ? "whole" : "segmented");
+  const [pdf, setPdf] = React.useState(null); // {name,size,uploadedAt}
+  const fileRef = React.useRef(null);
   React.useEffect(() => {
     if (open) {
-      setSelKeys(defaultKeys || []);
-      setMethod(methodLocked ? lockedMethod : methodAvailable ? "segmented" : "whole");
+      setMethod(isManual ? "whole" : "segmented");
+      setPdf(null);
     }
-  }, [open]);
+  }, [open, isManual]);
   if (!open) return null;
-  const toggle = key => setSelKeys(ks => ks.includes(key) ? ks.filter(k => k !== key) : [...ks, key]);
-  const valid = selKeys.length > 0;
-  const remaining = subjects.filter(s => !(subjectDone && subjectDone[s.key]));
-  const showMethod = methodAvailable && !methodLocked;
+  const onPick = e => {
+    const f = e.target.files?.[0];
+    if (f) setPdf({
+      name: f.name,
+      size: f.size,
+      uploadedAt: new Date().toLocaleString("zh-TW", {
+        hour12: false
+      }).slice(5)
+    });
+    e.target.value = "";
+  };
 
-  // 透過 portal 渲染到 body，避免被 .scaler 的 transform 影響 fixed 定位
+  // 手動輸入：必須先上傳 PDF 才能進入錄音
+  const valid = isManual ? !!pdf : true;
   return ReactDOM.createPortal(/*#__PURE__*/React.createElement("div", {
     style: {
       position: "fixed",
@@ -3900,13 +4136,19 @@ function PreRecordModal({
       font: "700 19px/1.2 'Noto Sans TC'",
       color: "var(--ink)"
     }
-  }, "\u958B\u59CB\u9304\u97F3\u524D\u8A2D\u5B9A")), /*#__PURE__*/React.createElement("p", {
+  }, "\u9032\u5165\u9304\u97F3\u4F5C\u696D"), /*#__PURE__*/React.createElement("span", {
+    className: "tag",
+    style: {
+      marginLeft: 4
+    }
+  }, isManual ? "手動輸入" : "建議書帶入")), /*#__PURE__*/React.createElement("p", {
     style: {
       margin: "10px 0 0",
       font: "400 13px/1.5 'Noto Sans TC'",
-      color: "var(--ink-3)"
+      color: "var(--ink-3)",
+      textWrap: "pretty"
     }
-  }, "\u8ACB\u9078\u64C7\u672C\u6B21\u8981\u9304\u97F3\u7684\u5C0D\u8C61", showMethod ? "與錄音方式" : "", "\u3002\u540C\u4E00\u6848\u4EF6\u7684\u591A\u4F4D\u5C0D\u8C61\u53EF\u5206\u6B21\u9304\u97F3\uFF0C\u5168\u90E8\u5B8C\u6210\u5F8C\u624D\u80FD\u9001\u51FA\u3002")), /*#__PURE__*/React.createElement("div", {
+  }, isManual ? "本案件為手動輸入通路，僅能整段錄音；開始前請先上傳本場題目文稿（PDF）。" : "本案件為建議書帶入通路，請選擇本場錄音方式。本場對象將一起錄音。")), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: "20px 28px",
       overflowY: "auto",
@@ -3932,87 +4174,40 @@ function PreRecordModal({
       font: "600 14px/1 'Noto Sans TC'",
       color: "var(--ink)"
     }
-  }, "\u672C\u6B21\u9304\u97F3\u5C0D\u8C61"), /*#__PURE__*/React.createElement("span", {
-    className: "meta",
+  }, "\u9078\u64C7\u9304\u97F3\u65B9\u5F0F")), isManual ? /*#__PURE__*/React.createElement(MethodCard, {
+    active: true,
+    onClick: () => {},
+    icon: /*#__PURE__*/React.createElement(I.Mic, {
+      size: 20,
+      stroke: "var(--primary)"
+    }),
+    title: "\u6574\u6BB5\u9304\u97F3",
+    desc: canWholeRecord ? "一次錄完整段，或直接上傳已錄好的完整音檔；無須分題與合併。手動輸入通路僅支援整段錄音。" : "上傳已錄好的完整音檔（桌機不支援現場整段錄音）。"
+  }) : /*#__PURE__*/React.createElement("div", {
     style: {
-      marginLeft: "auto"
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 12
     }
-  }, "\u55AE\u52FE\uFF1D\u5206\u958B\u9304\u97F3 \xB7 \u8907\u52FE\uFF1D\u540C\u5834\u4E00\u8D77\u9304")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: 10
-    }
-  }, subjects.map(s => {
-    const done = subjectDone && subjectDone[s.key];
-    const checked = selKeys.includes(s.key);
-    return /*#__PURE__*/React.createElement("label", {
-      key: s.key,
-      onClick: () => !done && toggle(s.key),
-      style: {
-        display: "flex",
-        alignItems: "center",
-        gap: 12,
-        padding: "12px 14px",
-        borderRadius: 10,
-        cursor: done ? "default" : "pointer",
-        background: done ? "var(--ok-soft)" : checked ? "var(--primary-soft)" : "#fff",
-        border: `1.5px solid ${done ? "rgba(72,153,61,.3)" : checked ? "var(--primary)" : "var(--line)"}`,
-        opacity: done ? .85 : 1,
-        transition: "all .15s"
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        width: 20,
-        height: 20,
-        borderRadius: 6,
-        flexShrink: 0,
-        background: done ? "var(--ok)" : checked ? "var(--primary)" : "#fff",
-        border: `1.5px solid ${done ? "var(--ok)" : checked ? "var(--primary)" : "var(--line-3)"}`,
-        display: "grid",
-        placeItems: "center"
-      }
-    }, (checked || done) && /*#__PURE__*/React.createElement(I.Check, {
-      size: 13,
-      stroke: "#fff",
-      sw: 3
-    })), /*#__PURE__*/React.createElement("span", {
-      style: {
-        font: "600 14.5px/1 'Noto Sans TC'",
-        color: "var(--ink)"
-      }
-    }, s.name), /*#__PURE__*/React.createElement("span", {
-      className: "meta tabular ff-mont",
-      style: {
-        font: "500 11.5px/1 Montserrat"
-      }
-    }, maskIdNo(s.idNo)), /*#__PURE__*/React.createElement("span", {
-      style: {
-        marginLeft: "auto",
-        display: "flex",
-        alignItems: "center",
-        gap: 6
-      }
-    }, s.roleKeys.map(r => /*#__PURE__*/React.createElement("span", {
-      key: r,
-      className: "tag",
-      style: {
-        padding: "2px 7px",
-        fontSize: 11
-      }
-    }, CASE_ROLE_MAP[r] ? CASE_ROLE_MAP[r].abbr : r)), done && /*#__PURE__*/React.createElement("span", {
-      className: "tag tag-ok",
-      style: {
-        padding: "2px 8px"
-      }
-    }, "\u5DF2\u5B8C\u6210")));
-  })), remaining.length === 0 && /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 10,
-      font: "400 12px/1.5 'Noto Sans TC'",
-      color: "var(--ok)"
-    }
-  }, "\u6240\u6709\u5C0D\u8C61\u7686\u5DF2\u5B8C\u6210\u9304\u97F3\uFF0C\u53EF\u76F4\u63A5\u9001\u51FA\u3002")), showMethod && /*#__PURE__*/React.createElement("section", null, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(MethodCard, {
+    active: method === "segmented",
+    onClick: () => setMethod("segmented"),
+    icon: /*#__PURE__*/React.createElement(I.Wave, {
+      size: 20,
+      stroke: method === "segmented" ? "var(--primary)" : "var(--ink-3)"
+    }),
+    title: "\u5206\u984C\u9304\u97F3",
+    desc: "\u9010\u984C\u9304\u97F3\uFF0C\u7CFB\u7D71\u81EA\u52D5\u64AD\u653E\u984C\u76EE\u8A9E\u97F3\u3001\u5404\u984C\u5373\u6642\u4E0A\u50B3\uFF1B\u9001\u51FA\u5F8C\u7531\u7CFB\u7D71\u5408\u4F75\u70BA\u5B8C\u6574\u97F3\u6A94\u3002"
+  }), /*#__PURE__*/React.createElement(MethodCard, {
+    active: method === "whole",
+    onClick: () => setMethod("whole"),
+    icon: /*#__PURE__*/React.createElement(I.Mic, {
+      size: 20,
+      stroke: method === "whole" ? "var(--primary)" : "var(--ink-3)"
+    }),
+    title: "\u6574\u6BB5\u9304\u97F3",
+    desc: "\u4E00\u6B21\u9304\u5B8C\u6574\u6BB5\uFF0C\u6216\u76F4\u63A5\u4E0A\u50B3\u5DF2\u9304\u597D\u7684\u5B8C\u6574\u97F3\u6A94\uFF1B\u7121\u9808\u5206\u984C\u8207\u5408\u4F75\u3002"
+  }))), isManual && /*#__PURE__*/React.createElement("section", null, /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       alignItems: "center",
@@ -4030,33 +4225,94 @@ function PreRecordModal({
       font: "600 14px/1 'Noto Sans TC'",
       color: "var(--ink)"
     }
-  }, "\u9304\u97F3\u65B9\u5F0F")), /*#__PURE__*/React.createElement("div", {
+  }, "\u4E0A\u50B3\u984C\u76EE\u6587\u7A3F"), /*#__PURE__*/React.createElement("span", {
     style: {
-      display: "grid",
-      gridTemplateColumns: "1fr 1fr",
+      color: "var(--danger)"
+    }
+  }, "*")), /*#__PURE__*/React.createElement("input", {
+    ref: fileRef,
+    type: "file",
+    accept: ".pdf",
+    style: {
+      display: "none"
+    },
+    onChange: onPick
+  }), !pdf ? /*#__PURE__*/React.createElement("div", {
+    onClick: () => fileRef.current?.click(),
+    style: {
+      padding: "24px 18px",
+      borderRadius: 12,
+      cursor: "pointer",
+      textAlign: "center",
+      border: "2px dashed rgba(73,99,250,.4)",
+      background: "var(--primary-soft-2)",
+      transition: "all .15s"
+    }
+  }, /*#__PURE__*/React.createElement(I.Upload, {
+    size: 30,
+    stroke: "var(--primary)",
+    sw: 1.6
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      font: "600 14px/1.3 'Noto Sans TC'",
+      color: "var(--ink)",
+      marginTop: 10
+    }
+  }, "\u9EDE\u64CA\u4E0A\u50B3\u984C\u76EE\u6587\u7A3F\uFF08PDF\uFF09"), /*#__PURE__*/React.createElement("div", {
+    className: "meta",
+    style: {
+      marginTop: 5
+    }
+  }, "\u672A\u4E0A\u50B3\u984C\u76EE\u6587\u7A3F\u524D\u7121\u6CD5\u958B\u59CB\u9304\u97F3")) : /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "12px 14px",
+      borderRadius: 10,
+      background: "var(--ok-soft)",
+      border: "1px solid rgba(72,153,61,.28)",
+      display: "flex",
+      alignItems: "center",
       gap: 12
     }
-  }, /*#__PURE__*/React.createElement(MethodCard, {
-    active: method === "segmented",
-    onClick: () => setMethod("segmented"),
-    icon: /*#__PURE__*/React.createElement(I.Wave, {
-      size: 20,
-      stroke: method === "segmented" ? "var(--primary)" : "var(--ink-3)"
-    }),
-    title: "\u65B9\u5F0F\u4E00 \xB7 \u5206\u984C\u9304\u97F3",
-    tag: "(a)",
-    desc: "\u4F9D\u984C\u76EE\u9010\u984C\u9304\u97F3\uFF0C\u5404\u984C\u5373\u6642\u4E0A\u50B3\uFF0C\u9001\u51FA\u5F8C\u7531\u5F8C\u7AEF\u5408\u4F75\u3002"
-  }), /*#__PURE__*/React.createElement(MethodCard, {
-    active: method === "whole",
-    onClick: () => setMethod("whole"),
-    icon: /*#__PURE__*/React.createElement(I.Mic, {
-      size: 20,
-      stroke: method === "whole" ? "var(--primary)" : "var(--ink-3)"
-    }),
-    title: "\u65B9\u5F0F\u4E8C \xB7 \u6574\u6BB5 / \u4E0A\u50B3",
-    tag: "(b)(c)",
-    desc: canWholeRecord ? "整段錄音或上傳整段音檔，作為完整音檔。" : "上傳整段音檔（桌機不支援現場整段錄音）。"
-  }))), method === "segmented" && /*#__PURE__*/React.createElement("section", null, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 34,
+      height: 34,
+      borderRadius: 7,
+      background: "#fff",
+      display: "grid",
+      placeItems: "center",
+      flexShrink: 0,
+      border: "1px solid rgba(72,153,61,.3)"
+    }
+  }, /*#__PURE__*/React.createElement(I.Doc, {
+    size: 17,
+    stroke: "var(--ok)"
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      font: "600 13px/1.3 'Noto Sans TC'",
+      color: "rgb(58,124,49)",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap"
+    }
+  }, pdf.name), /*#__PURE__*/React.createElement("div", {
+    className: "meta",
+    style: {
+      color: "rgb(58,124,49)",
+      marginTop: 2,
+      opacity: .85
+    }
+  }, (pdf.size / 1024).toFixed(1), " KB \xB7 \u4E0A\u50B3\u6642\u9593 ", pdf.uploadedAt)), /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-quiet btn-sm",
+    onClick: () => fileRef.current?.click()
+  }, /*#__PURE__*/React.createElement(I.Upload, {
+    size: 12
+  }), " \u91CD\u65B0\u4E0A\u50B3"))), !isManual && method === "segmented" && /*#__PURE__*/React.createElement("section", null, /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       alignItems: "center",
@@ -4069,7 +4325,7 @@ function PreRecordModal({
       color: "var(--primary)",
       letterSpacing: ".1em"
     }
-  }, "03"), /*#__PURE__*/React.createElement("span", {
+  }, "02"), /*#__PURE__*/React.createElement("span", {
     style: {
       font: "600 14px/1 'Noto Sans TC'",
       color: "var(--ink)"
@@ -4082,25 +4338,17 @@ function PreRecordModal({
       color: "var(--ink-4)",
       letterSpacing: ".06em"
     }
-  }, "F-202 / F-203")), /*#__PURE__*/React.createElement(TtsSettings, {
+  }, "F-202 / F-203")), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "-4px 0 12px",
+      font: "400 12px/1.6 'Noto Sans TC'",
+      color: "var(--ink-3)",
+      textWrap: "pretty"
+    }
+  }, "\u9078\u5B9A\u8A9E\u8A00\uFF0F\u8072\u97F3\u5F8C\uFF0C\u7CFB\u7D71\u6703\u4EE5\u8A72\u97F3\u8272\u5408\u6210\u984C\u76EE\u8A9E\u97F3\uFF1B\u5206\u984C\u9304\u97F3\u6642\u5373\u4EE5\u6B64\u8A9E\u97F3\u64AD\u653E\u984C\u76EE\u3002"), /*#__PURE__*/React.createElement(TtsSettings, {
     tts: tts,
     setTts: setTts
-  })), methodLocked && /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: "10px 14px",
-      borderRadius: 8,
-      background: "var(--primary-soft-2)",
-      border: "1px solid rgba(73,99,250,.18)",
-      font: "400 12.5px/1.5 'Noto Sans TC'",
-      color: "var(--ink-2)",
-      display: "flex",
-      alignItems: "center",
-      gap: 8
-    }
-  }, /*#__PURE__*/React.createElement(I.Info, {
-    size: 14,
-    stroke: "var(--primary)"
-  }), "\u5EF6\u7E8C\u672C\u6848\u9304\u97F3\u65B9\u5F0F\uFF1A", lockedMethod === "segmented" ? "分題錄音" : "整段 / 上傳")), /*#__PURE__*/React.createElement("div", {
+  }))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: "16px 28px",
       borderTop: "1px solid var(--line-2)",
@@ -4110,7 +4358,7 @@ function PreRecordModal({
     }
   }, /*#__PURE__*/React.createElement("span", {
     className: "meta"
-  }, valid ? `已選 ${selKeys.length} 位` : "請至少選擇 1 位錄音對象"), /*#__PURE__*/React.createElement("span", {
+  }, isManual ? pdf ? "題目文稿已就緒" : "請先上傳題目文稿" : `方式：${method === "segmented" ? "分題錄音" : "整段 / 上傳"}`), /*#__PURE__*/React.createElement("span", {
     style: {
       marginLeft: "auto",
       display: "flex",
@@ -4123,7 +4371,6 @@ function PreRecordModal({
     className: "btn btn-primary",
     disabled: !valid,
     onClick: () => onConfirm({
-      keys: selKeys,
       method
     })
   }, "\u9032\u5165\u9304\u97F3 ", /*#__PURE__*/React.createElement(I.Chevron, {
@@ -4169,14 +4416,14 @@ function MethodCard({
       display: "grid",
       placeItems: "center"
     }
-  }, icon), /*#__PURE__*/React.createElement("span", {
+  }, icon), tag ? /*#__PURE__*/React.createElement("span", {
     className: "ff-mont",
     style: {
       font: "600 12px/1 Montserrat",
       color: active ? "var(--primary)" : "var(--ink-4)",
       letterSpacing: ".08em"
     }
-  }, tag), /*#__PURE__*/React.createElement("span", {
+  }, tag) : null, /*#__PURE__*/React.createElement("span", {
     style: {
       marginLeft: "auto",
       width: 18,
@@ -4207,7 +4454,7 @@ function MethodCard({
   }, desc));
 }
 
-/* ── 語音播放設定（語言/聲音 + 語速），於彈窗 03 區塊使用 ── */
+/* ── 語音播放設定（語言/聲音 + 語速），於分題錄音區塊使用 ── */
 function TtsSettings({
   tts,
   setTts
@@ -4398,7 +4645,7 @@ function CaseListScreen({
 }) {
   const STATUS = window.__MLI_STATUS;
   const totalQ = window.__MLI_QUESTIONS.length;
-  const effStatus = c => progressMap[c.recordingNo] ? progressMap[c.recordingNo].status : c.status;
+  const effStatus = c => progressMap[c.caseNo] ? progressMap[c.caseNo].status : c.status;
   const [keyword, setKeyword] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [channelFilter, setChannelFilter] = React.useState("all");
@@ -4412,7 +4659,7 @@ function CaseListScreen({
       if (channelFilter !== "all" && !c.channel.startsWith(channelFilter)) return false;
       if (!kw) return true;
       const roleNames = c.roles ? Object.values(c.roles).map(r => r.name) : [];
-      return [c.recordingNo, c.policyNo || "", c.product, ...roleNames].some(v => v.toLowerCase().includes(kw));
+      return [c.recordingNo, c.caseNo, c.policyNo || "", c.product, ...roleNames].some(v => v.toLowerCase().includes(kw));
     });
     if (sort === "updated_desc") list = [...list].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
     if (sort === "updated_asc") list = [...list].sort((a, b) => a.updatedAt.localeCompare(b.updatedAt));
@@ -4473,7 +4720,7 @@ function CaseListScreen({
     },
     value: keyword,
     onChange: e => setKeyword(e.target.value),
-    placeholder: "\u641C\u5C0B\u9304\u97F3\u7DE8\u865F / \u4FDD\u55AE\u865F / \u5546\u54C1 / \u8981\u4FDD\u4EBA / \u88AB\u4FDD\u4EBA / \u7E73\u6B3E\u4EBA"
+    placeholder: "\u641C\u5C0B\u9304\u97F3\u7DE8\u865F / \u6848\u4EF6\u7DE8\u865F / \u4FDD\u55AE\u865F / \u5546\u54C1 / \u8981\u4FDD\u4EBA / \u88AB\u4FDD\u4EBA / \u7E73\u6B3E\u4EBA"
   }), keyword && /*#__PURE__*/React.createElement("button", {
     onClick: () => setKeyword(""),
     style: {
@@ -4550,7 +4797,7 @@ function CaseListScreen({
     style: {
       width: "100%",
       borderCollapse: "collapse",
-      minWidth: 1180
+      minWidth: 1260
     }
   }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
     style: {
@@ -4560,19 +4807,29 @@ function CaseListScreen({
   }, /*#__PURE__*/React.createElement("th", {
     style: {
       ...listTh,
-      width: 170
+      width: 110
     }
   }, "\u9304\u97F3\u7DE8\u865F"), /*#__PURE__*/React.createElement("th", {
     style: {
       ...listTh,
-      width: 280
+      width: 130
+    }
+  }, "\u6848\u4EF6\u7DE8\u865F"), /*#__PURE__*/React.createElement("th", {
+    style: {
+      ...listTh,
+      width: 260
     }
   }, "\u5546\u54C1 / \u4FDD\u55AE\u865F"), /*#__PURE__*/React.createElement("th", {
     style: {
       ...listTh,
-      width: 300
+      width: 230
     }
   }, "\u9304\u97F3\u5C0D\u8C61"), /*#__PURE__*/React.createElement("th", {
+    style: {
+      ...listTh,
+      width: 150
+    }
+  }, "\u9032\u5EA6"), /*#__PURE__*/React.createElement("th", {
     style: {
       ...listTh,
       width: 110
@@ -4589,14 +4846,14 @@ function CaseListScreen({
       textAlign: "right"
     }
   }, "\u64CD\u4F5C"))), /*#__PURE__*/React.createElement("tbody", null, filtered.map(c => /*#__PURE__*/React.createElement(CaseRow, {
-    key: c.recordingNo,
+    key: c.caseNo,
     c: c,
     STATUS: STATUS,
-    prog: progressMap[c.recordingNo],
+    prog: progressMap[c.caseNo],
     totalQ: totalQ,
-    onOpen: () => onOpen(c.recordingNo)
+    onOpen: () => onOpen(c.caseNo)
   })), filtered.length === 0 && /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
-    colSpan: 6,
+    colSpan: 8,
     style: {
       padding: "60px 0",
       textAlign: "center"
@@ -4713,10 +4970,19 @@ function CaseRow({
     className: "ff-mont tabular",
     style: {
       font: "600 13.5px/1.2 Montserrat",
-      color: "var(--primary)",
+      color: "var(--ink-2)",
       letterSpacing: ".02em"
     }
   }, c.recordingNo)), /*#__PURE__*/React.createElement("td", {
+    style: listTd
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ff-mont tabular",
+    style: {
+      font: "600 13.5px/1.2 Montserrat",
+      color: "var(--primary)",
+      letterSpacing: ".02em"
+    }
+  }, c.caseNo)), /*#__PURE__*/React.createElement("td", {
     style: listTd
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -4734,8 +5000,25 @@ function CaseRow({
     style: listTd
   }, /*#__PURE__*/React.createElement(SubjectsWithProgress, {
     disp: disp,
-    showProgress: dispStatus === "draft"
+    showProgress: false
   })), /*#__PURE__*/React.createElement("td", {
+    style: listTd
+  }, dispStatus === "draft" ? prog && prog.method ? /*#__PURE__*/React.createElement(CaseProgressCell, {
+    cp: window.buildCaseProgress(c, prog, totalQ)
+  }) : /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 6,
+      font: "400 12px/1.4 'Noto Sans TC'",
+      color: "var(--ink-4)"
+    }
+  }, /*#__PURE__*/React.createElement(I.Info, {
+    size: 12,
+    stroke: "var(--ink-4)"
+  }), " \u5C1A\u672A\u9078\u64C7\u9304\u97F3\u65B9\u5F0F") : /*#__PURE__*/React.createElement("span", {
+    className: "meta"
+  }, "\u2014")), /*#__PURE__*/React.createElement("td", {
     style: listTd
   }, /*#__PURE__*/React.createElement("span", {
     style: {
@@ -4771,6 +5054,43 @@ function CaseRow({
   }, "\u958B\u555F ", /*#__PURE__*/React.createElement(I.Chevron, {
     size: 12
   }))));
+}
+
+// 案件層級進度（一案一進度，僅草稿顯示）：單一 X/Y + 進度條（v1 風格）
+function CaseProgressCell({
+  cp
+}) {
+  const pct = cp.total ? cp.done / cp.total * 100 : 0;
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "baseline",
+      gap: 6,
+      marginBottom: 5
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ff-mont tabular",
+    style: {
+      font: "600 13.5px/1 Montserrat",
+      color: cp.complete ? "var(--ok)" : "var(--ink)"
+    }
+  }, cp.done, "/", cp.total), /*#__PURE__*/React.createElement("span", {
+    className: "meta"
+  }, cp.method === "whole" ? "整段" : "分題")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 5,
+      borderRadius: 3,
+      background: "var(--line-2)",
+      overflow: "hidden"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: `${pct}%`,
+      height: "100%",
+      background: cp.complete ? "var(--ok)" : "var(--primary)",
+      transition: "width .3s"
+    }
+  })));
 }
 
 // 錄音對象儲存格：姓名 + 角色 + （僅草稿）進度 X/Y
@@ -4829,48 +5149,6 @@ function SubjectsWithProgress({
       color: s.complete ? "var(--ok)" : "var(--ink-2)"
     }
   }, s.done, "/", s.total)))));
-}
-
-// 錄音對象儲存格（舊，保留）：去重合併的角色 + 姓名後接關係標籤
-function SubjectsCell({
-  subjects
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: 6
-    }
-  }, subjects.map((s, i) => /*#__PURE__*/React.createElement("div", {
-    key: i,
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 8
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      font: "500 13.5px/1 'Noto Sans TC'",
-      color: "var(--ink)"
-    }
-  }, s.name), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      gap: 3
-    }
-  }, s.roles.map(r => /*#__PURE__*/React.createElement("span", {
-    key: r,
-    style: {
-      display: "inline-grid",
-      placeItems: "center",
-      width: 18,
-      height: 18,
-      borderRadius: 4,
-      background: "var(--primary-soft)",
-      color: "var(--primary)",
-      font: "600 11px/1 'Noto Sans TC'"
-    }
-  }, r))))));
 }
 
 // ─── helpers ───
@@ -5033,32 +5311,43 @@ function CaseDetailScreen({
   caseProgress,
   onBack,
   onStartRecord,
-  onUpload
+  onStartCorrection
 }) {
   const STATUS = window.__MLI_STATUS;
   const status = caseProgress ? caseProgress.status : caseInfo.status;
   const s = STATUS[status];
-  const isWeb = caseInfo.channel.startsWith("Web");
   const canRecord = ["draft", "recording", "returned"].includes(status);
-  const canUpload = isWeb && ["draft", "recording"].includes(status) || status === "returned";
   const canDelete = ["returned", "draft"].includes(status) || status === "recording" && caseInfo.duration > 0;
   const hasAudio = caseProgress && caseProgress.status !== "reviewing" ? false : caseInfo.duration > 0;
-  const [confirm, setConfirm] = React.useState(null); // 'delete' | 'upload'
-  const [uploadStage, setUploadStage] = React.useState(null); // null | 'picking' | 'uploading' | 'done'
+  const [confirm, setConfirm] = React.useState(null); // 'delete'
 
   // Compose the action list — appears in the "..." menu in the header.
   // Order: primary actions first, then edits, then destructive.
   const actions = React.useMemo(() => {
     const list = [];
-    if (canRecord) {
+    if (status === "returned") {
+      // 退回補正：獨立「補正錄音」入口（只走整段/上傳，不與一般錄音混用）
+      list.push({
+        key: "correction",
+        icon: /*#__PURE__*/React.createElement(I.Replay, {
+          size: 16,
+          stroke: "var(--primary)"
+        }),
+        title: "補正錄音",
+        desc: "檢視退回原因，採整段錄音 / 上傳音檔補正後重新送出",
+        fcode: "F-103/F-104",
+        primary: true,
+        onClick: onStartCorrection
+      });
+    } else if (canRecord) {
       list.push({
         key: "record",
         icon: /*#__PURE__*/React.createElement(I.Mic, {
           size: 16,
           stroke: "var(--primary)"
         }),
-        title: status === "returned" ? "重新錄音" : "進入錄音作業",
-        desc: status === "returned" ? "退回補正重錄" : "分題 / 整段 / 上傳，多對象分次錄音",
+        title: "進入錄音作業",
+        desc: "分題 / 整段 / 上傳，多對象分次錄音",
         fcode: "F-103/F-104",
         primary: true,
         onClick: onStartRecord
@@ -5079,13 +5368,13 @@ function CaseDetailScreen({
       });
     }
     return list;
-  }, [canRecord, canUpload, canDelete, hasAudio, isWeb, status, onStartRecord]);
+  }, [canRecord, canDelete, hasAudio, status, onStartRecord, onStartCorrection]);
   return /*#__PURE__*/React.createElement("div", {
     "data-screen-label": `02 案件內容 / ${s.label}`,
     className: "fadeup"
   }, /*#__PURE__*/React.createElement(SubHeader, {
     title: "\u6848\u4EF6\u5167\u5BB9",
-    crumbs: ["錄音前台", "我的案件", caseInfo.recordingNo],
+    crumbs: ["錄音前台", "我的案件", caseInfo.caseNo],
     right: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ActionsMenu, {
       actions: actions
     }), /*#__PURE__*/React.createElement("button", {
@@ -5139,9 +5428,6 @@ function CaseDetailScreen({
   }), canDelete && /*#__PURE__*/React.createElement(FCode, {
     code: "F-306",
     label: "\u522A\u9664\u97F3\u6A94"
-  }), canUpload && /*#__PURE__*/React.createElement(FCode, {
-    code: "F-307",
-    label: "\u4E0A\u50B3\u97F3\u6A94"
   }))), /*#__PURE__*/React.createElement("aside", {
     style: {
       display: "flex",
@@ -5163,11 +5449,6 @@ function CaseDetailScreen({
     caseInfo: caseInfo,
     onCancel: () => setConfirm(null),
     onConfirm: () => setConfirm(null)
-  }), uploadStage && /*#__PURE__*/React.createElement(UploadAudioModal, {
-    caseInfo: caseInfo,
-    stage: uploadStage,
-    onStageChange: setUploadStage,
-    onClose: () => setUploadStage(null)
   }));
 }
 
@@ -5214,7 +5495,7 @@ function CaseDetailCard({
       color: "var(--ink-4)",
       letterSpacing: ".04em"
     }
-  }, caseInfo.recordingNo), /*#__PURE__*/React.createElement("span", {
+  }, caseInfo.caseNo), /*#__PURE__*/React.createElement("span", {
     style: {
       marginLeft: "auto",
       display: "inline-flex",
@@ -5577,136 +5858,7 @@ function CaseHistoryCard({
         font: "500 11.5px/1.4 Montserrat",
         color: isPending ? "var(--ink-4)" : "var(--ink-3)"
       }
-    }, n.date), n.progress && /*#__PURE__*/React.createElement(TimelineProgress, {
-      disp: disp
-    })));
-  })));
-}
-
-// 內嵌於「建立案件」節點下方的精簡錄音進度
-function TimelineProgress({
-  disp
-}) {
-  const methodLabel = disp.method === "whole" ? "整段 / 上傳" : "分題錄音";
-  const doneCount = disp.subjects.filter(s => s.complete).length;
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 10,
-      borderRadius: 9,
-      background: "var(--primary-bg)",
-      border: "1px solid var(--line-2)",
-      overflow: "hidden"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: "8px 11px",
-      borderBottom: "1px solid var(--line-2)",
-      display: "flex",
-      alignItems: "center",
-      gap: 6
-    }
-  }, disp.method === "whole" ? /*#__PURE__*/React.createElement(I.Headset, {
-    size: 13,
-    stroke: "var(--primary)"
-  }) : /*#__PURE__*/React.createElement(I.Wave, {
-    size: 13,
-    stroke: "var(--primary)"
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      font: "700 11.5px/1 'Noto Sans TC'",
-      color: "var(--ink-2)"
-    }
-  }, "\u9304\u97F3\u9032\u5EA6"), /*#__PURE__*/React.createElement("span", {
-    className: "tag",
-    style: {
-      marginLeft: 2,
-      padding: "1px 6px",
-      fontSize: 9.5
-    }
-  }, methodLabel), /*#__PURE__*/React.createElement("span", {
-    className: "tabular ff-mont",
-    style: {
-      marginLeft: "auto",
-      font: "600 11px/1 Montserrat",
-      color: "var(--primary)"
-    }
-  }, doneCount, /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: "var(--ink-4)"
-    }
-  }, "/", disp.subjects.length))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: "4px 11px 8px"
-    }
-  }, disp.subjects.map(s => {
-    const color = s.status === "done" ? "var(--ok)" : s.status === "active" ? "var(--primary)" : "var(--ink-4)";
-    return /*#__PURE__*/React.createElement("div", {
-      key: s.key,
-      style: {
-        padding: "7px 0",
-        borderBottom: "1px solid var(--line-2)"
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: "flex",
-        alignItems: "center",
-        gap: 6,
-        marginBottom: 5
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        width: 7,
-        height: 7,
-        borderRadius: "50%",
-        background: color,
-        flexShrink: 0
-      }
-    }), /*#__PURE__*/React.createElement("span", {
-      style: {
-        font: "600 12px/1.2 'Noto Sans TC'",
-        color: "var(--ink)",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap"
-      }
-    }, s.name), /*#__PURE__*/React.createElement("span", {
-      style: {
-        display: "flex",
-        gap: 3
-      }
-    }, s.roleAbbrs.map(r => /*#__PURE__*/React.createElement("span", {
-      key: r,
-      className: "tag",
-      style: {
-        padding: "0 4px",
-        fontSize: 9
-      }
-    }, r))), /*#__PURE__*/React.createElement("span", {
-      className: "tabular ff-mont",
-      style: {
-        marginLeft: "auto",
-        font: "600 12px/1 Montserrat",
-        color: "var(--ink-2)"
-      }
-    }, s.done, /*#__PURE__*/React.createElement("span", {
-      style: {
-        color: "var(--ink-4)"
-      }
-    }, "/", s.total))), /*#__PURE__*/React.createElement("div", {
-      style: {
-        height: 5,
-        borderRadius: 3,
-        background: "var(--line-2)",
-        overflow: "hidden"
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        width: `${s.total ? s.done / s.total * 100 : 0}%`,
-        height: "100%",
-        background: color,
-        transition: "width .3s"
-      }
-    })));
+    }, n.date)));
   })));
 }
 
@@ -5950,291 +6102,6 @@ function ActionsMenu({
     }
   }, a.fcode))))));
 }
-
-// ─────────────────────────────────────────────────────────────
-function TabBtn({
-  active,
-  onClick,
-  label
-}) {
-  return /*#__PURE__*/React.createElement("button", {
-    onClick: onClick,
-    style: {
-      padding: "12px 18px",
-      font: "500 14px/1 'Noto Sans TC'",
-      color: active ? "var(--primary)" : "var(--ink-3)",
-      borderBottom: `2px solid ${active ? "var(--primary)" : "transparent"}`,
-      marginBottom: -1,
-      cursor: "pointer",
-      letterSpacing: ".04em"
-    }
-  }, label);
-}
-
-// ─────────────────────────────────────────────────────────────
-function OverviewTab({
-  caseInfo,
-  questions,
-  editing,
-  draft,
-  setDraft,
-  onSaveEdit,
-  onCancelEdit,
-  hasAudio,
-  canDelete,
-  canUpload,
-  canRecord,
-  onAskDelete,
-  onAskUpload,
-  onStartRecord
-}) {
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("section", {
-    className: "card",
-    style: {
-      padding: 24
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "baseline",
-      marginBottom: 18
-    }
-  }, /*#__PURE__*/React.createElement("h3", {
-    style: {
-      margin: 0,
-      font: "700 16px/1 'Noto Sans TC'",
-      color: "var(--ink)",
-      letterSpacing: ".04em"
-    }
-  }, "\u6848\u4EF6\u8CC7\u8A0A"), /*#__PURE__*/React.createElement("span", {
-    className: "meta",
-    style: {
-      marginLeft: "auto"
-    }
-  }, editing ? "F-305 修改中" : "由建議書 / 行動投保系統帶入")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "grid",
-      gridTemplateColumns: "repeat(3, 1fr)",
-      gap: "22px 32px"
-    }
-  }, /*#__PURE__*/React.createElement(Detail, {
-    label: "\u5546\u54C1\u540D\u7A31",
-    value: caseInfo.product,
-    bold: true
-  }), /*#__PURE__*/React.createElement(Detail, {
-    label: "\u4FDD\u55AE\u865F\u78BC",
-    value: caseInfo.policyNo || "待核發（需審核通過 + 核保成功）",
-    mono: !!caseInfo.policyNo
-  }), /*#__PURE__*/React.createElement(Detail, {
-    label: "\u6848\u4EF6\u4F86\u6E90",
-    value: caseInfo.source
-  }), /*#__PURE__*/React.createElement(Detail, {
-    label: "\u8981\u4FDD\u4EBA",
-    value: caseInfo.proposer
-  }), /*#__PURE__*/React.createElement(Detail, {
-    label: "\u88AB\u4FDD\u96AA\u4EBA",
-    value: `${caseInfo.insured}（${caseInfo.insuredAge} 歲）`
-  }), /*#__PURE__*/React.createElement(Detail, {
-    label: "\u696D\u52D9\u54E1",
-    value: `${caseInfo.agent}　${caseInfo.agentId}`
-  }), /*#__PURE__*/React.createElement(Detail, {
-    label: "\u6240\u5C6C\u901A\u8A0A\u8655",
-    value: caseInfo.branch
-  }), /*#__PURE__*/React.createElement(Detail, {
-    label: "\u4F7F\u7528\u901A\u8DEF",
-    value: caseInfo.channel
-  }), /*#__PURE__*/React.createElement(Detail, {
-    label: "\u5EFA\u7ACB\u6642\u9593",
-    value: caseInfo.createdAt,
-    mono: true
-  })), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 22
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "baseline",
-      marginBottom: 8
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      font: "500 12px/1 'Noto Sans TC'",
-      color: "var(--ink-3)",
-      letterSpacing: ".08em"
-    }
-  }, "\u696D\u52D9\u54E1\u5099\u8A3B"), /*#__PURE__*/React.createElement("span", {
-    className: "meta",
-    style: {
-      marginLeft: "auto"
-    }
-  }, editing ? "可修改" : "如需修改其他欄位需聯繫內勤")), editing ? /*#__PURE__*/React.createElement("textarea", {
-    value: draft.note,
-    onChange: e => setDraft({
-      ...draft,
-      note: e.target.value
-    }),
-    placeholder: "\u8F38\u5165\u5099\u8A3B\uFF0C\u4F8B\u5982\u5BA2\u6236\u807D\u529B\u72C0\u6CC1\u3001\u5BA2\u6236\u8981\u6C42\u8A9E\u8A00\u3001\u88DC\u9304\u539F\u56E0\u7B49",
-    style: {
-      width: "100%",
-      minHeight: 80,
-      resize: "vertical",
-      padding: "10px 14px",
-      borderRadius: 8,
-      border: "1px solid var(--line)",
-      font: "400 13px/1.6 'Noto Sans TC'",
-      color: "var(--ink)",
-      outline: "none"
-    }
-  }) : /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: "12px 14px",
-      borderRadius: 8,
-      background: "var(--primary-bg)",
-      border: "1px dashed var(--line)",
-      font: "400 13px/1.6 'Noto Sans TC'",
-      color: caseInfo.note ? "var(--ink-2)" : "var(--ink-4)"
-    }
-  }, caseInfo.note || "—（無備註）")), editing && /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      gap: 10,
-      justifyContent: "flex-end",
-      marginTop: 18,
-      paddingTop: 16,
-      borderTop: "1px solid var(--line-2)"
-    }
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-quiet",
-    onClick: onCancelEdit
-  }, "\u53D6\u6D88"), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary",
-    onClick: onSaveEdit
-  }, /*#__PURE__*/React.createElement(I.Check, {
-    size: 14
-  }), " \u5132\u5B58\u8B8A\u66F4"))), /*#__PURE__*/React.createElement("section", {
-    className: "card",
-    style: {
-      padding: 24,
-      marginTop: 20
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "baseline",
-      marginBottom: 18
-    }
-  }, /*#__PURE__*/React.createElement("h3", {
-    style: {
-      margin: 0,
-      font: "700 16px/1 'Noto Sans TC'",
-      color: "var(--ink)",
-      letterSpacing: ".04em"
-    }
-  }, "\u9304\u97F3\u9032\u5EA6"), /*#__PURE__*/React.createElement("span", {
-    className: "meta",
-    style: {
-      marginLeft: "auto"
-    }
-  }, "\u5171 ", caseInfo.progress.total, " \u984C")), /*#__PURE__*/React.createElement(ProgressSummary, {
-    caseInfo: caseInfo
-  })));
-}
-function ProgressSummary({
-  caseInfo
-}) {
-  const p = caseInfo.progress;
-  const pending = p.total - p.recorded - p.skipped;
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "grid",
-      gridTemplateColumns: "repeat(4,1fr)",
-      gap: 12,
-      marginBottom: 18
-    }
-  }, /*#__PURE__*/React.createElement(StatBlock, {
-    label: "\u7E3D\u984C\u6578",
-    value: p.total
-  }), /*#__PURE__*/React.createElement(StatBlock, {
-    label: "\u5DF2\u9304\u97F3",
-    value: p.recorded,
-    color: "var(--ok)"
-  }), /*#__PURE__*/React.createElement(StatBlock, {
-    label: "\u5DF2\u8DF3\u904E",
-    value: p.skipped,
-    color: "var(--ink-3)"
-  }), /*#__PURE__*/React.createElement(StatBlock, {
-    label: "\u672A\u9304\u97F3",
-    value: pending,
-    color: "var(--warn)"
-  })), /*#__PURE__*/React.createElement("div", {
-    style: {
-      height: 8,
-      borderRadius: 4,
-      background: "var(--line-2)",
-      overflow: "hidden",
-      display: "flex"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      width: `${p.recorded / p.total * 100}%`,
-      background: "var(--ok)"
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      width: `${p.skipped / p.total * 100}%`,
-      background: "rgba(140,142,157,.5)"
-    }
-  })), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      justifyContent: "space-between",
-      marginTop: 10,
-      font: "400 11.5px/1 'Noto Sans TC'",
-      color: "var(--ink-3)"
-    }
-  }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(Dot, {
-    color: "var(--ok)",
-    size: 6
-  }), " \u5DF2\u9304 ", p.recorded), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(Dot, {
-    color: "rgba(140,142,157,.7)",
-    size: 6
-  }), " \u8DF3\u904E ", p.skipped), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(Dot, {
-    color: "var(--warn)",
-    size: 6
-  }), " \u672A\u9304 ", pending), caseInfo.duration > 0 && /*#__PURE__*/React.createElement("span", {
-    className: "tabular ff-mont",
-    style: {
-      color: "var(--primary)"
-    }
-  }, "\u97F3\u6A94\u9577\u5EA6 ", fmtDur(caseInfo.duration))));
-}
-function StatBlock({
-  label,
-  value,
-  color = "var(--ink)"
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: "14px 16px",
-      borderRadius: 10,
-      background: "var(--primary-bg)",
-      border: "1px solid var(--line-2)"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "tabular ff-mont",
-    style: {
-      font: "700 24px/1 Montserrat",
-      color
-    }
-  }, value), /*#__PURE__*/React.createElement("div", {
-    style: {
-      font: "400 12px/1 'Noto Sans TC'",
-      color: "var(--ink-3)",
-      marginTop: 6
-    }
-  }, label));
-}
 function Detail({
   label,
   value,
@@ -6256,370 +6123,6 @@ function Detail({
       color: muted ? "var(--ink-3)" : "var(--ink)"
     }
   }, value));
-}
-
-// ─────────────────────────────────────────────────────────────
-function QuestionsTab({
-  questions,
-  caseInfo
-}) {
-  // Render fake status based on case progress
-  const STATUS = window.__MLI_STATUS;
-  const generated = React.useMemo(() => {
-    const p = caseInfo.progress;
-    if (caseInfo.status === "draft") {
-      return questions.map(q => ({
-        ...q,
-        status: "pending",
-        duration: 0
-      }));
-    }
-    if (caseInfo.status === "recording") {
-      return questions.map((q, i) => {
-        if (i < p.recorded) return {
-          ...q,
-          status: "recorded",
-          duration: 30 + i % 5 * 8
-        };
-        if (i === p.recorded + 1) return {
-          ...q,
-          status: "skipped",
-          duration: 0
-        };
-        return {
-          ...q,
-          status: "pending",
-          duration: 0
-        };
-      });
-    }
-    // pending / reviewing / approved / returned — assume all complete-ish per case progress
-    return questions.map((q, i) => {
-      if (i < p.recorded) return {
-        ...q,
-        status: "recorded",
-        duration: 25 + i % 7 * 6
-      };
-      if (i < p.recorded + p.skipped) return {
-        ...q,
-        status: "skipped",
-        duration: 0
-      };
-      return {
-        ...q,
-        status: "pending",
-        duration: 0
-      };
-    });
-  }, [questions, caseInfo]);
-  const canPlayPerQuestion = ["pending", "reviewing", "approved", "returned", "recording"].includes(caseInfo.status);
-  return /*#__PURE__*/React.createElement("section", {
-    className: "card",
-    style: {
-      padding: 0,
-      overflow: "hidden"
-    }
-  }, /*#__PURE__*/React.createElement("table", {
-    style: {
-      width: "100%",
-      borderCollapse: "collapse"
-    }
-  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
-    style: {
-      background: "var(--primary-bg)",
-      borderBottom: "1px solid var(--line-2)"
-    }
-  }, /*#__PURE__*/React.createElement("th", {
-    style: {
-      ...listTh2,
-      width: 60
-    }
-  }, "\u984C\u865F"), /*#__PURE__*/React.createElement("th", {
-    style: {
-      ...listTh2,
-      width: 100
-    }
-  }, "\u985E\u578B"), /*#__PURE__*/React.createElement("th", {
-    style: {
-      ...listTh2
-    }
-  }, "\u984C\u76EE"), /*#__PURE__*/React.createElement("th", {
-    style: {
-      ...listTh2,
-      width: 100
-    }
-  }, "\u72C0\u614B"), /*#__PURE__*/React.createElement("th", {
-    style: {
-      ...listTh2,
-      width: 90,
-      textAlign: "right"
-    }
-  }, "\u6642\u9577"), /*#__PURE__*/React.createElement("th", {
-    style: {
-      ...listTh2,
-      width: 120,
-      textAlign: "right"
-    }
-  }, "\u64CD\u4F5C"))), /*#__PURE__*/React.createElement("tbody", null, generated.map(q => {
-    const isRec = q.status === "recorded";
-    const isSkip = q.status === "skipped";
-    return /*#__PURE__*/React.createElement("tr", {
-      key: q.no,
-      style: {
-        borderBottom: "1px solid var(--line-2)"
-      }
-    }, /*#__PURE__*/React.createElement("td", {
-      style: {
-        ...listTd2,
-        font: "600 13px/1 Montserrat",
-        color: "var(--primary)"
-      },
-      className: "tabular"
-    }, "Q", q.no.toString().padStart(2, "0")), /*#__PURE__*/React.createElement("td", {
-      style: listTd2
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "tag",
-      style: {
-        background: q.type === "tts" ? "var(--primary-soft)" : "rgb(238,246,255)",
-        color: q.type === "tts" ? "var(--primary)" : "rgb(53,150,253)"
-      }
-    }, q.type === "tts" ? "自動播稿" : "業務員自錄")), /*#__PURE__*/React.createElement("td", {
-      style: listTd2
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        font: "500 13.5px/1.3 'Noto Sans TC'",
-        color: "var(--ink)",
-        textDecoration: isSkip ? "line-through" : "none",
-        textDecorationColor: "var(--ink-4)"
-      }
-    }, q.title)), /*#__PURE__*/React.createElement("td", {
-      style: listTd2
-    }, /*#__PURE__*/React.createElement(QuestionStatusBadge, {
-      status: q.status
-    })), /*#__PURE__*/React.createElement("td", {
-      style: {
-        ...listTd2,
-        textAlign: "right",
-        font: "500 13px/1 Montserrat",
-        color: isRec ? "var(--ink-2)" : "var(--ink-4)"
-      },
-      className: "tabular ff-mont"
-    }, isRec ? fmtDur(q.duration) : "—"), /*#__PURE__*/React.createElement("td", {
-      style: {
-        ...listTd2,
-        textAlign: "right"
-      }
-    }, isRec && canPlayPerQuestion ? /*#__PURE__*/React.createElement("button", {
-      className: "btn btn-quiet btn-sm"
-    }, /*#__PURE__*/React.createElement(I.Play, {
-      size: 12
-    }), " \u64AD\u653E") : /*#__PURE__*/React.createElement("span", {
-      className: "meta"
-    }, "\u2014")));
-  }))));
-}
-function QuestionStatusBadge({
-  status
-}) {
-  const map = {
-    recorded: {
-      l: "已錄音",
-      c: "var(--ok)",
-      bg: "var(--ok-soft)"
-    },
-    skipped: {
-      l: "已跳過",
-      c: "var(--ink-3)",
-      bg: "rgba(140,142,157,.15)"
-    },
-    pending: {
-      l: "未錄音",
-      c: "var(--warn)",
-      bg: "var(--warn-soft)"
-    }
-  };
-  const m = map[status] || map.pending;
-  return /*#__PURE__*/React.createElement("span", {
-    style: {
-      display: "inline-flex",
-      alignItems: "center",
-      gap: 6,
-      padding: "4px 10px",
-      borderRadius: 12,
-      background: m.bg,
-      color: m.c,
-      font: "500 12px/1 'Noto Sans TC'"
-    }
-  }, /*#__PURE__*/React.createElement(Dot, {
-    color: m.c
-  }), " ", m.l);
-}
-
-// ─────────────────────────────────────────────────────────────
-function TimelineTab({
-  caseInfo
-}) {
-  // Synthesize a plausible timeline
-  const events = React.useMemo(() => {
-    const e = [];
-    e.push({
-      time: caseInfo.createdAt,
-      who: caseInfo.agent,
-      icon: /*#__PURE__*/React.createElement(I.Doc, {
-        size: 14,
-        stroke: "#fff"
-      }),
-      color: "var(--primary)",
-      title: "建立錄音案件",
-      desc: `由 ${caseInfo.source} 帶入案件資訊，取得錄音編號 ${caseInfo.recordingNo}`
-    });
-    if (caseInfo.progress.recorded > 0) {
-      e.push({
-        time: caseInfo.createdAt,
-        who: caseInfo.agent,
-        icon: /*#__PURE__*/React.createElement(I.Mic, {
-          size: 14,
-          stroke: "#fff"
-        }),
-        color: "var(--primary-2)",
-        title: "開始錄音作業",
-        desc: `共 ${caseInfo.progress.total} 題，逐題即時上傳分段音檔`
-      });
-    }
-    if (caseInfo.duration > 0) {
-      e.push({
-        time: caseInfo.updatedAt,
-        who: caseInfo.agent,
-        icon: /*#__PURE__*/React.createElement(I.Upload, {
-          size: 14,
-          stroke: "#fff"
-        }),
-        color: "var(--ok)",
-        title: "完成上傳",
-        desc: `已合併為完整音檔 ${caseInfo.recordingNo}_merged.wav · ${fmtDur(caseInfo.duration)}`
-      });
-    }
-    if (caseInfo.status === "reviewing") {
-      e.push({
-        time: caseInfo.updatedAt,
-        who: "內勤審核員 王小姐",
-        icon: /*#__PURE__*/React.createElement(I.Headset, {
-          size: 14,
-          stroke: "#fff"
-        }),
-        color: "rgb(53,113,200)",
-        title: "內勤指派審核",
-        desc: "案件已分派至內勤審核佇列"
-      });
-    }
-    if (caseInfo.status === "approved") {
-      e.push({
-        time: caseInfo.updatedAt,
-        who: "內勤審核員 王小姐",
-        icon: /*#__PURE__*/React.createElement(I.Check, {
-          size: 14,
-          stroke: "#fff"
-        }),
-        color: "var(--ok)",
-        title: "審核通過",
-        desc: "STT 比對與聽稿結果通過，案件已歸檔"
-      });
-    }
-    if (caseInfo.status === "returned") {
-      e.push({
-        time: caseInfo.updatedAt,
-        who: "內勤審核員 王小姐",
-        icon: /*#__PURE__*/React.createElement(I.Warn, {
-          size: 14,
-          stroke: "#fff"
-        }),
-        color: "var(--danger)",
-        title: "退回補正",
-        desc: caseInfo.note
-      });
-    }
-    return e.reverse();
-  }, [caseInfo]);
-  return /*#__PURE__*/React.createElement("section", {
-    className: "card",
-    style: {
-      padding: "24px 28px"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "baseline",
-      marginBottom: 18
-    }
-  }, /*#__PURE__*/React.createElement("h3", {
-    style: {
-      margin: 0,
-      font: "700 16px/1 'Noto Sans TC'",
-      color: "var(--ink)",
-      letterSpacing: ".04em"
-    }
-  }, "\u64CD\u4F5C\u7D00\u9304"), /*#__PURE__*/React.createElement("span", {
-    className: "meta",
-    style: {
-      marginLeft: "auto"
-    }
-  }, "\u7531\u7CFB\u7D71\u81EA\u52D5\u7522\u751F")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      position: "relative",
-      paddingLeft: 28
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      position: "absolute",
-      left: 11,
-      top: 6,
-      bottom: 6,
-      width: 2,
-      background: "var(--line-2)"
-    }
-  }), events.map((ev, i) => /*#__PURE__*/React.createElement("div", {
-    key: i,
-    style: {
-      position: "relative",
-      paddingBottom: i === events.length - 1 ? 0 : 22
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      position: "absolute",
-      left: -22,
-      top: 0,
-      width: 24,
-      height: 24,
-      borderRadius: "50%",
-      background: ev.color,
-      display: "grid",
-      placeItems: "center",
-      boxShadow: "0 0 0 4px #fff"
-    }
-  }, ev.icon), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "baseline",
-      gap: 10,
-      marginBottom: 4
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      font: "600 14px/1.2 'Noto Sans TC'",
-      color: "var(--ink)"
-    }
-  }, ev.title), /*#__PURE__*/React.createElement("span", {
-    className: "meta tabular"
-  }, ev.time), /*#__PURE__*/React.createElement("span", {
-    className: "meta"
-  }, "\xB7"), /*#__PURE__*/React.createElement("span", {
-    className: "meta"
-  }, ev.who)), /*#__PURE__*/React.createElement("div", {
-    style: {
-      font: "400 13px/1.6 'Noto Sans TC'",
-      color: "var(--ink-3)"
-    }
-  }, ev.desc)))));
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -6684,7 +6187,7 @@ function AudioPlayer({
     stroke: "var(--ink-4)"
   }), /*#__PURE__*/React.createElement("span", {
     className: "ff-mont tabular"
-  }, caseInfo.recordingNo, "_merged.wav")), /*#__PURE__*/React.createElement("div", {
+  }, caseInfo.caseNo, "_merged.wav")), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: "14px 12px",
       borderRadius: 10,
@@ -6805,183 +6308,6 @@ function AudioPlayer({
 }
 
 // ─────────────────────────────────────────────────────────────
-function ActionRow({
-  icon,
-  title,
-  desc,
-  fcode,
-  onClick,
-  danger
-}) {
-  return /*#__PURE__*/React.createElement("button", {
-    onClick: onClick,
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 12,
-      width: "100%",
-      padding: "12px 12px",
-      borderRadius: 10,
-      border: `1px solid ${danger ? "rgba(234,82,82,.25)" : "var(--line-2)"}`,
-      background: "#fff",
-      textAlign: "left",
-      cursor: "pointer",
-      transition: "all .12s"
-    },
-    onMouseEnter: e => e.currentTarget.style.background = danger ? "var(--danger-soft)" : "var(--primary-soft-2)",
-    onMouseLeave: e => e.currentTarget.style.background = "#fff"
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      width: 34,
-      height: 34,
-      borderRadius: 8,
-      background: danger ? "var(--danger-soft)" : "var(--primary-soft)",
-      display: "grid",
-      placeItems: "center",
-      flexShrink: 0
-    }
-  }, icon), /*#__PURE__*/React.createElement("div", {
-    style: {
-      flex: 1,
-      minWidth: 0
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      font: "500 13.5px/1.3 'Noto Sans TC'",
-      color: danger ? "var(--danger)" : "var(--ink)"
-    }
-  }, title), /*#__PURE__*/React.createElement("div", {
-    className: "meta",
-    style: {
-      marginTop: 3
-    }
-  }, desc)), /*#__PURE__*/React.createElement("span", {
-    className: "ff-mont",
-    style: {
-      font: "600 10.5px/1 Montserrat",
-      color: danger ? "var(--danger)" : "var(--primary)",
-      letterSpacing: ".04em",
-      flexShrink: 0
-    }
-  }, fcode));
-}
-
-// ─────────────────────────────────────────────────────────────
-// BasicInfoBlock — 案件基本資訊（側欄）
-// Style mirrors MetaBlock so the right column reads as a uniform info stack.
-function BasicInfoBlock({
-  caseInfo
-}) {
-  const recordDate = (caseInfo.createdAt || "").split(" ")[0].replace(/\//g, "-");
-  return /*#__PURE__*/React.createElement("section", {
-    className: "card",
-    style: {
-      padding: 18
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      font: "700 12px/1 'Noto Sans TC'",
-      color: "var(--ink-3)",
-      letterSpacing: ".08em",
-      marginBottom: 12
-    }
-  }, "\u6848\u4EF6\u57FA\u672C\u8CC7\u8A0A"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: 10,
-      font: "400 12px/1.4 'Noto Sans TC'"
-    }
-  }, /*#__PURE__*/React.createElement(MetaLine, {
-    label: "\u9304\u97F3\u65E5\u671F",
-    value: recordDate || "—",
-    mono: true
-  }), /*#__PURE__*/React.createElement(MetaLine, {
-    label: "\u4FDD\u96AA\u5546\u54C1",
-    value: caseInfo.product
-  }), /*#__PURE__*/React.createElement(MetaLine, {
-    label: "\u4FDD\u55AE\u865F\u78BC",
-    value: caseInfo.policyNo || "待核發",
-    mono: !!caseInfo.policyNo
-  }), /*#__PURE__*/React.createElement(MetaLine, {
-    label: "\u696D\u52D9\u54E1",
-    value: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", null, caseInfo.agent), /*#__PURE__*/React.createElement("span", {
-      className: "ff-mont tabular",
-      style: {
-        marginLeft: 6,
-        color: "var(--ink-4)",
-        font: "500 11.5px/1.4 Montserrat"
-      }
-    }, caseInfo.agentId))
-  }), /*#__PURE__*/React.createElement(MetaLine, {
-    label: "\u6240\u5C6C\u901A\u8A0A\u8655",
-    value: caseInfo.branch
-  })));
-}
-
-// ─────────────────────────────────────────────────────────────
-function MetaBlock({
-  caseInfo
-}) {
-  return /*#__PURE__*/React.createElement("section", {
-    className: "card",
-    style: {
-      padding: 18
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      font: "700 12px/1 'Noto Sans TC'",
-      color: "var(--ink-3)",
-      letterSpacing: ".08em",
-      marginBottom: 12
-    }
-  }, "\u7CFB\u7D71\u8CC7\u8A0A"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: 10,
-      font: "400 12px/1.4 'Noto Sans TC'"
-    }
-  }, /*#__PURE__*/React.createElement(MetaLine, {
-    label: "\u5EFA\u7ACB\u6642\u9593",
-    value: caseInfo.createdAt
-  }), /*#__PURE__*/React.createElement(MetaLine, {
-    label: "\u66F4\u65B0\u6642\u9593",
-    value: caseInfo.updatedAt
-  }), /*#__PURE__*/React.createElement(MetaLine, {
-    label: "\u4F7F\u7528\u901A\u8DEF",
-    value: caseInfo.channel
-  }), /*#__PURE__*/React.createElement(MetaLine, {
-    label: "\u4F86\u6E90\u7CFB\u7D71",
-    value: caseInfo.source
-  })));
-}
-function MetaLine({
-  label,
-  value,
-  mono
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      justifyContent: "space-between",
-      gap: 10
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: "var(--ink-4)"
-    }
-  }, label), /*#__PURE__*/React.createElement("span", {
-    className: mono ? "tabular ff-mont" : "",
-    style: {
-      color: "var(--ink-2)",
-      textAlign: "right",
-      font: mono ? "500 12px/1.4 Montserrat" : undefined
-    }
-  }, value));
-}
-
-// ─────────────────────────────────────────────────────────────
 function ConfirmDeleteModal({
   caseInfo,
   onCancel,
@@ -7044,7 +6370,7 @@ function ConfirmDeleteModal({
     style: {
       color: "var(--primary)"
     }
-  }, caseInfo.recordingNo, "_merged.wav"), /*#__PURE__*/React.createElement("span", {
+  }, caseInfo.caseNo, "_merged.wav"), /*#__PURE__*/React.createElement("span", {
     style: {
       margin: "0 8px",
       color: "var(--ink-4)"
@@ -7071,291 +6397,23 @@ function ConfirmDeleteModal({
     size: 14
   }), " \u78BA\u8A8D\u522A\u9664"))));
 }
-
-// ─────────────────────────────────────────────────────────────
-function UploadAudioModal({
-  caseInfo,
-  stage,
-  onStageChange,
-  onClose
-}) {
-  const [filename] = React.useState(`${caseInfo.recordingNo}_recall.wav`);
-  const [size] = React.useState("4.8 MB");
-  React.useEffect(() => {
-    if (stage === "uploading") {
-      const t = setTimeout(() => onStageChange("done"), 2200);
-      return () => clearTimeout(t);
-    }
-  }, [stage, onStageChange]);
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      position: "fixed",
-      inset: 0,
-      zIndex: 200,
-      background: "rgba(41,47,84,.4)",
-      display: "grid",
-      placeItems: "center"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card fadeup",
-    style: {
-      padding: 32,
-      width: 520
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 12,
-      marginBottom: 18
-    }
-  }, /*#__PURE__*/React.createElement(I.Upload, {
-    size: 22,
-    stroke: "var(--primary)"
-  }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", {
-    style: {
-      margin: 0,
-      font: "700 18px/1.2 'Noto Sans TC'",
-      color: "var(--ink)"
-    }
-  }, "\u4E0A\u50B3\u5B8C\u6574\u97F3\u6A94"), /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: "4px 0 0",
-      font: "400 12.5px/1.4 'Noto Sans TC'",
-      color: "var(--ink-3)"
-    }
-  }, "F-307 \xB7 \u9650 WAV / MP3 \u683C\u5F0F\uFF0C\u6A94\u6848\u5927\u5C0F\u4E0D\u8D85\u904E 100 MB")), /*#__PURE__*/React.createElement("button", {
-    onClick: onClose,
-    style: {
-      marginLeft: "auto",
-      padding: 6,
-      color: "var(--ink-4)"
-    }
-  }, /*#__PURE__*/React.createElement(I.X, {
-    size: 18
-  }))), stage === "picking" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: "30px 20px",
-      borderRadius: 12,
-      border: "2px dashed rgba(73,99,250,.4)",
-      background: "var(--primary-soft-2)",
-      textAlign: "center",
-      cursor: "pointer",
-      transition: "all .15s"
-    },
-    onClick: () => onStageChange("uploading")
-  }, /*#__PURE__*/React.createElement(I.Upload, {
-    size: 36,
-    stroke: "var(--primary)",
-    sw: 1.6
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      font: "600 14.5px/1.3 'Noto Sans TC'",
-      color: "var(--ink)",
-      marginTop: 12
-    }
-  }, "\u9EDE\u64CA\u9078\u64C7\u97F3\u6A94\uFF0C\u6216\u62D6\u66F3\u6A94\u6848\u81F3\u6B64"), /*#__PURE__*/React.createElement("div", {
-    className: "meta",
-    style: {
-      marginTop: 6
-    }
-  }, "\u5EFA\u8B70\u4F7F\u7528\u672C\u7CFB\u7D71 iPad \u7AEF\u9304\u88FD\u5F8C\u532F\u51FA\u4E4B WAV \u6A94\uFF0C\u4EE5\u78BA\u4FDD\u54C1\u8CEA")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 18,
-      padding: "12px 14px",
-      borderRadius: 8,
-      background: "var(--warn-soft)",
-      display: "flex",
-      gap: 10,
-      alignItems: "flex-start"
-    }
-  }, /*#__PURE__*/React.createElement(I.Info, {
-    size: 14,
-    stroke: "rgb(151,89,15)",
-    style: {
-      flexShrink: 0,
-      marginTop: 1
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      font: "400 12px/1.6 'Noto Sans TC'",
-      color: "rgb(151,89,15)"
-    }
-  }, "\u4E0A\u50B3\u6210\u529F\u5F8C\uFF0C\u672C\u6848\u4EF6\u5C07\u76F4\u63A5\u9032\u5165\u300C\u5F85\u5BE9\u6838\u300D\u72C0\u614B\uFF0C\u5F8C\u7AEF\u5C07\u9032\u884C STT \u6BD4\u5C0D\u3002 \u82E5\u70BA\u9000\u56DE\u88DC\u6B63\uFF0C\u5C07\u8986\u84CB\u539F\u97F3\u6A94\u3002")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      gap: 10,
-      justifyContent: "flex-end",
-      marginTop: 22
-    }
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-quiet",
-    onClick: onClose
-  }, "\u53D6\u6D88"))), stage === "uploading" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: "18px 16px",
-      borderRadius: 10,
-      background: "var(--primary-bg)",
-      border: "1px solid var(--line-2)"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 10,
-      marginBottom: 12
-    }
-  }, /*#__PURE__*/React.createElement(I.Doc, {
-    size: 20,
-    stroke: "var(--primary)"
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      flex: 1,
-      minWidth: 0
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "ff-mont tabular",
-    style: {
-      font: "500 13.5px/1.3 Montserrat",
-      color: "var(--ink)"
-    }
-  }, filename), /*#__PURE__*/React.createElement("div", {
-    className: "meta",
-    style: {
-      marginTop: 3
-    }
-  }, size, " \xB7 WAV")), /*#__PURE__*/React.createElement("svg", {
-    className: "spin",
-    width: 20,
-    height: 20,
-    viewBox: "0 0 24 24",
-    fill: "none"
-  }, /*#__PURE__*/React.createElement("circle", {
-    cx: "12",
-    cy: "12",
-    r: "9",
-    stroke: "var(--primary-soft)",
-    strokeWidth: "2.5"
-  }), /*#__PURE__*/React.createElement("path", {
-    d: "M12 3a9 9 0 0 1 9 9",
-    stroke: "var(--primary)",
-    strokeWidth: "2.5",
-    strokeLinecap: "round"
-  }))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      height: 6,
-      borderRadius: 3,
-      background: "var(--primary-soft)",
-      overflow: "hidden"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      height: "100%",
-      background: "var(--primary)",
-      width: "62%",
-      animation: "wf 1.6s ease-in-out infinite",
-      transformOrigin: "left"
-    }
-  })), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      justifyContent: "space-between",
-      marginTop: 8
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "meta"
-  }, "\u4E0A\u50B3\u4E2D\u2026"), /*#__PURE__*/React.createElement("span", {
-    className: "meta tabular ff-mont"
-  }, "62%")))), stage === "done" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: "24px 16px",
-      textAlign: "center"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      width: 64,
-      height: 64,
-      borderRadius: "50%",
-      background: "var(--ok-soft)",
-      display: "grid",
-      placeItems: "center",
-      margin: "0 auto 14px"
-    }
-  }, /*#__PURE__*/React.createElement(I.Check, {
-    size: 32,
-    stroke: "var(--ok)",
-    sw: 2.6
-  })), /*#__PURE__*/React.createElement("h3", {
-    style: {
-      margin: "0 0 6px",
-      font: "700 17px/1.3 'Noto Sans TC'",
-      color: "var(--ink)"
-    }
-  }, "\u4E0A\u50B3\u5B8C\u6210"), /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: "0 0 18px",
-      font: "400 13px/1.6 'Noto Sans TC'",
-      color: "var(--ink-3)"
-    }
-  }, "\u97F3\u6A94\u5DF2\u4E0A\u50B3\u4E26\u9001\u51FA\u5BE9\u6838\uFF0C\u5F8C\u7AEF\u5C07\u9032\u884C STT \u6BD4\u5C0D"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: "10px 14px",
-      borderRadius: 8,
-      background: "var(--primary-bg)",
-      display: "inline-block",
-      font: "400 12px/1.5 'Noto Sans TC'",
-      color: "var(--ink-2)"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "ff-mont tabular"
-  }, filename), " \xB7 ", size)), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      gap: 10,
-      justifyContent: "flex-end",
-      marginTop: 6
-    }
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary",
-    onClick: onClose
-  }, "\u5B8C\u6210")))));
-}
-
-// ─── styles ───
-const listTh2 = {
-  padding: "12px 16px",
-  textAlign: "left",
-  font: "500 12px/1 'Noto Sans TC'",
-  color: "var(--ink-3)",
-  letterSpacing: ".06em",
-  whiteSpace: "nowrap"
-};
-const listTd2 = {
-  padding: "14px 16px",
-  verticalAlign: "middle",
-  background: "#fff"
-};
 window.CaseDetailScreen = CaseDetailScreen;
 
 // ── EntryScreen.jsx ──
-// Entry screen — 建立錄音案件
+// EntryScreen — 建立錄音案件（v7 重構：單頁「建殼」）
 //
-// 流程重構（依保險業務邏輯）：
-//   STEP 01 輸入案件資訊
-//     ─ 依「起案通路」判斷是否由建議書 APP 帶入：
-//        • iPad（建議書 APP）→ 整合帶入，可確認 / 微調
-//        • Web（桌機瀏覽器）→ 業務員手動輸入
-//     ─ 欄位：商品 / 客戶（姓名、身分證、關係多選）
-//     ─ 通過驗證 → 點「下一步：確認題目文稿」進 STEP 02
+// 設計理念（斷開流程）：
+//   建立案件 ≠ 錄音。本頁只負責「建好錄音案件的殼」並取得錄音編號。
+//   一個錄音案件 = 一個錄音場次。同一張保單若分多次錄音（不同人不同天），
+//   就用每位客戶的「場次」欄位拆成多筆案件（多個錄音編號）。
 //
-//   STEP 02 確認題目文稿
-//     ─ 此步驟才會將 STEP 01 資料送後端，取得「錄音編號」（F-402）
-//     ─ 同時依商品呼叫「題目文稿」（F-201）供業務員確認
-//     ─ 右側可調 TTS 語音設定（F-202 / F-203）
-//     ─ 點「下一步：開始錄音」進 STEP 03
-//
-//   STEP 03 錄音作業
-//     ─ 由 RecordingScreen 承接
+//   流程：
+//     ① 起案通路（自動帶入 / 手動輸入）
+//     ② 投保商品
+//     ③ 客戶資料（姓名 / 身分證 / 本案關係多選 + 場次）
+//     ④ 自動帶入：頁面最下方一併顯示題目文稿（無 STEP 2）
+//        手動輸入：不顯示文稿，改於「進入錄音作業」前自行上傳 PDF
+//     ⑤「確認建立」→ 依場次拆案、產生錄音編號 → 成功視窗 →「回到錄音清單」
 
 const ROLE_MAP = {
   proposer: {
@@ -7383,7 +6441,8 @@ function rolesToCustomers(roles) {
       name: r.name,
       idNo: r.idNo || maskId(r.name, r.age),
       age: r.age,
-      roles: [k]
+      roles: [k],
+      sessionNo: 1
     });
   });
   return [...map.values()];
@@ -7397,13 +6456,9 @@ function maskId(name, age) {
 }
 function EntryScreen({
   caseInfo,
-  tts,
-  setTts,
-  entryStep,
-  setEntryStep,
   entrySource,
   setEntrySource,
-  onStart,
+  onCreate,
   onCancel
 }) {
   // ─── 由「資料來源」決定初始狀態 ───────────────────────
@@ -7419,244 +6474,32 @@ function EntryScreen({
       customers: [{
         name: "",
         idNo: "",
-        roles: ["proposer"]
+        roles: ["proposer"],
+        sessionNo: 1
       }]
     };
   }, [entrySource, caseInfo]);
   const [product, setProduct] = React.useState(initial.product);
   const [customers, setCustomers] = React.useState(initial.customers);
 
-  // 切換資料來源時重設 STEP 01 內容
+  // 切換資料來源時重設內容
   React.useEffect(() => {
     setProduct(initial.product);
     setCustomers(initial.customers);
   }, [initial]);
-
-  // STEP 02 取得錄音編號 + 題本（模擬非同步）
-  const [retrieving, setRetrieving] = React.useState(false);
-  const [retrieved, setRetrieved] = React.useState(false);
-  const goStep2 = () => {
-    setEntryStep(2);
-    setRetrieving(true);
-    setRetrieved(false);
-    setTimeout(() => {
-      setRetrieving(false);
-      setRetrieved(true);
-    }, 900);
-  };
-  const backStep1 = () => {
-    setEntryStep(1);
-    setRetrieved(false);
-  };
-
-  // STEP 01 驗證
-  const isStep1Valid = product && customers.length > 0 && customers.every(c => c.name.trim() && c.idNo.trim().length >= 8 && c.roles.length > 0);
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SubHeader, {
-    title: "\u5EFA\u7ACB\u9304\u97F3\u6848\u4EF6",
-    crumbs: ["我的案件", "新建錄音"],
-    right: /*#__PURE__*/React.createElement("button", {
-      className: "btn btn-quiet",
-      onClick: onCancel
-    }, /*#__PURE__*/React.createElement(I.ChevronL, {
-      size: 14
-    }), " \u8FD4\u56DE\u6848\u4EF6\u6E05\u55AE")
-  }), /*#__PURE__*/React.createElement(StepIndicator, {
-    current: entryStep
-  }), /*#__PURE__*/React.createElement("div", {
-    "data-screen-label": "04 \u5EFA\u7ACB\u9304\u97F3\u6848\u4EF6",
-    className: "fadeup",
-    style: {
-      padding: "8px 40px 60px"
-    }
-  }, entryStep === 1 && /*#__PURE__*/React.createElement(Step1Form, {
-    source: entrySource,
-    setSource: setEntrySource,
-    product: product,
-    setProduct: setProduct,
-    customers: customers,
-    setCustomers: setCustomers,
-    valid: isStep1Valid,
-    onCancel: onCancel,
-    onNext: goStep2
-  }), entryStep === 2 && /*#__PURE__*/React.createElement(Step2Confirm, {
-    source: entrySource,
-    caseInfo: caseInfo,
-    product: product,
-    customers: customers,
-    retrieving: retrieving,
-    retrieved: retrieved,
-    tts: tts,
-    setTts: setTts,
-    onBack: backStep1,
-    onNext: () => onStart(customers)
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "fcode-legend",
-    style: {
-      margin: "0 40px 28px",
-      padding: "12px 16px",
-      borderRadius: 10,
-      background: "var(--primary-soft-2)",
-      border: "1px dashed rgba(73,99,250,.25)",
-      font: "400 12px/1.5 'Noto Sans TC'",
-      color: "var(--ink-3)",
-      display: "flex",
-      alignItems: "center",
-      gap: 8,
-      flexWrap: "wrap"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      font: "600 12px/1 'Noto Sans TC'",
-      color: "var(--primary)",
-      letterSpacing: ".06em"
-    }
-  }, "\u672C\u756B\u9762\u5C0D\u61C9\u529F\u80FD"), /*#__PURE__*/React.createElement(FCode, {
-    code: "F-101",
-    label: "\u5EFA\u7ACB\u9304\u97F3\u6848\u4EF6"
-  }), /*#__PURE__*/React.createElement(FCode, {
-    code: "F-402",
-    label: "\u9304\u97F3\u7DE8\u865F\u53D6\u5F97\uFF08STEP 02 \u89F8\u767C\uFF09"
-  }), /*#__PURE__*/React.createElement(FCode, {
-    code: "F-201",
-    label: "\u984C\u672C\u53D6\u5F97\uFF08STEP 02 \u89F8\u767C\uFF09"
-  }), /*#__PURE__*/React.createElement(FCode, {
-    code: "F-202",
-    label: "\u591A\u8A9E\u8A00 TTS"
-  }), /*#__PURE__*/React.createElement(FCode, {
-    code: "F-203",
-    label: "\u8A9E\u901F\u8ABF\u6574"
-  })));
-}
-
-/* ─────────────────────────────────────────────────────
- * 步驟指示器
- * ───────────────────────────────────────────────────── */
-function StepIndicator({
-  current
-}) {
-  const steps = [{
-    n: 1,
-    label: "輸入案件資訊",
-    icon: /*#__PURE__*/React.createElement(I.User, {
-      size: 16
-    })
-  }, {
-    n: 2,
-    label: "確認題目文稿",
-    icon: /*#__PURE__*/React.createElement(I.Script, {
-      size: 16
-    })
-  }, {
-    n: 3,
-    label: "錄音作業",
-    icon: /*#__PURE__*/React.createElement(I.Mic, {
-      size: 16
-    })
-  }];
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: "20px 40px 4px",
-      display: "flex",
-      alignItems: "center",
-      gap: 0,
-      background: "#fff",
-      borderBottom: "1px solid var(--line-2)"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      flex: 1,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 0,
-      padding: "4px 0 18px"
-    }
-  }, steps.map((s, i) => {
-    const state = s.n < current ? "done" : s.n === current ? "active" : "todo";
-    const dotBg = state === "active" ? "var(--primary)" : state === "done" ? "var(--primary-2)" : "#fff";
-    const dotColor = state === "todo" ? "var(--ink-4)" : "#fff";
-    const dotBorder = state === "todo" ? "1.5px solid var(--line-3)" : "0";
-    return /*#__PURE__*/React.createElement(React.Fragment, {
-      key: s.n
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: "flex",
-        alignItems: "center",
-        gap: 10
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        background: dotBg,
-        color: dotColor,
-        border: dotBorder,
-        display: "grid",
-        placeItems: "center",
-        font: "700 13px/1 Montserrat,sans-serif",
-        letterSpacing: ".02em",
-        boxShadow: state === "active" ? "0 0 0 4px rgba(73,99,250,.16)" : "none",
-        transition: "all .2s ease"
-      }
-    }, state === "done" ? /*#__PURE__*/React.createElement(I.Check, {
-      size: 18,
-      stroke: "#fff",
-      sw: 2.5
-    }) : `0${s.n}`), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: "flex",
-        flexDirection: "column",
-        gap: 3
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "ff-mont",
-      style: {
-        font: `${state === "active" ? 700 : 500} 10.5px/1 Montserrat`,
-        color: state === "todo" ? "var(--ink-4)" : "var(--primary)",
-        letterSpacing: ".14em"
-      }
-    }, "STEP 0", s.n), /*#__PURE__*/React.createElement("span", {
-      style: {
-        font: `${state === "active" ? 700 : 500} 14px/1 'Noto Sans TC'`,
-        color: state === "todo" ? "var(--ink-3)" : "var(--ink)",
-        letterSpacing: ".04em"
-      }
-    }, s.label))), i < steps.length - 1 && /*#__PURE__*/React.createElement("div", {
-      style: {
-        flexShrink: 0,
-        width: 90,
-        height: 2,
-        margin: "0 26px",
-        background: s.n < current ? "var(--primary-2)" : "var(--line)"
-      }
-    }));
-  })));
-}
-
-/* ─────────────────────────────────────────────────────
- * STEP 01 — 輸入案件資訊
- * ───────────────────────────────────────────────────── */
-function Step1Form({
-  source,
-  setSource,
-  product,
-  setProduct,
-  customers,
-  setCustomers,
-  valid,
-  onCancel,
-  onNext
-}) {
   const updateCustomer = (idx, patch) => setCustomers(cs => cs.map((c, i) => i === idx ? {
     ...c,
     ...patch
   } : c));
-  const removeCustomer = idx => setCustomers(cs => cs.filter((_, i) => i !== idx));
+  const removeCustomer = idx => setCustomers(cs => cs.filter((_, i) => i !== idx).map(c => ({
+    ...c,
+    sessionNo: Math.min(c.sessionNo || 1, Math.max(1, cs.length - 1))
+  })));
   const addCustomer = () => setCustomers(cs => [...cs, {
     name: "",
     idNo: "",
-    roles: ["proposer"]
+    roles: ["proposer"],
+    sessionNo: 1
   }]);
   const toggleRole = (idx, role) => {
     const cur = customers[idx].roles;
@@ -7673,9 +6516,52 @@ function Step1Form({
     roleOwners[r].push(i);
   }));
   const conflicts = Object.entries(roleOwners).filter(([_, owners]) => owners.length > 1);
-  return /*#__PURE__*/React.createElement("div", {
+
+  // 依場次分組（供「將建立 N 筆」預覽與送出）
+  const groups = React.useMemo(() => {
+    const m = new Map();
+    customers.forEach(c => {
+      const n = c.sessionNo || 1;
+      if (!m.has(n)) m.set(n, []);
+      m.get(n).push(c);
+    });
+    return [...m.entries()].sort((a, b) => a[0] - b[0]).map(([sessionNo, cs]) => ({
+      sessionNo,
+      customers: cs
+    }));
+  }, [customers]);
+  const isValid = product && customers.length > 0 && customers.every(c => c.name.trim() && c.idNo.trim().length >= 8 && c.roles.length > 0) && conflicts.length === 0;
+  const submit = () => {
+    if (!isValid) return;
+    // 場次編號重新壓縮成連續（1,2,3…），避免出現「只有場次1與場次3」
+    const renum = groups.map((g, i) => ({
+      sessionNo: i + 1,
+      customers: g.customers
+    }));
+    onCreate({
+      product,
+      source: entrySource,
+      groups: renum
+    });
+  };
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SubHeader, {
+    title: "\u5EFA\u7ACB\u9304\u97F3\u6848\u4EF6",
+    crumbs: ["我的案件", "新建錄音案件"],
+    right: /*#__PURE__*/React.createElement("button", {
+      className: "btn btn-quiet",
+      onClick: onCancel
+    }, /*#__PURE__*/React.createElement(I.ChevronL, {
+      size: 14
+    }), " \u8FD4\u56DE\u6848\u4EF6\u6E05\u55AE")
+  }), /*#__PURE__*/React.createElement("div", {
+    "data-screen-label": "04 \u5EFA\u7ACB\u9304\u97F3\u6848\u4EF6",
+    className: "fadeup",
     style: {
-      maxWidth: 980,
+      padding: "0 40px 60px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 1080,
       margin: "0 auto",
       padding: "24px 0"
     }
@@ -7683,7 +6569,7 @@ function Step1Form({
     style: {
       display: "flex",
       alignItems: "center",
-      gap: 10,
+      gap: 12,
       padding: "14px 20px",
       borderRadius: 12,
       background: "var(--primary-soft-2)",
@@ -7696,10 +6582,23 @@ function Step1Form({
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
-      font: "600 14px/1.3 'Noto Sans TC'",
+      font: "500 13.5px/1.6 'Noto Sans TC'",
+      color: "var(--ink-2)",
+      textWrap: "pretty"
+    }
+  }, "\u672C\u6B65\u9A5F\u50C5", /*#__PURE__*/React.createElement("b", {
+    style: {
       color: "var(--ink)"
     }
-  }, "\u8ACB\u78BA\u8A8D\u5BA2\u6236\u8EAB\u5206\u4E26\u9078\u64C7\u672C\u6B21\u6295\u4FDD\u5546\u54C1")), /*#__PURE__*/React.createElement("section", {
+  }, "\u5EFA\u7ACB\u9304\u97F3\u6848\u4EF6\u4E26\u53D6\u5F97\u9304\u97F3\u7DE8\u865F"), "\uFF0C\u5C1A\u4E0D\u6703\u958B\u59CB\u9304\u97F3\u3002 \u4E00\u500B\u6848\u4EF6\u4EE3\u8868\u4E00\u500B", /*#__PURE__*/React.createElement("b", {
+    style: {
+      color: "var(--ink)"
+    }
+  }, "\u9304\u97F3\u5834\u6B21"), "\uFF1B\u82E5\u540C\u4E00\u4FDD\u55AE\u9700\u5206\u591A\u6B21\uFF08\u4E0D\u540C\u4EBA / \u4E0D\u540C\u5929\uFF09\u9304\u97F3\uFF0C \u8ACB\u65BC\u5404\u5BA2\u6236\u8A2D\u5B9A\u4E0D\u540C", /*#__PURE__*/React.createElement("b", {
+    style: {
+      color: "var(--ink)"
+    }
+  }, "\u5834\u6B21"), "\uFF0C\u7CFB\u7D71\u5C07\u62C6\u6210\u591A\u7B46\u6848\u4EF6\u3002\u5EFA\u7ACB\u5F8C\u8ACB\u56DE\u6E05\u55AE\uFF0C\u5206\u5225\u9EDE\u5165\u6848\u4EF6\u9032\u884C\u9304\u97F3\u3002")), /*#__PURE__*/React.createElement("section", {
     className: "card",
     style: {
       padding: 22,
@@ -7723,24 +6622,24 @@ function Step1Form({
       gap: 12
     }
   }, /*#__PURE__*/React.createElement(SourceCard, {
-    active: source === "integration",
-    onClick: () => setSource("integration"),
+    active: entrySource === "integration",
+    onClick: () => setEntrySource("integration"),
     icon: /*#__PURE__*/React.createElement(I.Tablet, {
       size: 22,
-      stroke: source === "integration" ? "var(--primary)" : "var(--ink-3)"
+      stroke: entrySource === "integration" ? "var(--primary)" : "var(--ink-3)"
     }),
     title: "iPad \xB7 \u5EFA\u8B70\u66F8 APP",
-    desc: "\u5DF2\u4ECB\u63A5\u901A\u8DEF\uFF0C\u5C07\u81EA\u52D5\u5E36\u5165\u5BA2\u6236\u8CC7\u6599",
+    desc: "\u5DF2\u4ECB\u63A5\u901A\u8DEF\uFF0C\u81EA\u52D5\u5E36\u5165\u5BA2\u6236\u8CC7\u6599\u8207\u984C\u76EE\u6587\u7A3F",
     badge: "\u81EA\u52D5\u5E36\u5165"
   }), /*#__PURE__*/React.createElement(SourceCard, {
-    active: source === "manual",
-    onClick: () => setSource("manual"),
+    active: entrySource === "manual",
+    onClick: () => setEntrySource("manual"),
     icon: /*#__PURE__*/React.createElement(I.Globe, {
       size: 22,
-      stroke: source === "manual" ? "var(--primary)" : "var(--ink-3)"
+      stroke: entrySource === "manual" ? "var(--primary)" : "var(--ink-3)"
     }),
     title: "Web \xB7 \u684C\u6A5F\u700F\u89BD\u5668",
-    desc: "\u672A\u4ECB\u63A5\u901A\u8DEF\uFF0C\u8ACB\u696D\u52D9\u54E1\u624B\u52D5\u8F38\u5165",
+    desc: "\u672A\u4ECB\u63A5\u901A\u8DEF\uFF0C\u624B\u52D5\u8F38\u5165\uFF1B\u984C\u76EE\u6587\u7A3F\u65BC\u9304\u97F3\u524D\u4E0A\u50B3",
     badge: "\u624B\u52D5\u8F38\u5165"
   }))), /*#__PURE__*/React.createElement("section", {
     className: "card",
@@ -7786,7 +6685,9 @@ function Step1Form({
     style: {
       display: "flex",
       alignItems: "center",
-      marginBottom: 16
+      marginBottom: 16,
+      flexWrap: "wrap",
+      gap: 6
     }
   }, /*#__PURE__*/React.createElement(I.User, {
     size: 18,
@@ -7807,7 +6708,7 @@ function Step1Form({
     style: {
       marginLeft: 10
     }
-  }, "\u540C\u4E00\u4EBA\u82E5\u517C\u4EFB\u591A\u500B\u89D2\u8272\uFF0C\u8ACB\u65BC\u4E00\u5F35\u5361\u7247\u4E2D\u8907\u9078\uFF1B\u4E0D\u540C\u89D2\u8272\u70BA\u4E0D\u540C\u4EBA\u6642\u8ACB\u65B0\u589E\u5BA2\u6236")), /*#__PURE__*/React.createElement("div", {
+  }, "\u540C\u4E00\u4EBA\u517C\u591A\u89D2\u8272\u8ACB\u65BC\u4E00\u5F35\u5361\u7247\u8907\u9078\uFF1B\u4E0D\u540C\u4EBA\u8ACB\u65B0\u589E\u5BA2\u6236\u3002\u4EE5\u300C\u5834\u6B21\u300D\u6C7A\u5B9A\u8AB0\u4E00\u8D77\u9304\u97F3\u3002")), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       flexDirection: "column",
@@ -7817,10 +6718,11 @@ function Step1Form({
     key: i,
     index: i,
     customer: c,
+    sessionCount: customers.length,
+    multiCustomer: customers.length > 1,
     onChange: patch => updateCustomer(i, patch),
     onToggleRole: r => toggleRole(i, r),
     onRemove: customers.length > 1 ? () => removeCustomer(i) : null,
-    source: source,
     conflictRoles: Object.fromEntries(conflicts)
   }))), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-soft",
@@ -7850,12 +6752,17 @@ function Step1Form({
   }, /*#__PURE__*/React.createElement(I.Warn, {
     size: 16,
     stroke: "var(--danger)"
-  }), "\u89D2\u8272\u91CD\u8907\u6307\u5B9A\uFF1A", conflicts.map(([r]) => ROLE_MAP[r].full).join("、"), "\u3000\xB7\u3000\u6BCF\u500B\u89D2\u8272\u50C5\u80FD\u7531\u4E00\u4F4D\u5BA2\u6236\u64D4\u4EFB")), /*#__PURE__*/React.createElement("div", {
+  }), "\u89D2\u8272\u91CD\u8907\u6307\u5B9A\uFF1A", conflicts.map(([r]) => ROLE_MAP[r].full).join("、"), "\u3000\xB7\u3000\u6BCF\u500B\u89D2\u8272\u50C5\u80FD\u7531\u4E00\u4F4D\u5BA2\u6236\u64D4\u4EFB")), /*#__PURE__*/React.createElement(ScriptBlock, {
+    source: entrySource
+  }), /*#__PURE__*/React.createElement(CreatePreview, {
+    groups: groups,
+    multiSession: groups.length > 1
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
-      marginTop: 24,
+      marginTop: 20,
       padding: "16px 20px",
       background: "#fff",
       borderRadius: 12,
@@ -7872,7 +6779,15 @@ function Step1Form({
   }, /*#__PURE__*/React.createElement(I.Info, {
     size: 14,
     stroke: "var(--ink-4)"
-  }), "\u6B04\u4F4D\u5B8C\u6210\u5F8C\u5373\u53EF\u9032\u5165\u4E0B\u4E00\u6B65\uFF0C\u7531\u7CFB\u7D71\u6B63\u5F0F\u5EFA\u7ACB\u6848\u4EF6\u4E26\u53D6\u5F97\u9304\u97F3\u7DE8\u865F"), /*#__PURE__*/React.createElement("div", {
+  }), "\u78BA\u8A8D\u5EFA\u7ACB\u5F8C\uFF0C\u7CFB\u7D71\u5C07\u7D66\u6574\u7D44\u4E00\u500B", /*#__PURE__*/React.createElement("b", {
+    style: {
+      color: "var(--ink)"
+    }
+  }, "\u9304\u97F3\u7DE8\u865F"), "\uFF0C\u4E26\u4F9D\u5834\u6B21\u62C6\u51FA\u5404\u81EA\u7684", /*#__PURE__*/React.createElement("b", {
+    style: {
+      color: "var(--ink)"
+    }
+  }, "\u6848\u4EF6\u7DE8\u865F")), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       gap: 10
@@ -7882,12 +6797,47 @@ function Step1Form({
     onClick: onCancel
   }, "\u53D6\u6D88"), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-primary btn-lg",
-    disabled: !valid || conflicts.length > 0,
-    onClick: onNext
-  }, "\u4E0B\u4E00\u6B65\uFF1A\u78BA\u8A8D\u984C\u76EE\u6587\u7A3F ", /*#__PURE__*/React.createElement(I.Chevron, {
+    disabled: !isValid,
+    onClick: submit
+  }, /*#__PURE__*/React.createElement(I.Check, {
     size: 16
-  })))));
+  }), " \u78BA\u8A8D\u5EFA\u7ACB", groups.length > 1 ? `（${groups.length} 筆）` : "")))), /*#__PURE__*/React.createElement("div", {
+    className: "fcode-legend",
+    style: {
+      margin: "8px auto 0",
+      maxWidth: 1080,
+      padding: "12px 16px",
+      borderRadius: 10,
+      background: "var(--primary-soft-2)",
+      border: "1px dashed rgba(73,99,250,.25)",
+      font: "400 12px/1.5 'Noto Sans TC'",
+      color: "var(--ink-3)",
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      font: "600 12px/1 'Noto Sans TC'",
+      color: "var(--primary)",
+      letterSpacing: ".06em"
+    }
+  }, "\u672C\u756B\u9762\u5C0D\u61C9\u529F\u80FD"), /*#__PURE__*/React.createElement(FCode, {
+    code: "F-101",
+    label: "\u5EFA\u7ACB\u9304\u97F3\u6848\u4EF6\uFF08\u5EFA\u6BBC\uFF09"
+  }), /*#__PURE__*/React.createElement(FCode, {
+    code: "F-402",
+    label: "\u9304\u97F3\u7DE8\u865F\u53D6\u5F97\uFF08\u78BA\u8A8D\u5EFA\u7ACB\u6642\uFF09"
+  }), /*#__PURE__*/React.createElement(FCode, {
+    code: "F-201",
+    label: "\u984C\u672C\u5E36\u5165\uFF08\u81EA\u52D5\u5E36\u5165\uFF09"
+  }))));
 }
+
+/* ─────────────────────────────────────────────────────
+ * 起案通路卡
+ * ───────────────────────────────────────────────────── */
 function SourceCard({
   active,
   onClick,
@@ -7967,16 +6917,22 @@ function SourceCard({
     }
   })));
 }
+
+/* ─────────────────────────────────────────────────────
+ * 客戶卡（含場次下拉）
+ * ───────────────────────────────────────────────────── */
+const SESSION_TINT = ["", "rgb(73,99,250)", "rgb(72,153,61)", "rgb(178,104,12)"];
 function CustomerCard({
   index,
   customer,
+  sessionCount,
+  multiCustomer,
   onChange,
   onToggleRole,
   onRemove,
-  source,
   conflictRoles
 }) {
-  const fromIntegration = source === "integration";
+  const tint = SESSION_TINT[customer.sessionNo] || "var(--primary)";
   return /*#__PURE__*/React.createElement("div", {
     style: {
       padding: "16px 18px 18px",
@@ -7988,6 +6944,7 @@ function CustomerCard({
     style: {
       display: "flex",
       alignItems: "center",
+      gap: 10,
       marginBottom: 14
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -8003,16 +6960,71 @@ function CustomerCard({
     }
   }, String(index + 1).padStart(2, "0")), /*#__PURE__*/React.createElement("span", {
     style: {
-      marginLeft: 10,
       font: "600 14px/1 'Noto Sans TC'",
       color: "var(--ink)"
     }
-  }, "\u5BA2\u6236 ", index + 1), onRemove && /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-quiet btn-sm",
-    onClick: onRemove,
+  }, "\u5BA2\u6236 ", index + 1), /*#__PURE__*/React.createElement("div", {
     style: {
-      marginLeft: "auto"
+      marginLeft: "auto",
+      display: "flex",
+      alignItems: "center",
+      gap: 8
     }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      font: "500 12.5px/1 'Noto Sans TC'",
+      color: "var(--ink-3)"
+    }
+  }, "\u5834\u6B21"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative",
+      display: "flex",
+      alignItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      left: 10,
+      width: 8,
+      height: 8,
+      borderRadius: "50%",
+      background: tint,
+      pointerEvents: "none"
+    }
+  }), /*#__PURE__*/React.createElement("select", {
+    className: "input",
+    value: customer.sessionNo || 1,
+    onChange: e => onChange({
+      sessionNo: parseInt(e.target.value, 10)
+    }),
+    style: {
+      height: 34,
+      padding: "0 30px 0 24px",
+      borderRadius: 8,
+      font: "600 13px/1 Montserrat",
+      border: `1.5px solid ${tint}`,
+      color: tint,
+      minWidth: 86,
+      appearance: "none",
+      background: "#fff"
+    }
+  }, Array.from({
+    length: Math.max(1, sessionCount)
+  }, (_, i) => i + 1).map(n => /*#__PURE__*/React.createElement("option", {
+    key: n,
+    value: n
+  }, "\u5834\u6B21 ", n))), /*#__PURE__*/React.createElement(I.Chevron, {
+    size: 13,
+    stroke: tint,
+    style: {
+      position: "absolute",
+      right: 10,
+      pointerEvents: "none",
+      transform: "rotate(90deg)"
+    }
+  }))), onRemove && /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-quiet btn-sm",
+    onClick: onRemove
   }, /*#__PURE__*/React.createElement(I.Delete, {
     size: 14
   }), " \u522A\u9664")), /*#__PURE__*/React.createElement("div", {
@@ -8110,121 +7122,88 @@ function CustomerCard({
 }
 
 /* ─────────────────────────────────────────────────────
- * STEP 02 — 確認題目文稿
+ * 題目文稿區塊 — 自動帶入顯示 14 題；手動輸入顯示「錄音前上傳」說明
  * ───────────────────────────────────────────────────── */
-function Step2Confirm({
-  source,
-  caseInfo,
-  product,
-  customers,
-  retrieving,
-  retrieved,
-  tts,
-  setTts,
-  onBack,
-  onNext
+function ScriptBlock({
+  source
 }) {
   const questions = window.__MLI_QUESTIONS;
-  const [uploadedScript, setUploadedScript] = React.useState(null); // {name, size, uploadedAt}
-  const fileInputRef = React.useRef(null);
-
-  // WEB 起案需自行上傳題目文稿；上傳前不予預覽、也不能進下一步
-  const hasScript = source === "integration" || !!uploadedScript;
-  const handleFileSelect = e => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setUploadedScript({
-        name: file.name,
-        size: file.size,
-        uploadedAt: new Date().toLocaleString("zh-TW", {
-          hour12: false
-        }).slice(5)
-      });
-    }
-    e.target.value = ""; // 重設以便重複上傳同一檔案
-  };
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      maxWidth: 1280,
-      margin: "0 auto",
-      padding: "24px 0"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: {
-      marginBottom: 20,
-      padding: "14px 20px",
-      background: retrieving ? "var(--primary-soft-2)" : "linear-gradient(to right, rgba(73,99,250,.05), rgba(73,99,250,.02))",
-      border: "1px solid rgba(73,99,250,.18)",
-      display: "flex",
-      alignItems: "center",
-      gap: 12
-    }
-  }, retrieving ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("svg", {
-    className: "spin",
-    width: 20,
-    height: 20,
-    viewBox: "0 0 24 24",
-    fill: "none",
-    stroke: "var(--primary)",
-    strokeWidth: "2.5",
-    style: {
-      flexShrink: 0
-    }
-  }, /*#__PURE__*/React.createElement("path", {
-    d: "M12 3a9 9 0 1 1-6.4 2.6",
-    strokeLinecap: "round"
-  })), /*#__PURE__*/React.createElement("span", {
-    style: {
-      font: "500 14px/1.5 'Noto Sans TC'",
-      color: "var(--ink-2)"
-    }
-  }, "\u6B63\u5728\u5EFA\u7ACB\u6848\u4EF6\u4E26\u53D6\u5F97\u9304\u97F3\u7DE8\u865F", source === "integration" ? " / 題目文稿" : "", "\u2026")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      width: 24,
-      height: 24,
-      borderRadius: 12,
-      background: "var(--primary)",
-      color: "#fff",
-      display: "grid",
-      placeItems: "center",
-      flexShrink: 0
-    }
-  }, /*#__PURE__*/React.createElement(I.Check, {
-    size: 14,
-    stroke: "#fff",
-    sw: 3
-  })), /*#__PURE__*/React.createElement("div", {
-    style: {
-      flex: 1,
-      font: "500 14.5px/1.5 'Noto Sans TC'",
-      color: "var(--ink)",
-      letterSpacing: ".01em"
-    }
-  }, "\u6848\u4EF6\u5DF2\u5EFA\u7ACB\uFF0C\u9304\u97F3\u7DE8\u865F", /*#__PURE__*/React.createElement("span", {
-    className: "tabular ff-mont",
-    style: {
-      font: "700 15px/1 Montserrat,sans-serif",
-      color: "var(--primary)",
-      letterSpacing: ".04em",
-      margin: "0 8px"
-    }
-  }, caseInfo.recordingNo), source === "integration" ? /*#__PURE__*/React.createElement(React.Fragment, null, "\uFF0C\u984C\u672C\u5DF2\u5C31\u7DD2\uFF0C\u78BA\u8A8D\u4E0B\u4E00\u6B65\u958B\u59CB\u9304\u97F3\u3002") : uploadedScript ? /*#__PURE__*/React.createElement(React.Fragment, null, "\uFF0C\u984C\u672C\u5DF2\u4E0A\u50B3\uFF0C\u78BA\u8A8D\u4E0B\u4E00\u6B65\u958B\u59CB\u9304\u97F3\u3002") : /*#__PURE__*/React.createElement(React.Fragment, null, "\uFF0C\u8ACB\u81EA\u884C\u4E0A\u50B3\u9304\u97F3\u984C\u76EE\u6587\u7A3F\uFF0C\u4E0A\u50B3\u5F8C\u4E0B\u4E00\u6B65\u958B\u59CB\u9304\u97F3\u3002")))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "grid",
-      gridTemplateColumns: "minmax(0, 1fr) 400px",
-      gap: 20
-    }
-  }, /*#__PURE__*/React.createElement("section", {
+  const [open, setOpen] = React.useState(true);
+  if (source === "manual") {
+    return /*#__PURE__*/React.createElement("section", {
+      className: "card",
+      style: {
+        padding: 0,
+        marginBottom: 20,
+        overflow: "hidden"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        padding: "16px 22px",
+        display: "flex",
+        alignItems: "center",
+        gap: 10
+      }
+    }, /*#__PURE__*/React.createElement(I.Script, {
+      size: 18,
+      stroke: "var(--ink-4)"
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        font: "600 14px/1 'Noto Sans TC'",
+        color: "var(--ink)"
+      }
+    }, "\u984C\u76EE\u6587\u7A3F"), /*#__PURE__*/React.createElement("span", {
+      className: "tag tag-gray"
+    }, "\u624B\u52D5\u8F38\u5165 \xB7 \u9304\u97F3\u524D\u4E0A\u50B3")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        padding: "0 22px 20px"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        padding: "16px 18px",
+        borderRadius: 10,
+        background: "var(--primary-bg)",
+        border: "1px dashed var(--line)",
+        display: "flex",
+        alignItems: "flex-start",
+        gap: 12
+      }
+    }, /*#__PURE__*/React.createElement(I.Info, {
+      size: 18,
+      stroke: "var(--ink-4)",
+      style: {
+        flexShrink: 0,
+        marginTop: 1
+      }
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        font: "400 13px/1.7 'Noto Sans TC'",
+        color: "var(--ink-2)",
+        textWrap: "pretty"
+      }
+    }, "\u624B\u52D5\u8F38\u5165\u901A\u8DEF\u672A\u4ECB\u63A5\u984C\u672C\uFF0C", /*#__PURE__*/React.createElement("b", {
+      style: {
+        color: "var(--ink)"
+      }
+    }, "\u6B64\u8655\u4E0D\u986F\u793A\u6587\u7A3F"), "\u3002 \u984C\u76EE\u6587\u7A3F\uFF08PDF\uFF09\u5C07\u65BC\u65E5\u5F8C\u5F9E\u6E05\u55AE\u9EDE\u5165\u6848\u4EF6\u3001\u9078\u64C7\u300C\u9032\u5165\u9304\u97F3\u4F5C\u696D\u300D\u6642\u518D\u884C\u4E0A\u50B3\uFF0C\u4E14\u50C5\u80FD\u4F7F\u7528", /*#__PURE__*/React.createElement("b", {
+      style: {
+        color: "var(--ink)"
+      }
+    }, "\u6574\u6BB5\u9304\u97F3"), "\u3002"))));
+  }
+  const ttsN = questions.filter(q => q.type === "tts").length;
+  const selfN = questions.filter(q => q.type === "self").length;
+  return /*#__PURE__*/React.createElement("section", {
     className: "card",
     style: {
       padding: 0,
+      marginBottom: 20,
       overflow: "hidden"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      padding: "18px 24px",
-      borderBottom: "1px solid var(--line-2)",
+      padding: "16px 22px",
+      borderBottom: open ? "1px solid var(--line-2)" : "none",
       display: "flex",
       alignItems: "center",
       gap: 10,
@@ -8238,100 +7217,39 @@ function Step2Confirm({
       font: "700 15px/1.2 'Noto Sans TC'",
       color: "var(--ink)"
     }
-  }, "\u984C\u76EE\u6587\u7A3F"), uploadedScript && source === "integration" && /*#__PURE__*/React.createElement("span", {
-    className: "tag tag-warn"
-  }, "\u4F7F\u7528\u4E0A\u50B3\u984C\u672C"), source === "manual" && /*#__PURE__*/React.createElement("span", {
+  }, "\u984C\u76EE\u6587\u7A3F"), /*#__PURE__*/React.createElement("span", {
     className: "tag"
-  }, "\u4E0A\u50B3 PDF \u5716\u6A94 \xB7 \u4E0D\u5206\u984C"), /*#__PURE__*/React.createElement("span", {
+  }, "\u5EFA\u8B70\u66F8\u5E36\u5165 \xB7 \u5206\u984C\u984C\u672C"), /*#__PURE__*/React.createElement("span", {
     style: {
       marginLeft: "auto",
       display: "flex",
       alignItems: "center",
       gap: 10
     }
-  }, source === "integration" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     className: "meta"
   }, "\u5171 ", questions.length, " \u984C"), /*#__PURE__*/React.createElement("span", {
     className: "meta"
   }, "\xB7"), /*#__PURE__*/React.createElement("span", {
     className: "meta"
-  }, "\u81EA\u52D5\u64AD\u7A3F ", questions.filter(q => q.type === "tts").length), /*#__PURE__*/React.createElement("span", {
+  }, "\u81EA\u52D5\u64AD\u7A3F ", ttsN), /*#__PURE__*/React.createElement("span", {
     className: "meta"
   }, "\xB7"), /*#__PURE__*/React.createElement("span", {
     className: "meta"
-  }, "\u696D\u52D9\u54E1\u81EA\u9304 ", questions.filter(q => q.type === "self").length)), (source === "manual" || uploadedScript) && /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-soft btn-sm",
-    onClick: () => fileInputRef.current?.click(),
-    style: {
-      marginLeft: 6
-    }
-  }, /*#__PURE__*/React.createElement(I.Upload, {
-    size: 13
-  }), " ", uploadedScript ? "重新上傳題本" : "上傳題目文稿"), source === "integration" && /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-soft btn-sm",
-    onClick: () => fileInputRef.current?.click(),
-    style: {
-      marginLeft: 6
-    }
-  }, /*#__PURE__*/React.createElement(I.Upload, {
-    size: 13
-  }), " \u81EA\u884C\u4E0A\u50B3\u984C\u672C"), /*#__PURE__*/React.createElement("input", {
-    ref: fileInputRef,
-    type: "file",
-    accept: ".pdf,.docx,.txt",
-    style: {
-      display: "none"
-    },
-    onChange: handleFileSelect
-  }))), uploadedScript && /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: "12px 24px",
-      background: "var(--warn-soft)",
-      borderBottom: "1px solid rgb(244,220,168)",
-      display: "flex",
-      alignItems: "center",
-      gap: 12
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      width: 32,
-      height: 32,
-      borderRadius: 6,
-      background: "#fff",
-      display: "grid",
-      placeItems: "center",
-      flexShrink: 0,
-      border: "1px solid rgb(244,220,168)"
-    }
-  }, /*#__PURE__*/React.createElement(I.Doc, {
-    size: 16,
-    stroke: "rgb(178,104,12)"
-  })), /*#__PURE__*/React.createElement("div", {
-    style: {
-      flex: 1,
-      minWidth: 0
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      font: "600 13px/1.3 'Noto Sans TC'",
-      color: "rgb(151,89,15)"
-    }
-  }, source === "manual" ? "已上傳題目文稿：" : "已上傳自訂題本：", uploadedScript.name), /*#__PURE__*/React.createElement("div", {
-    className: "meta",
-    style: {
-      color: "rgb(151,89,15)",
-      marginTop: 2,
-      opacity: .85
-    }
-  }, (uploadedScript.size / 1024).toFixed(1), " KB \xB7 \u4E0A\u50B3\u6642\u9593 ", uploadedScript.uploadedAt, source === "manual" ? " · 下方為您上傳之題目文稿預覽" : " · 下方預覽為原系統標準題本，錄音時將使用您上傳之題本")), source === "integration" && /*#__PURE__*/React.createElement("button", {
+  }, "\u696D\u52D9\u54E1\u81EA\u9304 ", selfN), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-quiet btn-sm",
-    onClick: () => setUploadedScript(null)
-  }, /*#__PURE__*/React.createElement(I.X, {
-    size: 12,
-    sw: 2
-  }), " \u9084\u539F\u7CFB\u7D71\u984C\u672C")), source === "integration" ? /*#__PURE__*/React.createElement("div", {
+    onClick: () => setOpen(o => !o),
     style: {
-      maxHeight: 680,
+      marginLeft: 6
+    }
+  }, open ? "收合" : "展開", " ", /*#__PURE__*/React.createElement(I.Chevron, {
+    size: 12,
+    style: {
+      transform: open ? "rotate(-90deg)" : "rotate(90deg)"
+    }
+  })))), open && /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxHeight: 460,
       overflowY: "auto",
       padding: "8px 0"
     }
@@ -8386,129 +7304,344 @@ function Step2Confirm({
       color: "var(--ink-2)",
       textWrap: "pretty"
     }
-  }, q.script))))) : uploadedScript ? /*#__PURE__*/React.createElement(PdfPreview, {
-    fileName: uploadedScript.name,
-    pages: 3,
-    maxHeight: 680
-  }) : /*#__PURE__*/React.createElement(ScriptEmptyState, {
-    onUpload: () => fileInputRef.current?.click()
-  })), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: 16
-    }
-  }, /*#__PURE__*/React.createElement(CaseInfoSummary, {
-    caseInfo: caseInfo,
-    product: product,
-    customers: customers
-  }))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      marginTop: 24,
-      padding: "16px 20px",
-      background: "#fff",
-      borderRadius: 12,
-      boxShadow: "var(--shadow-sm)",
-      border: "1px solid var(--line-2)"
-    }
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-quiet",
-    onClick: onBack
-  }, /*#__PURE__*/React.createElement(I.ChevronL, {
-    size: 14
-  }), " \u4E0A\u4E00\u6B65\uFF1A\u4FEE\u6539\u6848\u4EF6\u8CC7\u8A0A"), /*#__PURE__*/React.createElement("div", {
-    className: "meta",
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 8
-    }
-  }, /*#__PURE__*/React.createElement(I.Info, {
-    size: 14,
-    stroke: "var(--ink-4)"
-  }), hasScript ? "確認題目文稿無誤後，即可進入錄音作業" : "請先上傳題目文稿才能進入錄音作業"), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary btn-lg",
-    onClick: onNext,
-    disabled: retrieving || !hasScript
-  }, /*#__PURE__*/React.createElement(I.Mic, {
-    size: 18,
-    stroke: "#fff"
-  }), " \u4E0B\u4E00\u6B65\uFF1A\u958B\u59CB\u9304\u97F3")));
+  }, q.script))))));
 }
 
 /* ─────────────────────────────────────────────────────
- * 題目文稿空狀態 — WEB 起案、尚未上傳時顯示
+ * 將建立的案件預覽（依場次）
  * ───────────────────────────────────────────────────── */
-function ScriptEmptyState({
-  onUpload
+function CreatePreview({
+  groups,
+  multiSession
 }) {
-  return /*#__PURE__*/React.createElement("div", {
+  return /*#__PURE__*/React.createElement("section", {
+    className: "card",
     style: {
-      padding: "56px 40px",
+      padding: 0,
+      marginBottom: 0,
+      overflow: "hidden",
+      border: "1px solid rgba(73,99,250,.22)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "14px 22px",
+      borderBottom: "1px solid var(--line-2)",
+      background: "var(--primary-soft-2)",
       display: "flex",
-      flexDirection: "column",
       alignItems: "center",
-      justifyContent: "center",
-      textAlign: "center",
-      gap: 18,
-      minHeight: 420
+      gap: 10
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(I.Doc, {
+    size: 16,
+    stroke: "var(--primary)"
+  }), /*#__PURE__*/React.createElement("span", {
     style: {
-      width: 72,
-      height: 72,
-      borderRadius: 16,
-      background: "var(--primary-soft)",
-      display: "grid",
-      placeItems: "center"
-    }
-  }, /*#__PURE__*/React.createElement(I.Upload, {
-    size: 28,
-    stroke: "var(--primary)",
-    sw: 1.8
-  })), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: 6,
-      maxWidth: 420
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      font: "600 16px/1.4 'Noto Sans TC'",
+      font: "700 14px/1 'Noto Sans TC'",
       color: "var(--ink)"
     }
-  }, "\u8ACB\u5148\u4E0A\u50B3\u9304\u97F3\u984C\u76EE\u6587\u7A3F"), /*#__PURE__*/React.createElement("div", {
+  }, "\u5C07\u5EFA\u7ACB\u7684\u9304\u97F3\u6848\u4EF6"), /*#__PURE__*/React.createElement("span", {
+    className: "tag",
     style: {
-      font: "400 13.5px/1.7 'Noto Sans TC'",
+      marginLeft: 4
+    }
+  }, groups.length, " \u7B46"), multiSession && /*#__PURE__*/React.createElement("span", {
+    className: "meta",
+    style: {
+      marginLeft: "auto"
+    }
+  }, "\u540C\u4E00\u9304\u97F3\u7DE8\u865F \xB7 \u4E0D\u540C\u5834\u6B21 = \u4E0D\u540C\u6848\u4EF6\u7DE8\u865F")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "6px 22px 14px"
+    }
+  }, groups.map((g, i) => {
+    const tint = SESSION_TINT[g.sessionNo] || "var(--primary)";
+    const named = g.customers.filter(c => c.name.trim());
+    return /*#__PURE__*/React.createElement("div", {
+      key: g.sessionNo,
+      style: {
+        padding: "12px 0",
+        borderBottom: i < groups.length - 1 ? "1px dashed var(--line-2)" : "none",
+        display: "flex",
+        alignItems: "center",
+        gap: 14
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 7,
+        flexShrink: 0,
+        padding: "6px 12px",
+        borderRadius: 14,
+        background: "#fff",
+        border: `1.5px solid ${tint}`,
+        color: tint,
+        font: "700 12px/1 Montserrat"
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        width: 8,
+        height: 8,
+        borderRadius: "50%",
+        background: tint
+      }
+    }), " \u5834\u6B21 ", g.sessionNo), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0,
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 8,
+        alignItems: "center"
+      }
+    }, named.length === 0 ? /*#__PURE__*/React.createElement("span", {
+      className: "meta"
+    }, "\uFF08\u5C1A\u672A\u8F38\u5165\u5BA2\u6236\u59D3\u540D\uFF09") : named.map((c, j) => /*#__PURE__*/React.createElement("span", {
+      key: j,
+      style: {
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        padding: "5px 10px",
+        borderRadius: 8,
+        background: "var(--primary-bg)",
+        border: "1px solid var(--line-2)"
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        font: "600 13px/1 'Noto Sans TC'",
+        color: "var(--ink)"
+      }
+    }, c.name), /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: "flex",
+        gap: 3
+      }
+    }, c.roles.map(r => /*#__PURE__*/React.createElement("span", {
+      key: r,
+      style: {
+        display: "inline-grid",
+        placeItems: "center",
+        width: 17,
+        height: 17,
+        borderRadius: 4,
+        background: "var(--primary-soft)",
+        color: "var(--primary)",
+        font: "600 10.5px/1 'Noto Sans TC'"
+      }
+    }, ROLE_MAP[r].abbr)))))), /*#__PURE__*/React.createElement("span", {
+      className: "meta",
+      style: {
+        flexShrink: 0
+      }
+    }, named.length, " \u4F4D\u5C0D\u8C61"));
+  })));
+}
+
+/* ─────────────────────────────────────────────────────
+ * 建立成功視窗 — 列出本次建立的錄音編號，僅「回到錄音清單」
+ * ───────────────────────────────────────────────────── */
+function CreatedCasesModal({
+  created,
+  onBackToList
+}) {
+  if (!created || !created.cases || !created.cases.length) return null;
+  const list = created.cases;
+  const groupNo = created.groupNo;
+  return ReactDOM.createPortal(/*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "fixed",
+      inset: 0,
+      zIndex: 220,
+      background: "rgba(41,47,84,.42)",
+      display: "grid",
+      placeItems: "center",
+      padding: 24,
+      animation: "fadeup .2s ease-out"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "card fadeup",
+    style: {
+      padding: 0,
+      width: 520,
+      maxHeight: "86vh",
+      display: "flex",
+      flexDirection: "column",
+      overflow: "hidden"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "28px 30px 18px",
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 60,
+      height: 60,
+      borderRadius: "50%",
+      background: "var(--ok-soft)",
+      display: "grid",
+      placeItems: "center",
+      margin: "0 auto 14px"
+    }
+  }, /*#__PURE__*/React.createElement(I.Check, {
+    size: 30,
+    stroke: "var(--ok)",
+    sw: 2.6
+  })), /*#__PURE__*/React.createElement("h3", {
+    style: {
+      margin: "0 0 6px",
+      font: "700 20px/1.3 'Noto Sans TC'",
+      color: "var(--ink)"
+    }
+  }, "\u5DF2\u5EFA\u7ACB ", list.length, " \u7B46\u9304\u97F3\u6848\u4EF6"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      font: "400 13.5px/1.6 'Noto Sans TC'",
       color: "var(--ink-3)",
       textWrap: "pretty"
     }
-  }, "Web \u8D77\u6848\u9700\u7531\u696D\u52D9\u54E1\u81EA\u884C\u4E0A\u50B3\u984C\u76EE\u6587\u7A3F\uFF0C\u4E0A\u50B3\u5F8C\u5C07\u65BC\u6B64\u8655\u9810\u89BD\u984C\u76EE\u9806\u5E8F\uFF0C\u78BA\u8A8D\u7121\u8AA4\u5F8C\u5373\u53EF\u9032\u5165\u9304\u97F3\u3002")), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary",
-    onClick: onUpload,
+  }, "\u672C\u6B21\u5EFA\u7ACB\u5171\u7528\u4E00\u500B", /*#__PURE__*/React.createElement("b", {
     style: {
-      marginTop: 4
+      color: "var(--ink)"
     }
-  }, /*#__PURE__*/React.createElement(I.Upload, {
-    size: 14
-  }), " \u4E0A\u50B3\u984C\u76EE\u6587\u7A3F"), /*#__PURE__*/React.createElement("div", {
-    className: "meta",
+  }, "\u9304\u97F3\u7DE8\u865F"), "\uFF0C\u4F9D\u5834\u6B21\u62C6\u6210\u591A\u500B", /*#__PURE__*/React.createElement("b", {
     style: {
+      color: "var(--ink)"
+    }
+  }, "\u6848\u4EF6\u7DE8\u865F"), "\uFF0C\u72C0\u614B\u70BA\u300C\u8349\u7A3F\u300D\u3002\u8ACB\u56DE\u6E05\u55AE\u5206\u5225\u9EDE\u5165\u5404\u6848\u4EF6\u9032\u884C\u9304\u97F3\u3002")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      margin: "0 30px 14px",
+      padding: "12px 16px",
+      borderRadius: 10,
+      background: "var(--primary)",
+      color: "#fff",
       display: "flex",
       alignItems: "center",
-      gap: 6,
-      color: "var(--ink-4)"
+      gap: 12
     }
-  }, /*#__PURE__*/React.createElement(I.Info, {
-    size: 12,
-    stroke: "var(--ink-4)"
-  }), "\u652F\u63F4\u683C\u5F0F\uFF1APDF / DOCX / TXT"));
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      font: "500 12px/1 'Noto Sans TC'",
+      letterSpacing: ".06em",
+      opacity: .85
+    }
+  }, "\u9304\u97F3\u7DE8\u865F"), /*#__PURE__*/React.createElement("span", {
+    className: "ff-mont tabular",
+    style: {
+      font: "700 20px/1 Montserrat",
+      letterSpacing: ".04em"
+    }
+  }, groupNo), /*#__PURE__*/React.createElement("span", {
+    style: {
+      marginLeft: "auto",
+      font: "400 12px/1 'Noto Sans TC'",
+      opacity: .85
+    }
+  }, "\u52FE\u7A3D ", list.length, " \u500B\u6848\u4EF6\u7DE8\u865F")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "0 30px",
+      overflowY: "auto"
+    }
+  }, list.map(c => {
+    const subs = window.__MLI_uniqueSubjects(c);
+    return /*#__PURE__*/React.createElement("div", {
+      key: c.caseNo,
+      style: {
+        padding: "14px 16px",
+        marginBottom: 10,
+        borderRadius: 10,
+        background: "var(--primary-bg)",
+        border: "1px solid var(--line-2)"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        marginBottom: 8
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        padding: "4px 10px",
+        borderRadius: 12,
+        background: "var(--primary)",
+        color: "#fff",
+        font: "600 12px/1 Montserrat",
+        letterSpacing: ".02em"
+      },
+      className: "tabular"
+    }, c.caseNo), /*#__PURE__*/React.createElement("span", {
+      className: "tag",
+      style: {
+        background: "var(--primary-soft)",
+        color: "var(--primary)"
+      }
+    }, "\u5834\u6B21 ", c.sessionNo), /*#__PURE__*/React.createElement("span", {
+      className: "meta",
+      style: {
+        marginLeft: "auto"
+      }
+    }, subs.length, " \u4F4D\u5C0D\u8C61")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 8
+      }
+    }, subs.map((s, i) => /*#__PURE__*/React.createElement("span", {
+      key: i,
+      style: {
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        padding: "4px 9px",
+        borderRadius: 8,
+        background: "#fff",
+        border: "1px solid var(--line-2)"
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        font: "600 12.5px/1 'Noto Sans TC'",
+        color: "var(--ink)"
+      }
+    }, s.name), /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: "flex",
+        gap: 3
+      }
+    }, s.roles.map(r => /*#__PURE__*/React.createElement("span", {
+      key: r,
+      style: {
+        display: "inline-grid",
+        placeItems: "center",
+        width: 16,
+        height: 16,
+        borderRadius: 4,
+        background: "var(--primary-soft)",
+        color: "var(--primary)",
+        font: "600 10px/1 'Noto Sans TC'"
+      }
+    }, r)))))));
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "16px 30px 22px",
+      borderTop: "1px solid var(--line-2)",
+      marginTop: 8,
+      display: "flex",
+      justifyContent: "center"
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-primary btn-lg",
+    onClick: onBackToList
+  }, "\u56DE\u5230\u9304\u97F3\u6E05\u55AE ", /*#__PURE__*/React.createElement(I.Chevron, {
+    size: 16
+  }))))), document.body);
 }
 window.EntryScreen = EntryScreen;
+window.CreatedCasesModal = CreatedCasesModal;
 
 // ── RecordingScreen.jsx ──
 // RecordingScreen — main recording workspace
@@ -9222,20 +8355,12 @@ function ActiveQuestionCard({
 function CaseSidebar({
   caseInfo,
   subjects,
-  sessionKeys,
   subjectDone,
-  completedSessions,
-  isLastSession,
-  questions,
-  onSessionComplete,
-  onBackToCase
+  totalQ,
+  onOpenCheck
 }) {
-  const total = questions.length;
-  const done = questions.filter(q => q.status === "recorded" || q.status === "skipped").length;
-  const sessionComplete = done === total;
-
-  // Aggregated elapsed
-  const totalElapsed = questions.reduce((sum, q) => sum + (q.duration || 0), 0);
+  const total = subjects.length;
+  const done = subjects.filter(s => subjectDone && subjectDone[s.key]).length;
   return /*#__PURE__*/React.createElement("aside", {
     style: {
       width: 300,
@@ -9266,7 +8391,7 @@ function CaseSidebar({
       display: "flex",
       alignItems: "baseline",
       justifyContent: "space-between",
-      marginBottom: 14
+      marginBottom: 12
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
@@ -9274,113 +8399,31 @@ function CaseSidebar({
       color: "var(--ink)",
       letterSpacing: ".04em"
     }
-  }, "\u672C\u5834\u9304\u97F3"), /*#__PURE__*/React.createElement("span", {
+  }, "\u6574\u9AD4\u9032\u5EA6"), /*#__PURE__*/React.createElement("span", {
     className: "tabular ff-mont",
     style: {
       font: "600 13px/1 Montserrat",
-      color: "var(--ink-3)"
+      color: done === total ? "var(--ok)" : "var(--ink-3)"
     }
-  }, fmtTime(totalElapsed))), /*#__PURE__*/React.createElement("div", {
+  }, done, " ", /*#__PURE__*/React.createElement("span", {
     style: {
-      display: "grid",
-      gridTemplateColumns: "1fr 1fr",
-      gap: 8,
-      marginBottom: 16
+      color: "var(--ink-4)"
     }
-  }, /*#__PURE__*/React.createElement(StatChip, {
-    n: questions.filter(q => q.status === "recorded").length,
-    l: "\u5DF2\u9304",
-    color: "var(--ok)"
-  }), /*#__PURE__*/React.createElement(StatChip, {
-    n: questions.filter(q => q.status === "skipped").length,
-    l: "\u8DF3\u904E",
-    color: "var(--ink-3)"
-  })), /*#__PURE__*/React.createElement("button", {
+  }, "/ ", total), " \u4F4D")), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-primary",
     style: {
       width: "100%"
     },
-    disabled: !sessionComplete,
-    onClick: onSessionComplete
-  }, isLastSession ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(I.Upload, {
+    onClick: onOpenCheck
+  }, /*#__PURE__*/React.createElement(I.Upload, {
     size: 16
-  }), " \u5B8C\u6210\u672C\u5834\u4E26\u9001\u51FA") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(I.User, {
-    size: 16
-  }), " \u5B8C\u6210\u672C\u5834\uFF0C\u9304\u88FD\u4E0B\u4E00\u4F4D")), !sessionComplete ? /*#__PURE__*/React.createElement("div", {
+  }), " \u9001\u51FA\u524D\u6AA2\u6838"), /*#__PURE__*/React.createElement("div", {
     className: "meta",
     style: {
-      textAlign: "center",
-      marginTop: 8,
-      color: "var(--warn)"
+      marginTop: 10,
+      lineHeight: 1.5
     }
-  }, "\u672C\u5834\u5C1A\u6709 ", total - done, " \u984C\u672A\u5B8C\u6210") : !isLastSession ? /*#__PURE__*/React.createElement("div", {
-    className: "meta",
-    style: {
-      textAlign: "center",
-      marginTop: 8
-    }
-  }, "\u672C\u5834\u5DF2\u9304\u6EFF\uFF0C\u5C1A\u6709\u5C0D\u8C61\u672A\u9304\u97F3\uFF0C\u9001\u51FA\u5DF2\u9396\u5B9A") : null), /*#__PURE__*/React.createElement("section", {
-    className: "card",
-    style: {
-      padding: 20
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      font: "700 14px/1 'Noto Sans TC'",
-      color: "var(--ink)",
-      marginBottom: 12
-    }
-  }, "\u97F3\u6A94\u5F59\u6574"), /*#__PURE__*/React.createElement(FileCountSummary, {
-    completedSessions: completedSessions || [],
-    subjects: subjects || []
-  })));
-}
-function Mini({
-  label,
-  value,
-  strong,
-  mono
-}) {
-  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      font: "400 11px/1 'Noto Sans TC'",
-      color: "var(--ink-4)",
-      letterSpacing: ".08em",
-      marginBottom: 4
-    }
-  }, label), /*#__PURE__*/React.createElement("div", {
-    className: mono ? "tabular ff-mont" : "",
-    style: {
-      font: strong ? "500 14px/1.4 'Noto Sans TC'" : mono ? "500 12.5px/1.3 Montserrat" : "400 13px/1.4 'Noto Sans TC'",
-      color: "var(--ink)"
-    }
-  }, value));
-}
-function StatChip({
-  n,
-  l,
-  color
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: "10px 12px",
-      borderRadius: 8,
-      background: "var(--primary-bg)",
-      border: "1px solid var(--line-2)"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "tabular ff-mont",
-    style: {
-      font: "700 22px/1 Montserrat",
-      color
-    }
-  }, n), /*#__PURE__*/React.createElement("div", {
-    style: {
-      font: "400 11px/1 'Noto Sans TC'",
-      color: "var(--ink-3)",
-      marginTop: 4
-    }
-  }, l));
+  }, "\u6BCF\u984C\u5C0F\u97F3\u6A94\u9304\u5B8C\u5373\u6642\u4E0A\u50B3\uFF0C\u7121\u9808\u4E00\u6B21\u9304\u5B8C\u3002\u53EF\u96A8\u6642\u6253\u958B\u6AA2\u6838\u8996\u7A97\u78BA\u8A8D\u9032\u5EA6\uFF0C\u5168\u6578\u5B8C\u6210\u5373\u53EF\u9001\u51FA\u5408\u4F75\u3002")));
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -9482,16 +8525,12 @@ function RecordingScreen({
   setTts,
   questions,
   setQuestions,
-  onFinish,
   tweaks,
-  onBackToCase,
   onBackToList,
   subjects = [],
   sessionKeys = [],
   subjectDone = {},
-  completedSessions = [],
-  isLastSession = true,
-  onSessionComplete
+  onOpenCheck
 }) {
   const [active, setActive] = React.useState(1);
   const [modal, setModal] = React.useState(null); // {kind, qNo}
@@ -9533,24 +8572,23 @@ function RecordingScreen({
   };
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SubHeader, {
     title: "\u9304\u97F3\u4F5C\u696D",
-    crumbs: ["我的案件", caseInfo.product],
-    right: /*#__PURE__*/React.createElement("button", {
+    right: /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 10
+      }
+    }, /*#__PURE__*/React.createElement("button", {
       className: "btn btn-quiet",
       onClick: onBackToList
     }, /*#__PURE__*/React.createElement(I.ChevronL, {
       size: 14
-    }), " \u8FD4\u56DE\u6848\u4EF6\u6E05\u55AE")
+    }), " \u8FD4\u56DE\u6848\u4EF6\u6E05\u55AE"))
   }), /*#__PURE__*/React.createElement("div", {
     "data-screen-label": "03 \u9304\u97F3\u4F5C\u696D",
     style: {
       padding: "20px 40px 40px"
     }
-  }, subjects.length > 0 && /*#__PURE__*/React.createElement(SubjectProgressBar, {
-    subjects: subjects,
-    sessionKeys: sessionKeys,
-    subjectDone: subjectDone,
-    note: `本次錄音對象：${sessionSubjects.map(s => s.name).join("、") || "—"}　·　分題方式完成 ${questions.length} 題即產生 ${questions.length} 個小音檔`
-  }), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       gap: 20,
@@ -9581,13 +8619,9 @@ function RecordingScreen({
   })), /*#__PURE__*/React.createElement(CaseSidebar, {
     caseInfo: caseInfo,
     subjects: subjects,
-    sessionKeys: sessionKeys,
     subjectDone: subjectDone,
-    completedSessions: completedSessions,
-    isLastSession: isLastSession,
-    questions: questions,
-    onSessionComplete: onSessionComplete,
-    onBackToCase: onBackToCase
+    totalQ: questions.length,
+    onOpenCheck: onOpenCheck
   }))), /*#__PURE__*/React.createElement("div", {
     style: {
       margin: "0 40px 28px",
@@ -9671,11 +8705,15 @@ function WholeRecordingScreen({
   uploadedFileName,
   device,
   questions,
-  completedSessions,
-  isLastSession,
-  onSessionComplete,
+  flowMode = "normal",
+  returnInfo,
+  onSubmitCorrection,
+  onWholeStatus,
+  onOpenCheck,
+  onPickSubjects,
   onBackToList
 }) {
+  const isCorrection = flowMode === "correction";
   const canRecord = device === "ipad";
   const [mode, setMode] = React.useState(canRecord ? "record" : "upload");
 
@@ -9733,25 +8771,65 @@ function WholeRecordingScreen({
     e.target.value = "";
   };
   const sessionDone = mode === "record" && recState === "done" || mode === "upload" && !!uploaded;
+
+  // 補正送出時，依目前錄製 / 上傳狀態組出補正音檔 meta（獨立保存）
+  const corrNowStr = () => {
+    const d = new Date();
+    const p = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  };
+  const buildCorrectionAudio = () => {
+    if (uploaded) return {
+      name: uploaded.name,
+      sizeMB: +(uploaded.size / 1024 / 1024).toFixed(2),
+      durationSec: 90,
+      uploadedAt: corrNowStr(),
+      method: "upload"
+    };
+    return {
+      name: `${caseInfo.caseNo}_correction.wav`,
+      sizeMB: 1.5,
+      durationSec: elapsed || 90,
+      uploadedAt: corrNowStr(),
+      method: "record"
+    };
+  };
+
+  // 本場錄完 / 選好檔 → 即時把該對象寫入進度（可自由切換對象補錄，進度不掉）
+  React.useEffect(() => {
+    if (isCorrection) return; // 補正模式不寫一般進度（補正音檔獨立保存）
+    const status = uploaded ? "uploaded" : recState === "done" ? "recorded" : "pending";
+    onWholeStatus && onWholeStatus(sessionKeys, status);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recState, uploaded, sessionKeys.join("|")]);
+  const doneCount = subjects.filter(s => subjectDone && subjectDone[s.key]).length;
+  const totalCount = subjects.length;
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SubHeader, {
-    title: "\u9304\u97F3\u4F5C\u696D \xB7 \u6574\u6BB5 / \u4E0A\u50B3",
-    crumbs: ["我的案件", caseInfo.product],
-    right: /*#__PURE__*/React.createElement("button", {
+    title: isCorrection ? "補正錄音" : "錄音作業",
+    right: /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 10
+      }
+    }, onPickSubjects && !isCorrection && /*#__PURE__*/React.createElement("button", {
+      className: "btn btn-quiet",
+      onClick: onPickSubjects
+    }, /*#__PURE__*/React.createElement(I.User, {
+      size: 14
+    }), " \u5207\u63DB\u9304\u97F3\u5C0D\u8C61"), /*#__PURE__*/React.createElement("button", {
       className: "btn btn-quiet",
       onClick: onBackToList
     }, /*#__PURE__*/React.createElement(I.ChevronL, {
       size: 14
-    }), " \u8FD4\u56DE\u6848\u4EF6\u6E05\u55AE")
+    }), " ", isCorrection ? "返回案件" : "返回案件清單"))
   }), /*#__PURE__*/React.createElement("div", {
-    "data-screen-label": "03 \u9304\u97F3\u4F5C\u696D\uFF08\u6574\u6BB5/\u4E0A\u50B3\uFF09",
+    "data-screen-label": isCorrection ? "03 補正錄音（整段/上傳）" : "03 錄音作業（整段/上傳）",
     style: {
       padding: "20px 40px 40px"
     }
-  }, /*#__PURE__*/React.createElement(SubjectProgressBar, {
-    subjects: subjects,
-    sessionKeys: sessionKeys,
-    subjectDone: subjectDone,
-    note: `本次錄音對象：${sessionSubjects.map(s => s.name).join("、")}　·　整段／上傳方式每位對象產生 1 個完整音檔`
+  }, isCorrection && /*#__PURE__*/React.createElement(ReturnReasonBanner, {
+    info: returnInfo,
+    caseInfo: caseInfo
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "grid",
@@ -9940,7 +9018,18 @@ function WholeRecordingScreen({
   }, /*#__PURE__*/React.createElement(I.Info, {
     size: 14,
     stroke: "var(--ink-4)"
-  }), " \u9EDE\u64CA\u9EA5\u514B\u98A8\u958B\u59CB\u6574\u6BB5\u9304\u97F3\uFF0C\u5168\u7A0B\u4E00\u6B21\u9304\u5B8C")), recState === "done" && /*#__PURE__*/React.createElement("button", {
+  }), " \u9EDE\u64CA\u9EA5\u514B\u98A8\u958B\u59CB\u6574\u6BB5\u9304\u97F3\uFF0C\u5168\u7A0B\u4E00\u6B21\u9304\u5B8C")), recState === "idle" && /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-primary btn-lg",
+    onClick: startRec
+  }, /*#__PURE__*/React.createElement(I.Mic, {
+    size: 16
+  }), " \u958B\u59CB\u9304\u97F3"), recState === "recording" && /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-warn btn-lg",
+    onClick: stopRec
+  }, /*#__PURE__*/React.createElement(I.Stop, {
+    size: 16,
+    stroke: "#fff"
+  }), " \u505C\u6B62\u4E26\u5132\u5B58"), recState === "done" && /*#__PURE__*/React.createElement("button", {
     className: "btn btn-danger btn-sm",
     onClick: resetRec
   }, /*#__PURE__*/React.createElement(I.Replay, {
@@ -10060,7 +9149,7 @@ function WholeRecordingScreen({
       idNo: s.idNo,
       roles: s.roleKeys
     }))
-  }), /*#__PURE__*/React.createElement("section", {
+  }), isCorrection ? /*#__PURE__*/React.createElement("section", {
     className: "card",
     style: {
       padding: 20
@@ -10069,32 +9158,111 @@ function WholeRecordingScreen({
     style: {
       font: "700 14px/1 'Noto Sans TC'",
       color: "var(--ink)",
+      letterSpacing: ".04em",
       marginBottom: 12
     }
-  }, "\u97F3\u6A94\u5F59\u6574"), /*#__PURE__*/React.createElement(FileCountSummary, {
-    completedSessions: completedSessions,
-    subjects: subjects
-  }), /*#__PURE__*/React.createElement("button", {
+  }, "\u9001\u51FA\u88DC\u6B63"), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-primary",
     style: {
       width: "100%",
-      marginTop: 16
+      opacity: sessionDone ? 1 : .5,
+      cursor: sessionDone ? "pointer" : "not-allowed"
     },
     disabled: !sessionDone,
-    onClick: () => onSessionComplete(mode)
-  }, isLastSession ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(I.Check, {
-    size: 16,
-    stroke: "#fff",
-    sw: 2.4
-  }), " \u5B8C\u6210\u672C\u5834\u4E26\u9001\u51FA") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(I.User, {
+    onClick: () => sessionDone && onSubmitCorrection && onSubmitCorrection(buildCorrectionAudio())
+  }, /*#__PURE__*/React.createElement(I.Upload, {
     size: 16
-  }), " \u5B8C\u6210\u672C\u5834\uFF0C\u9304\u88FD\u4E0B\u4E00\u4F4D")), !sessionDone && /*#__PURE__*/React.createElement("div", {
+  }), " \u9001\u51FA\u88DC\u6B63\u97F3\u6A94"), /*#__PURE__*/React.createElement("div", {
     className: "meta",
     style: {
-      textAlign: "center",
-      marginTop: 8
+      marginTop: 10,
+      lineHeight: 1.6
     }
-  }, mode === "record" ? "請先完成整段錄音" : "請先上傳整段音檔"))))), /*#__PURE__*/React.createElement("div", {
+  }, "\u9001\u51FA\u5F8C\u88DC\u6B63\u97F3\u6A94\u5C07", /*#__PURE__*/React.createElement("b", {
+    style: {
+      color: "var(--ink-2)"
+    }
+  }, "\u7368\u7ACB\u4FDD\u5B58"), "\uFF0C\u4E0D\u8207\u539F\u59CB\u5B8C\u6574\u97F3\u6A94\u5408\u4F75\u3001\u4E0D\u8986\u84CB\uFF1B\u6848\u4EF6\u9032\u5165\u300C\u88DC\u4EF6\u5BE9\u6838\u300D\uFF0C\u7531\u5167\u52E4\u5C31\u88DC\u6B63\u5167\u5BB9\u8907\u5BE9\u3002"), !sessionDone && /*#__PURE__*/React.createElement("div", {
+    className: "meta",
+    style: {
+      marginTop: 8,
+      display: "flex",
+      alignItems: "center",
+      gap: 6,
+      color: "var(--warn)"
+    }
+  }, /*#__PURE__*/React.createElement(I.Info, {
+    size: 13,
+    stroke: "var(--warn)"
+  }), " \u8ACB\u5148\u5B8C\u6210\u6574\u6BB5\u9304\u97F3\u6216\u4E0A\u50B3\u97F3\u6A94\uFF0C\u624D\u80FD\u9001\u51FA\u88DC\u6B63\u3002"), sessionDone && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 10,
+      display: "flex",
+      alignItems: "center",
+      gap: 6,
+      font: "400 12px/1.4 'Noto Sans TC'",
+      color: "var(--ok)"
+    }
+  }, /*#__PURE__*/React.createElement(I.Check, {
+    size: 14,
+    stroke: "var(--ok)",
+    sw: 2.4
+  }), " \u88DC\u6B63\u97F3\u6A94\u5DF2\u5C31\u7DD2\uFF0C\u53EF\u9001\u51FA")) : /*#__PURE__*/React.createElement("section", {
+    className: "card",
+    style: {
+      padding: 20
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "baseline",
+      justifyContent: "space-between",
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      font: "700 14px/1 'Noto Sans TC'",
+      color: "var(--ink)",
+      letterSpacing: ".04em"
+    }
+  }, "\u6574\u9AD4\u9032\u5EA6"), /*#__PURE__*/React.createElement("span", {
+    className: "tabular ff-mont",
+    style: {
+      font: "600 13px/1 Montserrat",
+      color: doneCount === totalCount ? "var(--ok)" : "var(--ink-3)"
+    }
+  }, doneCount, " ", /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "var(--ink-4)"
+    }
+  }, "/ ", totalCount), " \u4F4D")), /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-primary",
+    style: {
+      width: "100%"
+    },
+    onClick: onOpenCheck
+  }, /*#__PURE__*/React.createElement(I.Upload, {
+    size: 16
+  }), " \u9001\u51FA\u524D\u6AA2\u6838"), /*#__PURE__*/React.createElement("div", {
+    className: "meta",
+    style: {
+      marginTop: 10,
+      lineHeight: 1.5
+    }
+  }, "\u6BCF\u4F4D\u5C0D\u8C61\u9304\u5B8C / \u4E0A\u50B3\u5373\u6642\u4FDD\u5B58\uFF08\u6BCF\u4F4D 1 \u500B\u5B8C\u6574\u97F3\u6A94\uFF09\uFF0C\u53EF\u96A8\u6642\u5207\u63DB\u5C0D\u8C61\u88DC\u9304\u3002\u53EF\u6253\u958B\u6AA2\u6838\u8996\u7A97\u78BA\u8A8D\u9032\u5EA6\uFF0C\u5168\u6578\u5B8C\u6210\u5373\u53EF\u9001\u51FA\u5408\u4F75\u3002"), sessionDone && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 10,
+      display: "flex",
+      alignItems: "center",
+      gap: 6,
+      font: "400 12px/1.4 'Noto Sans TC'",
+      color: "var(--ok)"
+    }
+  }, /*#__PURE__*/React.createElement(I.Check, {
+    size: 14,
+    stroke: "var(--ok)",
+    sw: 2.4
+  }), " \u672C\u5834\uFF08", sessionSubjects.map(s => s.name).join("、"), "\uFF09\u5DF2\u4FDD\u5B58"))))), /*#__PURE__*/React.createElement("div", {
     className: "fcode-legend",
     style: {
       margin: "0 40px 28px",
@@ -10163,7 +9331,681 @@ function ModeTab({
     }
   }, sub));
 }
+
+// ─────────────────────────────────────────────────────────────
+// ReturnReasonBanner — 補正錄音頁頂部「退回原因說明」
+// 結構化呈現內勤的退回說明（類別 / 題目 / 對象 / 文字），高齡業務情境下比一段文字好讀。
+function ReturnReasonBanner({
+  info,
+  caseInfo
+}) {
+  if (!info) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "card",
+      style: {
+        padding: "14px 18px",
+        marginBottom: 20,
+        background: "var(--warn-soft)",
+        border: "1px solid rgba(241,160,40,.3)",
+        font: "400 13px/1.6 'Noto Sans TC'",
+        color: "rgb(151,89,15)"
+      }
+    }, "\u672C\u6848\u4EF6\u70BA\u9000\u56DE\u88DC\u6B63\u6848\uFF0C\u8ACB\u4F9D\u5167\u52E4\u9000\u56DE\u8AAA\u660E\u91CD\u65B0\u9304\u88FD\u5F8C\u9001\u51FA\u3002");
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    className: "card",
+    style: {
+      padding: 0,
+      marginBottom: 20,
+      overflow: "hidden",
+      border: "1px solid rgba(234,82,82,.3)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "13px 20px",
+      borderBottom: "1px solid var(--line-2)",
+      background: "var(--danger-soft)",
+      display: "flex",
+      alignItems: "center",
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 26,
+      height: 26,
+      borderRadius: 8,
+      background: "#fff",
+      display: "grid",
+      placeItems: "center",
+      flexShrink: 0,
+      border: "1px solid rgba(234,82,82,.25)"
+    }
+  }, /*#__PURE__*/React.createElement(I.Warn, {
+    size: 15,
+    stroke: "var(--danger)"
+  })), /*#__PURE__*/React.createElement("span", {
+    style: {
+      font: "700 15px/1.2 'Noto Sans TC'",
+      color: "var(--ink)"
+    }
+  }, "\u9000\u56DE\u539F\u56E0\u8AAA\u660E"), info.round > 1 && /*#__PURE__*/React.createElement("span", {
+    className: "tag",
+    style: {
+      background: "#fff",
+      color: "var(--danger)",
+      border: "1px solid rgba(234,82,82,.3)"
+    }
+  }, "\u7B2C ", info.round, " \u6B21\u9000\u56DE"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1
+    }
+  }), info.returnedAt && /*#__PURE__*/React.createElement("span", {
+    className: "meta tabular ff-mont"
+  }, "\u9000\u56DE ", info.returnedAt, info.reviewer ? ` · ${info.reviewer}` : "")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "16px 20px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      font: "400 13.5px/1.75 'Noto Sans TC'",
+      color: "var(--ink-2)"
+    }
+  }, info.reasonText)));
+}
+function BannerPill({
+  label,
+  value
+}) {
+  return /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 7,
+      padding: "6px 12px",
+      borderRadius: 9,
+      background: "var(--primary-soft)"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      font: "500 11px/1 'Noto Sans TC'",
+      color: "rgba(73,99,250,.7)",
+      letterSpacing: ".04em"
+    }
+  }, label), /*#__PURE__*/React.createElement("span", {
+    style: {
+      font: "600 13px/1 'Noto Sans TC'",
+      color: "var(--primary)"
+    }
+  }, value));
+}
 window.WholeRecordingScreen = WholeRecordingScreen;
+
+// ── SubmitCheckModal.jsx ──
+// SubmitCheckModal — 送出前檢核視窗（取代原「完成送出頁」）
+//
+// 由分題錄音頁的「送出前檢核」按鈕彈出。三段內部狀態：
+//   check   — 各錄音對象進度總覽 + 統計 +「完成送出」(全數完成才 enable)
+//   merging — 後端合併分題小音檔為單一完整音檔
+//   done    — 送出完成
+//
+// 「繼續錄音」＝關閉視窗即可回去補錄/重錄（無一場結束才下一場的限制）。
+
+function SubmitCheckModal({
+  open,
+  mode,
+  setMode,
+  caseInfo,
+  subjects,
+  prog,
+  totalQ,
+  method,
+  onClose,
+  onSubmit,
+  onDoneToList
+}) {
+  const isWhole = method === "whole";
+
+  // merging → done（模擬後端合併）
+  React.useEffect(() => {
+    if (mode === "merging") {
+      const t = setTimeout(() => setMode("done"), 2200);
+      return () => clearTimeout(t);
+    }
+  }, [mode, setMode]);
+  if (!open) return null;
+  const rows = (subjects || []).map(s => {
+    if (isWhole) {
+      const w = prog && prog.whole ? prog.whole[s.key] : "pending";
+      const done = !!w && w !== "pending";
+      return {
+        ...s,
+        rec: done ? 1 : 0,
+        sk: 0,
+        doneCount: done ? 1 : 0,
+        total: 1,
+        wholeKind: w === "uploaded" ? "上傳" : "整段",
+        status: done ? "done" : "pending"
+      };
+    }
+    const c = prog ? window.progSubjectCount(prog, s.key, totalQ) : {
+      rec: 0,
+      sk: 0,
+      done: 0
+    };
+    const complete = c.done >= totalQ;
+    return {
+      ...s,
+      rec: c.rec,
+      sk: c.sk,
+      doneCount: c.done,
+      total: totalQ,
+      status: complete ? "done" : c.done > 0 ? "active" : "pending"
+    };
+  });
+  const allDone = prog ? window.progAllDone(prog, totalQ) : false;
+  const clips = window.progClipCount(prog, totalQ);
+  const remainCount = rows.filter(r => r.status !== "done").length;
+  const submit = () => {
+    onSubmit && onSubmit();
+    setMode("merging");
+  };
+  return ReactDOM.createPortal(/*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "fixed",
+      inset: 0,
+      zIndex: 210,
+      background: "rgba(41,47,84,.4)",
+      display: "grid",
+      placeItems: "center",
+      animation: "fadeup .2s ease-out",
+      padding: 24
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "card fadeup",
+    style: {
+      padding: 0,
+      width: 600,
+      maxHeight: "90vh",
+      display: "flex",
+      flexDirection: "column",
+      overflow: "hidden"
+    }
+  }, mode === "check" && /*#__PURE__*/React.createElement(CheckBody, {
+    rows: rows,
+    totalQ: totalQ,
+    clips: clips,
+    allDone: allDone,
+    isWhole: isWhole,
+    remainCount: remainCount,
+    caseInfo: caseInfo,
+    onClose: onClose,
+    onSubmit: submit
+  }), mode === "merging" && /*#__PURE__*/React.createElement(MergingBody, {
+    clips: clips,
+    caseInfo: caseInfo,
+    isWhole: isWhole
+  }), mode === "done" && /*#__PURE__*/React.createElement(DoneBody, {
+    rows: rows,
+    totalQ: totalQ,
+    clips: clips,
+    caseInfo: caseInfo,
+    isWhole: isWhole,
+    onDoneToList: onDoneToList
+  }))), document.body);
+}
+
+// ── check：案件層級重點摘要 + 送出（一案一進度，不再逐對象） ──
+function CheckBody({
+  rows,
+  totalQ,
+  clips,
+  allDone,
+  remainCount,
+  caseInfo,
+  isWhole,
+  onClose,
+  onSubmit
+}) {
+  // 案件層級進度（分題＝已錄+跳過 / 14；整段＝1 個完整音檔）
+  const doneCount = isWhole ? rows.filter(r => r.status === "done").length // 整段：每位 1 檔皆完成才算
+  : Math.max(0, ...rows.map(r => r.doneCount)); // 分題：本場一起錄，取代表值
+  const recMax = isWhole ? 0 : Math.max(0, ...rows.map(r => r.rec));
+  const skMax = isWhole ? 0 : Math.max(0, ...rows.map(r => r.sk));
+  const total = isWhole ? 1 : totalQ;
+  const done = isWhole ? allDone ? 1 : 0 : doneCount;
+  const pending = total - done;
+  const pct = total ? Math.round(done / total * 100) : 0;
+  const methodLabel = isWhole ? "整段錄音" : "分題錄音";
+  const Line = ({
+    label,
+    children
+  }) => /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 12,
+      padding: "11px 0",
+      borderBottom: "1px solid var(--line-2)"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 78,
+      flexShrink: 0,
+      font: "500 12.5px/1.4 'Noto Sans TC'",
+      color: "var(--ink-4)",
+      letterSpacing: ".04em"
+    }
+  }, label), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, children));
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "22px 28px 18px",
+      borderBottom: "1px solid var(--line-2)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 34,
+      height: 34,
+      borderRadius: 9,
+      background: "var(--primary-soft)",
+      display: "grid",
+      placeItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement(I.Upload, {
+    size: 17,
+    stroke: "var(--primary)"
+  })), /*#__PURE__*/React.createElement("h3", {
+    style: {
+      margin: 0,
+      font: "700 19px/1.2 'Noto Sans TC'",
+      color: "var(--ink)"
+    }
+  }, "\u9001\u51FA\u524D\u6AA2\u6838")), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "10px 0 0",
+      font: "400 13px/1.5 'Noto Sans TC'",
+      color: "var(--ink-3)",
+      textWrap: "pretty"
+    }
+  }, "\u8ACB\u78BA\u8A8D\u4EE5\u4E0B\u91CD\u9EDE\u7121\u8AA4\u5F8C\u9001\u51FA\u3002\u9001\u51FA\u5F8C\u7531\u5F8C\u7AEF\u6574\u7406\u70BA\u4E00\u500B\u5B8C\u6574\u97F3\u6A94\uFF0C\u9001\u5167\u52E4\u5BE9\u6838\u3002")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "18px 28px 6px",
+      overflowY: "auto"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "2px 16px 8px",
+      borderRadius: 12,
+      background: "var(--primary-bg)",
+      border: "1px solid var(--line-2)"
+    }
+  }, /*#__PURE__*/React.createElement(Line, {
+    label: "\u6848\u4EF6\u7DE8\u865F"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ff-mont tabular",
+    style: {
+      font: "600 14px/1 Montserrat",
+      color: "var(--primary)",
+      letterSpacing: ".03em"
+    }
+  }, caseInfo.caseNo)), /*#__PURE__*/React.createElement(Line, {
+    label: "\u6295\u4FDD\u5546\u54C1"
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      font: "500 13.5px/1.5 'Noto Sans TC'",
+      color: "var(--ink)"
+    }
+  }, caseInfo.product)), /*#__PURE__*/React.createElement(Line, {
+    label: "\u9304\u97F3\u65B9\u5F0F"
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 7,
+      padding: "4px 11px",
+      borderRadius: 13,
+      background: "var(--primary-soft)",
+      color: "var(--primary)",
+      font: "600 12.5px/1 'Noto Sans TC'"
+    }
+  }, isWhole ? /*#__PURE__*/React.createElement(I.Mic, {
+    size: 13,
+    stroke: "var(--primary)"
+  }) : /*#__PURE__*/React.createElement(I.Wave, {
+    size: 13,
+    stroke: "var(--primary)"
+  }), methodLabel)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 12,
+      padding: "13px 0 4px"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 78,
+      flexShrink: 0,
+      font: "500 12.5px/1.4 'Noto Sans TC'",
+      color: "var(--ink-4)",
+      letterSpacing: ".04em"
+    }
+  }, "\u5B8C\u6210\u9032\u5EA6"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      height: 8,
+      borderRadius: 4,
+      background: "var(--line-2)",
+      overflow: "hidden",
+      display: "flex"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: (isWhole ? pct : totalQ ? recMax / totalQ * 100 : 0) + "%",
+      height: "100%",
+      background: "var(--ok)"
+    }
+  }), !isWhole && /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: (totalQ ? skMax / totalQ * 100 : 0) + "%",
+      height: "100%",
+      background: "rgba(140,142,157,.5)"
+    }
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "tabular ff-mont",
+    style: {
+      font: "700 14px/1 Montserrat",
+      color: allDone ? "var(--ok)" : "var(--ink)"
+    }
+  }, done, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "var(--ink-4)"
+    }
+  }, "/", total))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 7,
+      font: "400 12px/1 'Noto Sans TC'",
+      color: "var(--ink-3)"
+    }
+  }, isWhole ? allDone ? "已完成 1 個完整音檔" : "尚未完成整段錄音 / 上傳" : /*#__PURE__*/React.createElement(React.Fragment, null, "\u5DF2\u9304 ", /*#__PURE__*/React.createElement("b", {
+    style: {
+      color: "var(--ok)"
+    }
+  }, recMax), " \u984C \xB7 \u8DF3\u904E ", skMax, " \u984C", pending > 0 ? /*#__PURE__*/React.createElement(React.Fragment, null, " \xB7 \u672A\u9304 ", /*#__PURE__*/React.createElement("b", {
+    style: {
+      color: "var(--warn)"
+    }
+  }, pending), " \u984C") : ""))))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      margin: "14px 0 12px",
+      padding: "11px 14px",
+      borderRadius: 9,
+      background: "var(--primary-soft-2)",
+      border: "1px solid rgba(73,99,250,.18)",
+      display: "flex",
+      alignItems: "flex-start",
+      gap: 8,
+      font: "400 12.5px/1.6 'Noto Sans TC'",
+      color: "var(--ink-2)"
+    }
+  }, /*#__PURE__*/React.createElement(I.Info, {
+    size: 14,
+    stroke: "var(--primary)",
+    style: {
+      flexShrink: 0,
+      marginTop: 2
+    }
+  }), isWhole ? /*#__PURE__*/React.createElement(React.Fragment, null, "\u6574\u6BB5\u9304\u97F3\u5DF2\u662F 1 \u500B\u5B8C\u6574\u97F3\u6A94\uFF0C", /*#__PURE__*/React.createElement("b", null, "\u7121\u9808\u5408\u4F75"), "\uFF0C\u9001\u51FA\u5F8C\u76F4\u63A5\u9001\u5167\u52E4\u5BE9\u6838\u3002") : /*#__PURE__*/React.createElement(React.Fragment, null, "\u5206\u984C\u5C0F\u97F3\u6A94\u5C07\u65BC\u9001\u51FA\u5F8C\u7531\u5F8C\u7AEF", /*#__PURE__*/React.createElement("b", null, "\u5408\u4F75\u70BA 1 \u500B\u5B8C\u6574\u97F3\u6A94"), "\u9001\u5167\u52E4\u5BE9\u6838\u3002"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "16px 28px",
+      borderTop: "1px solid var(--line-2)",
+      display: "flex",
+      alignItems: "center",
+      gap: 12
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "meta",
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 6
+    }
+  }, allDone ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(I.Check, {
+    size: 14,
+    stroke: "var(--ok)",
+    sw: 2.6
+  }), " \u5DF2\u5B8C\u6210\uFF0C\u53EF\u9001\u51FA") : isWhole ? "尚未完成整段錄音 / 上傳" : `尚有 ${pending} 題未完成`), /*#__PURE__*/React.createElement("span", {
+    style: {
+      marginLeft: "auto",
+      display: "flex",
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-quiet",
+    onClick: onClose
+  }, "\u7E7C\u7E8C\u9304\u97F3"), /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-primary btn-lg",
+    disabled: !allDone,
+    "aria-disabled": !allDone,
+    onClick: onSubmit
+  }, /*#__PURE__*/React.createElement(I.Upload, {
+    size: 16
+  }), " \u5B8C\u6210\u9001\u51FA"))));
+}
+
+// ── merging ──
+function MergingBody({
+  clips,
+  caseInfo,
+  isWhole
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: 48,
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 76,
+      height: 76,
+      borderRadius: "50%",
+      background: "var(--primary-soft)",
+      display: "grid",
+      placeItems: "center",
+      margin: "0 auto 20px"
+    }
+  }, /*#__PURE__*/React.createElement("svg", {
+    className: "spin",
+    width: 38,
+    height: 38,
+    viewBox: "0 0 24 24",
+    fill: "none"
+  }, /*#__PURE__*/React.createElement("circle", {
+    cx: "12",
+    cy: "12",
+    r: "9",
+    stroke: "rgba(73,99,250,.2)",
+    strokeWidth: "2.5"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M12 3a9 9 0 0 1 9 9",
+    stroke: "var(--primary)",
+    strokeWidth: "2.5",
+    strokeLinecap: "round"
+  }))), /*#__PURE__*/React.createElement("h3", {
+    style: {
+      margin: "0 0 8px",
+      font: "700 20px/1.2 'Noto Sans TC'",
+      color: "var(--ink)"
+    }
+  }, isWhole ? "正在處理音檔…" : "正在合併音檔…"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 24px",
+      font: "400 13.5px/1.6 'Noto Sans TC'",
+      color: "var(--ink-3)"
+    }
+  }, isWhole ? "後端正在處理完整音檔並送出審核，請稍候" : `後端正將 ${clips} 個分題小音檔合併為單一完整音檔，請稍候`), /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 420,
+      margin: "0 auto"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 8,
+      borderRadius: 4,
+      background: "var(--primary-soft)",
+      overflow: "hidden"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: "100%",
+      background: "var(--primary)",
+      width: "68%",
+      borderRadius: 4,
+      animation: "wf 2.2s ease-in-out infinite",
+      transformOrigin: "left"
+    }
+  }))));
+}
+
+// ── done ──
+function DoneBody({
+  rows,
+  totalQ,
+  clips,
+  caseInfo,
+  isWhole,
+  onDoneToList
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "fadeup",
+    style: {
+      padding: 44,
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 84,
+      height: 84,
+      borderRadius: "50%",
+      background: "var(--ok-soft)",
+      display: "grid",
+      placeItems: "center",
+      margin: "0 auto 22px",
+      boxShadow: "0 0 0 8px rgba(72,153,61,.08)"
+    }
+  }, /*#__PURE__*/React.createElement(I.Check, {
+    size: 42,
+    stroke: "var(--ok)",
+    sw: 2.6
+  })), /*#__PURE__*/React.createElement("h3", {
+    style: {
+      margin: "0 0 8px",
+      font: "700 22px/1.2 'Noto Sans TC'",
+      color: "var(--ink)"
+    }
+  }, "\u9001\u51FA\u5B8C\u6210\uFF01"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 26px",
+      font: "400 14px/1.6 'Noto Sans TC'",
+      color: "var(--ink-3)"
+    }
+  }, isWhole ? "完整音檔已送內勤審核" : "分題音檔已合併為完整音檔，送內勤審核"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "16px 20px",
+      borderRadius: 10,
+      background: "var(--primary-soft-2)",
+      border: "1px dashed rgba(73,99,250,.3)",
+      maxWidth: 440,
+      margin: "0 auto",
+      display: "flex",
+      alignItems: "center",
+      gap: 12,
+      textAlign: "left"
+    }
+  }, /*#__PURE__*/React.createElement(I.Doc, {
+    size: 26,
+    stroke: "var(--primary)"
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      font: "500 13px/1.2 'Noto Sans TC'",
+      color: "var(--ink)"
+    }
+  }, "\u5B8C\u6574\u97F3\u6A94\u8B58\u5225\u78BC"), /*#__PURE__*/React.createElement("div", {
+    className: "ff-mont tabular",
+    style: {
+      font: "600 13.5px/1 Montserrat",
+      color: "var(--primary)",
+      marginTop: 4
+    }
+  }, caseInfo.caseNo, "_merged.wav")), /*#__PURE__*/React.createElement("span", {
+    className: "tag tag-ok"
+  }, /*#__PURE__*/React.createElement(I.Check, {
+    size: 11,
+    stroke: "currentColor"
+  }), " \u5DF2\u9001\u5BE9\u6838")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 10,
+      justifyContent: "center",
+      marginTop: 28
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-primary btn-lg",
+    onClick: onDoneToList
+  }, "\u8FD4\u56DE\u6211\u7684\u6848\u4EF6")));
+}
+function Stat({
+  n,
+  label,
+  color = "var(--ink)"
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "12px 14px",
+      borderRadius: 10,
+      background: "var(--primary-bg)",
+      border: "1px solid var(--line-2)",
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "tabular ff-mont",
+    style: {
+      font: "700 24px/1 Montserrat",
+      color
+    }
+  }, n), /*#__PURE__*/React.createElement("div", {
+    style: {
+      font: "400 11.5px/1 'Noto Sans TC'",
+      color: "var(--ink-3)",
+      marginTop: 6
+    }
+  }, label));
+}
+window.SubmitCheckModal = SubmitCheckModal;
 
 // ── UploadScreen.jsx ──
 // UploadScreen — three sub-states:
@@ -10836,8 +10678,7 @@ window.UploadScreen = UploadScreen;
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "demoState": "mixed",
   "primaryHue": "indigo",
-  "showFCodes": true,
-  "device": "ipad"
+  "showFCodes": true
 } /*EDITMODE-END*/;
 const PRIMARY_PALETTES = {
   indigo: {
@@ -10893,7 +10734,7 @@ function subjectsFromCase(c) {
 }
 function App() {
   const data = window.__MLI_DATA;
-  const cases = window.__MLI_CASES;
+  const [cases, setCases] = React.useState(window.__MLI_CASES);
   const questions = window.__MLI_QUESTIONS;
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   React.useEffect(() => {
@@ -10902,25 +10743,115 @@ function App() {
 
   // Routing
   const [screen, setScreen] = React.useState("list"); // list | detail | entry | recording | upload
-  const [activeCaseNo, setActiveCaseNo] = React.useState(cases[0].recordingNo);
-  const activeCase = cases.find(c => c.recordingNo === activeCaseNo) || cases[0];
+  const [activeCaseNo, setActiveCaseNo] = React.useState(cases[0].caseNo);
+  const activeCase = cases.find(c => c.caseNo === activeCaseNo) || cases[0];
 
   // Recording flow state
-  const [uploadMode, setUploadMode] = React.useState("validate");
   const [tts, setTts] = React.useState(data.tts);
 
-  // ── 多對象 / 多場次錄音流程（進度以 recordingNo 為 key 持久化於 app 狀態）──
-  const [progressMap, setProgressMap] = React.useState({});
+  // ── 多對象 / 多場次錄音流程（進度以 caseNo 為 key 持久化於 app 狀態）──
+  const [progressMap, setProgressMap] = React.useState(() => {
+    // 示範：一筆草稿（A0002-1，iPad/建議書）已選「分題」並錄到一半（7/14），
+    // 讓清單/詳情展示「進行中草稿」；另一筆 Web 草稿（A0007-1）維持「尚未選擇錄音方式」。
+    const seedNo = "A0002-1";
+    const sc = window.__MLI_CASES.find(c => c.caseNo === seedNo);
+    if (!sc) return {};
+    const subs = subjectsFromCase(sc);
+    const prog = progInit(subs);
+    prog.method = "segmented";
+    subs.forEach(s => {
+      for (let n = 1; n <= 7; n++) prog.q[s.key][n] = "recorded";
+    });
+    return {
+      [seedNo]: prog
+    };
+  });
   const [recSubjects, setRecSubjects] = React.useState(() => subjectsFromCase(cases[0]));
   const [sessionKeys, setSessionKeys] = React.useState(() => subjectsFromCase(cases[0]).map(s => s.key));
   const [recMethod, setRecMethod] = React.useState("segmented"); // segmented | whole
+  const [recFlowMode, setRecFlowMode] = React.useState("normal"); // normal | correction（補正錄音）
+  const [correctionDone, setCorrectionDone] = React.useState(null); // 補正送出成功視窗
   const [preRecOpen, setPreRecOpen] = React.useState(false);
-  const [methodLocked, setMethodLocked] = React.useState(false);
+  // 送出前檢核視窗（取代原「完成送出頁」）
+  const [checkOpen, setCheckOpen] = React.useState(false);
+  const [checkMode, setCheckMode] = React.useState("check"); // check | merging | done
 
   // Entry screen state
-  const [entryStep, setEntryStep] = React.useState(1); // 1: 案件資訊 / 2: 確認題稿
   const [entrySource, setEntrySource] = React.useState("integration"); // integration | manual
 
+  // 建立案件成功視窗（列出本次產生的錄音編號）
+  const [createdCases, setCreatedCases] = React.useState(null);
+  const serialRef = React.useRef(19); // 既有示範群組已用到 A0019，新建從 A0020 起
+  // 取得「錄音編號」（整組建立母體的群組號，例：A0020）
+  const genGroupNo = () => {
+    serialRef.current += 1;
+    return `A${String(serialRef.current).padStart(4, "0")}`;
+  };
+  const nowStr = () => {
+    const d = new Date();
+    const p = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  };
+  // 依「場次」拆成多筆案件：整組共用一個「錄音編號」(群組)，各場次給「案件編號」recordingNo-場次
+  const createCases = ({
+    product,
+    source,
+    groups
+  }) => {
+    const now = nowStr();
+    const groupNo = genGroupNo(); // 本次建立母體 → 一個錄音編號（一對多的「一」）
+    const newCases = groups.map(g => {
+      const roles = {};
+      g.customers.forEach(c => (c.roles || []).forEach(rk => {
+        roles[rk] = {
+          name: c.name,
+          idNo: c.idNo,
+          age: c.age || 70
+        };
+      }));
+      const first = g.customers[0] || {};
+      const insuredRole = roles.insured || roles.proposer || {
+        name: first.name,
+        age: first.age || 70
+      };
+      return {
+        recordingNo: groupNo,
+        caseNo: `${groupNo}-${g.sessionNo}`,
+        sessionNo: g.sessionNo,
+        createdAt: now,
+        updatedAt: now,
+        policyNo: null,
+        product,
+        roles,
+        agent: activeCase.agent,
+        agentId: activeCase.agentId,
+        branch: activeCase.branch,
+        channel: source === "integration" ? "iPad（行銷系統）" : "Web（桌機瀏覽器）",
+        duration: 0,
+        status: "draft",
+        source: source === "integration" ? "建議書系統" : "行動投保系統",
+        scriptMode: source,
+        // integration | manual → 決定錄音方式閘門
+        note: "",
+        progress: {
+          total: questions.length,
+          recorded: 0,
+          skipped: 0
+        },
+        proposer: roles.proposer ? roles.proposer.name : first.name,
+        insured: insuredRole.name,
+        insuredAge: insuredRole.age || 70
+      };
+    });
+    setCases(cs => [...newCases, ...cs]);
+    setCreatedCases({
+      groupNo,
+      cases: newCases
+    });
+  };
+
+  // 案件通路 → 錄音方式模式（建議書帶入可分題；手動輸入只能整段）
+  const caseScriptMode = c => c && c.scriptMode ? c.scriptMode : c && c.source === "建議書系統" ? "integration" : "manual";
   const buildQuestions = React.useCallback(demoState => {
     return questions.map((q, i) => {
       let status = "pending";
@@ -10970,70 +10901,60 @@ function App() {
     setScreen("detail");
   };
   const goToEntry = () => {
-    // demo：預設帶出雙錄音對象案件，並重置該案進度（全新起案）
+    // demo：以雙對象案作為「建議書帶入」的預帶資料來源（建立的是全新案件，不影響此案）
     const twoSub = cases.find(c => subjectsFromCase(c).length >= 2) || activeCase;
-    setActiveCaseNo(twoSub.recordingNo);
-    setProgressMap(pm => {
-      const n = {
-        ...pm
-      };
-      delete n[twoSub.recordingNo];
-      return n;
-    });
+    setActiveCaseNo(twoSub.caseNo);
     setScreen("entry");
-    setEntryStep(1);
-    setRecQuestions(buildQuestions("fresh"));
   };
-  const goToRecording = () => {
-    setScreen("recording");
-    setUploadMode("validate");
+
+  // ── 補正錄音（退回補正案專用）：獨立入口，只走整段 / 上傳，不分題、不跳檢核視窗 ──
+  const startCorrectionFlow = () => {
+    const subs = subjectsFromCase(activeCase);
+    setRecSubjects(subs);
+    setSessionKeys(subs.map(s => s.key));
+    setRecMethod("whole");
+    setRecFlowMode("correction");
+    setScreen("whole");
   };
-  const goToUpload = () => {
-    setScreen("upload");
-    setUploadMode("validate");
+
+  // 送出補正：補正音檔 append 到最新一輪（不動原始音檔、不合併、不覆蓋）；案件 → 補件審核
+  const submitCorrection = audioMeta => {
+    const no = activeCaseNo;
+    if (window.__MLI_CORRECTION) {
+      const rounds = window.mliCorrectionRounds(no);
+      const latest = rounds.length ? rounds[rounds.length - 1] : null;
+      if (latest && latest.status === "awaiting") {
+        latest.status = "submitted";
+        latest.audio = audioMeta;
+      } else {
+        const r = window.mliPushReturn(no, {
+          reasonType: "other",
+          reasonText: "業務員補正上傳。",
+          qNos: [],
+          subjectNames: []
+        });
+        r.status = "submitted";
+        r.audio = audioMeta;
+      }
+    }
+    setCases(cs => cs.map(c => c.caseNo === no ? {
+      ...c,
+      status: "resubmit"
+    } : c));
+    setRecFlowMode("normal");
+    setCorrectionDone({
+      caseNo: no,
+      audio: audioMeta
+    });
   };
 
   // 開始錄音：彈出「開始錄音前設定」（對象 + 方式）；若案件已有進度則續錄
-  const startRecordingFlow = subs => {
-    const no = activeCaseNo;
-    let prog = progressMap[no];
-    const list = prog && prog.subjects && prog.subjects.length ? prog.subjects : subs && subs.length ? subs : subjectsFromCase(activeCase);
-    if (!prog) {
-      prog = progInit(list);
-      setProgressMap(pm => ({
-        ...pm,
-        [no]: prog
-      }));
-    }
-    setRecSubjects(list);
-    setMethodLocked(!!(prog && prog.method));
-    setRecMethod(prog && prog.method ? prog.method : "segmented");
-    const dm = progDoneMap(prog, questions.length);
-    setSessionKeys(list.filter(s => !dm[s.key]).map(s => s.key));
-    setPreRecOpen(true);
-  };
-  const confirmPreRec = ({
-    keys,
-    method
-  }) => {
-    const no = activeCaseNo;
-    setSessionKeys(keys);
+  // 進入錄音模組（依鎖定方式直接開對應頁；分題載入已存題目狀態）
+  const enterModule = (method, list, prog) => {
     setRecMethod(method);
-    setPreRecOpen(false);
-    // 鎖定案件錄音方式（首場決定）
-    setProgressMap(pm => {
-      const prog = pm[no] || progInit(recSubjects);
-      return {
-        ...pm,
-        [no]: {
-          ...prog,
-          method: prog.method || method
-        }
-      };
-    });
+    const keys = (list || []).map(s => s.key);
+    setSessionKeys(keys);
     if (method === "segmented") {
-      // 載入該場首位對象已存的題目狀態（題級續錄）
-      const prog = progressMap[no];
       const saved = prog && prog.q && prog.q[keys[0]] || {};
       setRecQuestions(questions.map(q => {
         const st = saved[q.no] || "pending";
@@ -11047,6 +10968,58 @@ function App() {
     } else {
       setScreen("whole");
     }
+  };
+
+  // 進入錄音作業：方式未鎖定 → 開設定彈窗；已鎖定 → 直接進入對應錄音模組
+  const startRecordingFlow = subs => {
+    const no = activeCaseNo;
+    let prog = progressMap[no];
+    const list = prog && prog.subjects && prog.subjects.length ? prog.subjects : subs && subs.length ? subs : subjectsFromCase(activeCase);
+    if (!prog) {
+      prog = progInit(list);
+      setProgressMap(pm => ({
+        ...pm,
+        [no]: prog
+      }));
+    }
+    setRecSubjects(list);
+    if (prog.method) {
+      // 已選定並鎖定錄音方式 → 跳過設定彈窗，直接進入對應錄音頁
+      enterModule(prog.method, list, prog);
+    } else {
+      // 首次：開「進入錄音作業」設定彈窗（選方式 / 設定 TTS / 手動上傳 PDF）
+      setRecMethod("segmented");
+      setSessionKeys(list.map(s => s.key));
+      setPreRecOpen(true);
+    }
+  };
+  const confirmPreRec = ({
+    method
+  }) => {
+    const no = activeCaseNo;
+    // 本案件所有對象即為本場一起錄音的對象（場次已在建立時決定）
+    const keys = recSubjects.map(s => s.key);
+    setPreRecOpen(false);
+    // 鎖定案件錄音方式（首次選定後不可異動）
+    setProgressMap(pm => {
+      const prog = pm[no] || progInit(recSubjects);
+      const groupOf = {
+        ...(prog.groupOf || {})
+      };
+      const gid = [...keys].sort().join("|");
+      keys.forEach(k => {
+        groupOf[k] = gid;
+      });
+      return {
+        ...pm,
+        [no]: {
+          ...prog,
+          method: prog.method || method,
+          groupOf
+        }
+      };
+    });
+    enterModule(method, recSubjects, progressMap[no]);
   };
 
   // 錄音中（分題）：每次題目變動即時寫回進度，離開也不會掉
@@ -11065,44 +11038,55 @@ function App() {
     });
   }, [recQuestions, screen, sessionKeys, activeCaseNo]);
 
-  // 完成本場 → 標記本場對象完成；全部對象完成則送出(審核中)，否則續錄下一位
-  const completeSession = wholeMode => {
+  // 整段/上傳：本場錄完或選好檔即時把該對象寫入 whole[k]（題級續錄的整段版）
+  const markWholeStatus = (keys, status) => {
     const no = activeCaseNo;
-    let np = {
-      ...(progressMap[no] || progInit(recSubjects))
-    };
-    np.method = np.method || recMethod;
-    if (recMethod === "whole") {
+    setProgressMap(pm => {
+      const prog = pm[no] || progInit(recSubjects);
       const whole = {
-        ...np.whole
+        ...prog.whole
       };
-      sessionKeys.forEach(k => {
-        whole[k] = wholeMode === "upload" ? "uploaded" : "recorded";
+      keys.forEach(k => {
+        whole[k] = status;
       });
-      np.whole = whole;
-    } else {
-      np = progWriteSegmented(np, sessionKeys, recQuestions);
-      np.method = np.method || recMethod;
-    }
-    np.sessions = [...np.sessions, {
-      keys: sessionKeys,
-      method: recMethod
-    }];
-    const allDone = progAllDone(np, questions.length);
-    np.status = allDone ? "reviewing" : "draft";
-    setProgressMap(pm => ({
-      ...pm,
-      [no]: np
-    }));
-    if (allDone) {
-      setScreen("upload");
-      setUploadMode("validate");
-    } else {
-      setMethodLocked(true);
-      const dm = progDoneMap(np, questions.length);
-      setSessionKeys(np.subjects.filter(s => !dm[s.key]).map(s => s.key));
-      setPreRecOpen(true);
-    }
+      let np = {
+        ...prog,
+        whole,
+        method: prog.method || "whole"
+      };
+      np.status = progAllDone(np, questions.length) ? np.status : "draft";
+      return {
+        ...pm,
+        [no]: np
+      };
+    });
+  };
+
+  // 送出前檢核：開視窗
+  const openCheck = () => {
+    setCheckMode("check");
+    setCheckOpen(true);
+  };
+
+  // 完成送出：寫回最新進度並置「審核中」（分題寫題級，整段已即時寫入）
+  const submitCase = () => {
+    const no = activeCaseNo;
+    setProgressMap(pm => {
+      let np = {
+        ...(pm[no] || progInit(recSubjects))
+      };
+      if ((np.method || recMethod) === "segmented") {
+        np = progWriteSegmented(np, sessionKeys, recQuestions);
+        np.method = np.method || "segmented";
+      } else {
+        np.method = np.method || "whole";
+      }
+      np.status = "reviewing";
+      return {
+        ...pm,
+        [no]: np
+      };
+    });
   };
   const tweaksDomNode = document.getElementById("tweaks-root");
 
@@ -11115,8 +11099,9 @@ function App() {
   const activeProg = progressMap[activeCaseNo] || null;
   const subjectDone = progDoneMap(activeProg, questions.length);
   const completedSessions = activeProg ? activeProg.sessions : [];
-  const hasSegmented = entrySource === "integration"; // API 同步分題題稿 → 方式一可選
-  const canWholeRecord = t.device === "ipad"; // 整段錄音僅 iPad
+  const activeScriptMode = caseScriptMode(activeCase); // 依案件通路決定錄音方式閘門
+  const isWebCase = (activeCase.channel || "").startsWith("Web"); // Web/桌機通路：整段錄音不可用，只能上傳
+  const canWholeRecord = !isWebCase; // 整段錄音僅 iPad 通路（依案件通路，不再用全域裝置 Tweak）
   const preRecDefaultKeys = recSubjects.filter(s => !subjectDone[s.key]).map(s => s.key);
   const isLastSession = recSubjects.filter(s => !subjectDone[s.key] && !sessionKeys.includes(s.key)).length === 0;
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
@@ -11143,16 +11128,13 @@ function App() {
     questions: questions,
     caseProgress: activeProg,
     onBack: goToList,
-    onStartRecord: () => startRecordingFlow(subjectsFromCase(activeCase))
+    onStartRecord: () => startRecordingFlow(subjectsFromCase(activeCase)),
+    onStartCorrection: startCorrectionFlow
   }), screen === "entry" && /*#__PURE__*/React.createElement(EntryScreen, {
     caseInfo: activeCase,
-    tts: tts,
-    setTts: setTts,
-    entryStep: entryStep,
-    setEntryStep: setEntryStep,
     entrySource: entrySource,
     setEntrySource: setEntrySource,
-    onStart: customers => startRecordingFlow(customersToSubjects(customers)),
+    onCreate: createCases,
     onCancel: goToList
   }), screen === "recording" && /*#__PURE__*/React.createElement(RecordingScreen, {
     caseInfo: activeCase,
@@ -11160,50 +11142,69 @@ function App() {
     setTts: setTts,
     questions: recQuestions,
     setQuestions: setRecQuestions,
-    onFinish: goToUpload,
     tweaks: t,
     onBackToList: goToList,
-    onBackToCase: () => goToDetail(activeCaseNo),
     subjects: recSubjects,
     sessionKeys: sessionKeys,
     subjectDone: subjectDone,
-    completedSessions: completedSessions,
-    isLastSession: isLastSession,
-    onSessionComplete: completeSession
+    onOpenCheck: openCheck
   }), screen === "whole" && /*#__PURE__*/React.createElement(WholeRecordingScreen, {
     caseInfo: activeCase,
     subjects: recSubjects,
     sessionKeys: sessionKeys,
     subjectDone: subjectDone,
-    scriptSource: entrySource,
-    device: t.device,
+    scriptSource: caseScriptMode(activeCase),
+    device: canWholeRecord ? "ipad" : "desktop",
     questions: questions,
-    completedSessions: completedSessions,
-    isLastSession: isLastSession,
-    onSessionComplete: completeSession,
-    onBackToList: goToList
-  }), screen === "upload" && /*#__PURE__*/React.createElement(UploadScreen, {
-    caseInfo: activeCase,
-    questions: recQuestions,
-    mode: uploadMode,
-    onModeChange: setUploadMode,
-    onBack: goToRecording,
-    onRestart: goToList
+    flowMode: recFlowMode,
+    returnInfo: recFlowMode === "correction" ? window.mliLatestRound(activeCaseNo) : null,
+    onSubmitCorrection: submitCorrection,
+    onWholeStatus: markWholeStatus,
+    onOpenCheck: openCheck,
+    onBackToList: recFlowMode === "correction" ? () => goToDetail(activeCaseNo) : goToList
   }), /*#__PURE__*/React.createElement("div", {
     className: "ftr"
   }, "Copyright \xA9 2026 TPIsoftware \xB7 MLI \u9AD8\u9F61\u4FDD\u96AA\u9304\u97F3\u524D\u53F0 v1.0"))), /*#__PURE__*/React.createElement(PreRecordModal, {
     open: preRecOpen,
     subjects: recSubjects,
-    subjectDone: subjectDone,
-    defaultKeys: preRecDefaultKeys,
-    methodAvailable: hasSegmented,
-    methodLocked: methodLocked,
-    lockedMethod: recMethod,
+    scriptMode: activeScriptMode,
     canWholeRecord: canWholeRecord,
     tts: tts,
     setTts: setTts,
     onCancel: () => setPreRecOpen(false),
     onConfirm: confirmPreRec
+  }), /*#__PURE__*/React.createElement(CreatedCasesModal, {
+    created: createdCases,
+    onBackToList: () => {
+      setCreatedCases(null);
+      goToList();
+    }
+  }), /*#__PURE__*/React.createElement(CorrectionDoneModal, {
+    info: correctionDone,
+    onBackToList: () => {
+      setCorrectionDone(null);
+      goToList();
+    },
+    onBackToCase: () => {
+      const no = correctionDone.caseNo;
+      setCorrectionDone(null);
+      goToDetail(no);
+    }
+  }), /*#__PURE__*/React.createElement(SubmitCheckModal, {
+    open: checkOpen,
+    mode: checkMode,
+    setMode: setCheckMode,
+    caseInfo: activeCase,
+    subjects: recSubjects,
+    prog: activeProg,
+    totalQ: questions.length,
+    method: activeProg && activeProg.method || recMethod,
+    onClose: () => setCheckOpen(false),
+    onSubmit: submitCase,
+    onDoneToList: () => {
+      setCheckOpen(false);
+      goToList();
+    }
   }), tweaksDomNode && ReactDOM.createPortal(/*#__PURE__*/React.createElement(TweaksPanel, {
     title: "Tweaks"
   }, /*#__PURE__*/React.createElement(TweakSection, {
@@ -11226,13 +11227,8 @@ function App() {
     }, {
       value: "whole",
       label: "P-1 · 錄音作業（整段/上傳）"
-    }, {
-      value: "upload",
-      label: "P-1 · 完成送出"
     }],
     onChange: v => {
-      if (v === "upload") setUploadMode("validate");
-      if (v === "entry") setEntryStep(1);
       if ((v === "recording" || v === "whole") && recSubjects.length === 0) {
         const s = subjectsFromCase(activeCase);
         setRecSubjects(s);
@@ -11240,32 +11236,10 @@ function App() {
       }
       setScreen(v);
     }
-  }), /*#__PURE__*/React.createElement(TweakSection, {
-    label: "\u901A\u8DEF / \u88DD\u7F6E"
+  }), screen === "entry" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(TweakSection, {
+    label: "\u901A\u8DEF"
   }), /*#__PURE__*/React.createElement(TweakRadio, {
-    label: "\u88DD\u7F6E\uFF08\u5F71\u97FF\u6574\u6BB5\u9304\u97F3\uFF09",
-    value: t.device,
-    options: [{
-      value: "ipad",
-      label: "iPad"
-    }, {
-      value: "desktop",
-      label: "桌機瀏覽器"
-    }],
-    onChange: v => setTweak('device', v)
-  }), screen === "entry" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(TweakRadio, {
-    label: "STEP \u5207\u63DB",
-    value: entryStep,
-    options: [{
-      value: 1,
-      label: "01 案件資訊"
-    }, {
-      value: 2,
-      label: "02 確認題稿"
-    }],
-    onChange: setEntryStep
-  }), /*#__PURE__*/React.createElement(TweakRadio, {
-    label: "\u8D77\u6848\u901A\u8DEF",
+    label: "\u8D77\u6848\u901A\u8DEF\uFF08\u9810\u5E36\u8CC7\u6599\uFF09",
     value: entrySource,
     options: [{
       value: "integration",
@@ -11279,25 +11253,33 @@ function App() {
     label: "\u6AA2\u8996\u6848\u4EF6",
     value: activeCaseNo,
     options: cases.map(c => ({
-      value: c.recordingNo,
+      value: c.caseNo,
       label: `${window.__MLI_STATUS[c.status].label}　·　${c.proposer}　·　${c.product.slice(0, 12)}`
     })),
     onChange: setActiveCaseNo
-  }), screen === "upload" && /*#__PURE__*/React.createElement(TweakRadio, {
-    label: "\u4E0A\u50B3\u5B50\u72C0\u614B",
-    value: uploadMode,
+  }), screen === "whole" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(TweakSection, {
+    label: "\u6574\u6BB5\u9304\u97F3\u6A21\u5F0F"
+  }), /*#__PURE__*/React.createElement(TweakRadio, {
+    label: "\u6D41\u7A0B\u6A21\u5F0F",
+    value: recFlowMode,
     options: [{
-      value: "validate",
-      label: "檢核"
+      value: "normal",
+      label: "一般錄音"
     }, {
-      value: "merging",
-      label: "合併中"
-    }, {
-      value: "done",
-      label: "完成"
+      value: "correction",
+      label: "補正錄音"
     }],
-    onChange: setUploadMode
-  }), screen === "recording" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(TweakSection, {
+    onChange: v => {
+      if (v === "correction") {
+        const ret = cases.find(c => c.status === "returned") || activeCase;
+        setActiveCaseNo(ret.caseNo);
+        const subs = subjectsFromCase(ret);
+        setRecSubjects(subs);
+        setSessionKeys(subs.map(s => s.key));
+      }
+      setRecFlowMode(v);
+    }
+  })), screen === "recording" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(TweakSection, {
     label: "\u984C\u5361\u72C0\u614B\u6F14\u793A"
   }), /*#__PURE__*/React.createElement(TweakSelect, {
     label: "\u984C\u5361\u8CC7\u6599",
@@ -11348,7 +11330,146 @@ function App() {
       font: "11.5px/1.55 'Noto Sans TC'",
       color: "rgba(41,38,27,.55)"
     }
-  }, /*#__PURE__*/React.createElement("b", null, "v3 \u91CD\u9EDE\u66F4\u65B0"), /*#__PURE__*/React.createElement("br", null), "\u2022 \u300C\u5EFA\u7ACB\u9304\u97F3\u6848\u4EF6\u300D\u91CD\u69CB\u70BA 3 \u6B65\u9A5F\u6D41\u7A0B", /*#__PURE__*/React.createElement("br", null), "\xA0\xA0\u3000STEP 01 \u8F38\u5165\u6848\u4EF6\u8CC7\u8A0A\uFF08\u59D3\u540D/\u8EAB\u5206\u8B49/\u95DC\u4FC2/\u5546\u54C1\uFF09", /*#__PURE__*/React.createElement("br", null), "\xA0\xA0\u3000STEP 02 \u53D6\u865F + \u78BA\u8A8D\u984C\u76EE\u6587\u7A3F", /*#__PURE__*/React.createElement("br", null), "\xA0\xA0\u3000STEP 03 \u9304\u97F3\u4F5C\u696D", /*#__PURE__*/React.createElement("br", null), "\u2022 \u4F9D\u8D77\u6848\u901A\u8DEF\u5224\u65B7\u662F\u5426\u7531\u5EFA\u8B70\u66F8 APP \u5E36\u5165", /*#__PURE__*/React.createElement("br", null), "\u2022 \u5BA2\u6236\u8CC7\u6599\u652F\u63F4\u591A\u5BA2\u6236 / \u591A\u91CD\u89D2\u8272\u88DD\u986F", /*#__PURE__*/React.createElement("br", null), "\u2022 v2 \u65B0\u589E P-3 \u6848\u4EF6\u67E5\u8A62\u4ECB\u9762\uFF08F-301~F-307\uFF09")), tweaksDomNode));
+  }, /*#__PURE__*/React.createElement("b", null, "v7 \u91CD\u9EDE\u66F4\u65B0 \xB7 \u65B7\u958B\u6D41\u7A0B"), /*#__PURE__*/React.createElement("br", null), "\u2022 \u300C\u5EFA\u7ACB\u9304\u97F3\u6848\u4EF6\u300D\u6539\u70BA\u55AE\u9801\u300C\u5EFA\u6BBC\u300D\uFF0C\u4E0D\u518D\u4E32\u9304\u97F3", /*#__PURE__*/React.createElement("br", null), "\u2022 \u6BCF\u4F4D\u5BA2\u6236\u65B0\u589E\u300C\u5834\u6B21\u300D\u6B04\u4F4D\uFF0C\u4F9D\u5834\u6B21\u62C6\u591A\u7B46\u6848\u4EF6\uFF08\u5404\u81EA\u7DE8\u865F\uFF09", /*#__PURE__*/React.createElement("br", null), "\u2022 \u78BA\u8A8D\u5EFA\u7ACB \u2192 \u6210\u529F\u8996\u7A97\u5217\u51FA\u7DE8\u865F \u2192 \u56DE\u5230\u9304\u97F3\u6E05\u55AE", /*#__PURE__*/React.createElement("br", null), "\u2022 \u81EA\u52D5\u5E36\u5165\uFF1A\u984C\u76EE\u6587\u7A3F\u986F\u793A\u65BC\u9801\u9762\u4E0B\u65B9\uFF08\u7121 STEP 2\uFF09", /*#__PURE__*/React.createElement("br", null), "\u2022 \u9304\u97F3\u6539\u7531 \u6E05\u55AE \u2192 \u8A73\u60C5 \u2192\u300C\u9032\u5165\u9304\u97F3\u4F5C\u696D\u300D\u89F8\u767C", /*#__PURE__*/React.createElement("br", null), "\u2022 \u5EFA\u8B70\u66F8\u5E36\u5165\uFF1D\u5206\u984C/\u6574\u6BB5\uFF1B\u624B\u52D5\u8F38\u5165\uFF1D\u53EA\u80FD\u6574\u6BB5\u4E14\u9808\u5148\u4E0A\u50B3 PDF", /*#__PURE__*/React.createElement("br", null), "\u2022 \u5DF2\u79FB\u9664\u300C\u9078\u64C7\u672C\u5834\u9304\u97F3\u5C0D\u8C61\u300D\uFF08\u6539\u7531\u5834\u6B21\u6C7A\u5B9A\uFF09")), tweaksDomNode));
+}
+
+// ─────────────────────────────────────────────────────────────
+// CorrectionDoneModal — 補正音檔送出成功
+// 直接送出（不經檢核視窗），確認補正音檔已獨立上傳、案件進入補件審核
+function CorrectionDoneModal({
+  info,
+  onBackToList,
+  onBackToCase
+}) {
+  if (!info) return null;
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "fixed",
+      inset: 0,
+      zIndex: 200,
+      background: "rgba(41,47,84,.4)",
+      display: "grid",
+      placeItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "card fadeup",
+    style: {
+      padding: 32,
+      width: 500,
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 64,
+      height: 64,
+      borderRadius: "50%",
+      background: "var(--ok-soft)",
+      display: "grid",
+      placeItems: "center",
+      margin: "0 auto 14px"
+    }
+  }, /*#__PURE__*/React.createElement(I.Check, {
+    size: 32,
+    stroke: "var(--ok)",
+    sw: 2.6
+  })), /*#__PURE__*/React.createElement("h3", {
+    style: {
+      margin: "0 0 8px",
+      font: "700 19px/1.3 'Noto Sans TC'",
+      color: "var(--ink)"
+    }
+  }, "\u88DC\u6B63\u97F3\u6A94\u5DF2\u9001\u51FA"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 18px",
+      font: "400 13.5px/1.7 'Noto Sans TC'",
+      color: "var(--ink-3)"
+    }
+  }, "\u88DC\u6B63\u97F3\u6A94\u5DF2", /*#__PURE__*/React.createElement("b", {
+    style: {
+      color: "var(--ink-2)"
+    }
+  }, "\u7368\u7ACB\u4E0A\u50B3"), "\uFF0C\u4E0D\u8986\u84CB\u539F\u59CB\u5B8C\u6574\u97F3\u6A94\u3002\u6848\u4EF6", /*#__PURE__*/React.createElement("span", {
+    className: "ff-mont tabular",
+    style: {
+      margin: "0 4px",
+      color: "var(--primary)"
+    }
+  }, info.caseNo), "\u9032\u5165\u300C\u88DC\u4EF6\u5BE9\u6838\u300D\uFF0C\u5167\u52E4\u5C07\u5C31\u88DC\u6B63\u5167\u5BB9\u91CD\u65B0\u9032\u884C STT \u8F49\u6587\u5B57\u8207 AI \u8CEA\u6AA2\u5F8C\u8907\u5BE9\u3002"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "12px 16px",
+      borderRadius: 10,
+      background: "var(--primary-bg)",
+      border: "1px solid var(--line-2)",
+      marginBottom: 20,
+      textAlign: "left",
+      display: "flex",
+      flexDirection: "column",
+      gap: 7,
+      font: "400 12.5px/1.5 'Noto Sans TC'"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "var(--ink-4)"
+    }
+  }, "\u9304\u97F3\u7DE8\u865F"), /*#__PURE__*/React.createElement("span", {
+    className: "ff-mont tabular",
+    style: {
+      color: "var(--primary)"
+    }
+  }, info.caseNo)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "var(--ink-4)"
+    }
+  }, "\u88DC\u6B63\u97F3\u6A94"), /*#__PURE__*/React.createElement("span", {
+    className: "ff-mont tabular",
+    style: {
+      color: "var(--ink-2)",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap",
+      maxWidth: 260
+    }
+  }, info.audio.name)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "var(--ink-4)"
+    }
+  }, "\u88DC\u6B63\u65B9\u5F0F"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "var(--ink-2)"
+    }
+  }, info.audio.method === "upload" ? "上傳整段音檔" : "整段錄音", " \xB7 1 \u5B8C\u6574\u97F3\u6A94"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 10,
+      justifyContent: "center"
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-quiet",
+    onClick: onBackToList
+  }, "\u56DE\u5230\u6848\u4EF6\u6E05\u55AE"), /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-primary",
+    onClick: onBackToCase
+  }, /*#__PURE__*/React.createElement(I.Doc, {
+    size: 14
+  }), " \u6AA2\u8996\u6848\u4EF6"))));
 }
 ReactDOM.createRoot(document.getElementById("root")).render(/*#__PURE__*/React.createElement(App, null));
 </script>

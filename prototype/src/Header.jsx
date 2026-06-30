@@ -53,7 +53,7 @@ function Header({ caseInfo, screen, onNav }) {
 }
 
 // Sub header — title + breadcrumb + actions (right slot)
-function SubHeader({ title, crumbs = [], right = null, recordingNo, time }) {
+function SubHeader({ title, crumbs = [], right = null, caseNo, time }) {
   return (
     <div className="subhdr">
       <h1>{title}</h1>
@@ -68,10 +68,10 @@ function SubHeader({ title, crumbs = [], right = null, recordingNo, time }) {
           ))}
         </div>
       )}
-      {recordingNo && (
+      {caseNo && (
         <div className="meta tabular" style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:14}}>
           <span style={{display:"flex",alignItems:"center",gap:6}}>
-            <I.Hash size={14} stroke="var(--ink-4)"/> {recordingNo}
+            <I.Hash size={14} stroke="var(--ink-4)"/> {caseNo}
           </span>
           <span style={{width:1,height:14,background:"var(--line-3)"}}/>
           <span style={{display:"flex",alignItems:"center",gap:6}}>
@@ -80,7 +80,7 @@ function SubHeader({ title, crumbs = [], right = null, recordingNo, time }) {
         </div>
       )}
       {right && (
-        <div style={{marginLeft:recordingNo?16:"auto",display:"flex",gap:10,alignItems:"center"}}>{right}</div>
+        <div style={{marginLeft:caseNo?16:"auto",display:"flex",gap:10,alignItems:"center"}}>{right}</div>
       )}
     </div>
   );

@@ -533,8 +533,10 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
 // ── data.js ──
 // 案件範例資料 + 題目腳本
 //
-// 編碼邏輯：
-//   錄音編號 = A + YYYYMMDD + XXXX(4 碼流水號)，例：A202605210001
+// 編碼邏輯（兩層）：
+//   recordingNo（錄音編號）= 整組建立母體，一張保單一次建立共用一個群組號，例：A0001
+//   caseNo（案件編號）     = 群組下的個別案件（一場次一個），格式 {recordingNo}-{場次}，例：A0001-1、A0001-2
+//   一個 recordingNo 可勾稽多個 caseNo（一對多）；caseNo 為系統內部唯一鍵。
 //
 // 審核狀態（v2 — 對齊 v1 待確認 #4 結論，5 種）：
 //   draft        草稿     — 業務員建立但尚未送出審核
@@ -634,8 +636,53 @@ const QUESTIONS = [
 //   #7 要保 = 被保 = 繳款                          — 審核中
 //   #8 三人皆不同                                    — 退回補正
 window.__MLI_CASES = [
+  // ── 範例群組 A0001：同一保單 3 位錄音對象、分 2 場次 → 1 個錄音編號、2 個案件編號 ──
+  //    場次1：陳志明(要)＋陳麗華(被) → A0001-1　／　場次2：陳國強(繳) → A0001-2
   {
-    recordingNo: "A202605210001",
+    recordingNo: "A0001",
+    caseNo:      "A0001-1",
+    sessionNo:   1,
+    createdAt:   "2026/05/22 10:05",
+    updatedAt:   "2026/05/22 10:05",
+    policyNo:    null,
+    product:     "鑫美鑫多元利率變動型終身壽險",
+    roles: {
+      proposer: { name: "陳志明", age: 73, idNo: "C168294017" },
+      insured:  { name: "陳麗華", age: 71, idNo: "C279305128" },
+    },
+    agent:    "林佩君",  agentId: "A0427",
+    branch:   "台北中山通訊處",
+    channel:  "iPad（行銷系統）",
+    duration: 0,
+    status:   "draft",
+    source:   "建議書系統",
+    note:     "",
+    progress: { total: 14, recorded: 0, skipped: 0 },
+  },
+  {
+    recordingNo: "A0001",
+    caseNo:      "A0001-2",
+    sessionNo:   2,
+    createdAt:   "2026/05/22 10:05",
+    updatedAt:   "2026/05/22 10:05",
+    policyNo:    null,
+    product:     "鑫美鑫多元利率變動型終身壽險",
+    roles: {
+      payer:    { name: "陳國強", age: 69, idNo: "C381426239" },
+    },
+    agent:    "林佩君",  agentId: "A0427",
+    branch:   "台北中山通訊處",
+    channel:  "iPad（行銷系統）",
+    duration: 0,
+    status:   "draft",
+    source:   "建議書系統",
+    note:     "",
+    progress: { total: 14, recorded: 0, skipped: 0 },
+  },
+  {
+    recordingNo: "A0002",
+    caseNo:      "A0002-1",
+    sessionNo:   1,
     createdAt:   "2026/05/21 14:08",
     updatedAt:   "2026/05/21 14:46",
     policyNo:    null,
@@ -652,10 +699,12 @@ window.__MLI_CASES = [
     status:   "draft",
     source:   "建議書系統",
     note:     "",
-    progress: { total: 14, recorded: 3, skipped: 0 },
+    progress: { total: 14, recorded: 7, skipped: 0 },
   },
   {
-    recordingNo: "A202605210002",
+    recordingNo: "A0003",
+    caseNo:      "A0003-1",
+    sessionNo:   1,
     createdAt:   "2026/05/21 11:23",
     updatedAt:   "2026/05/21 13:08",
     policyNo:    null,
@@ -675,7 +724,9 @@ window.__MLI_CASES = [
     progress: { total: 14, recorded: 14, skipped: 0 },
   },
   {
-    recordingNo: "A202605200003",
+    recordingNo: "A0004",
+    caseNo:      "A0004-1",
+    sessionNo:   1,
     createdAt:   "2026/05/20 16:42",
     updatedAt:   "2026/05/21 09:18",
     policyNo:    null,
@@ -695,7 +746,9 @@ window.__MLI_CASES = [
     progress: { total: 14, recorded: 14, skipped: 0 },
   },
   {
-    recordingNo: "A202605190001",
+    recordingNo: "A0005",
+    caseNo:      "A0005-1",
+    sessionNo:   1,
     createdAt:   "2026/05/19 10:11",
     updatedAt:   "2026/05/19 15:33",
     policyNo:    "P-2026-0048120",     // 已通過 + 核保成功，後端已核發保單號
@@ -715,7 +768,9 @@ window.__MLI_CASES = [
     progress: { total: 14, recorded: 14, skipped: 0 },
   },
   {
-    recordingNo: "A202605180001",
+    recordingNo: "A0006",
+    caseNo:      "A0006-1",
+    sessionNo:   1,
     createdAt:   "2026/05/18 14:55",
     updatedAt:   "2026/05/19 11:02",
     policyNo:    null,
@@ -735,7 +790,9 @@ window.__MLI_CASES = [
     progress: { total: 14, recorded: 14, skipped: 0 },
   },
   {
-    recordingNo: "A202605210003",
+    recordingNo: "A0007",
+    caseNo:      "A0007-1",
+    sessionNo:   1,
     createdAt:   "2026/05/21 09:02",
     updatedAt:   "2026/05/21 09:02",
     policyNo:    null,
@@ -755,7 +812,9 @@ window.__MLI_CASES = [
     progress: { total: 14, recorded: 0, skipped: 0 },
   },
   {
-    recordingNo: "A202605170002",
+    recordingNo: "A0008",
+    caseNo:      "A0008-1",
+    sessionNo:   1,
     createdAt:   "2026/05/17 13:20",
     updatedAt:   "2026/05/18 10:44",
     policyNo:    null,
@@ -775,7 +834,9 @@ window.__MLI_CASES = [
     progress: { total: 14, recorded: 14, skipped: 0 },
   },
   {
-    recordingNo: "A202605150001",
+    recordingNo: "A0009",
+    caseNo:      "A0009-1",
+    sessionNo:   1,
     createdAt:   "2026/05/15 15:48",
     updatedAt:   "2026/05/16 14:21",
     policyNo:    null,
@@ -798,9 +859,11 @@ window.__MLI_CASES = [
 
 // 向後相容：把 roles 攤平成舊欄位（proposer / insured / insuredAge）給其他畫面使用
 window.__MLI_CASES.forEach(c => {
-  c.proposer   = c.roles.proposer.name;
-  c.insured    = c.roles.insured.name;
-  c.insuredAge = c.roles.insured.age;
+  const r = c.roles || {};
+  const any = r.proposer || r.insured || r.payer || {};
+  c.proposer   = (r.proposer || any).name;
+  c.insured    = (r.insured  || any).name;
+  c.insuredAge = (r.insured  || any).age;
 });
 
 window.__MLI_QUESTIONS = QUESTIONS;
@@ -868,6 +931,8 @@ window.__MLI_DATA = {
 
   // 既有 8 筆案件擴充
   const ENRICH = [
+    {region:"北一區", reviewer:null,         sla: 6,  riskScore: 10, riskLevel:"low",  sttFlags:{diff:0,  negation:0, lowConf:0 }, reviewStage:"unassigned"},
+    {region:"北一區", reviewer:null,         sla: 6,  riskScore: 10, riskLevel:"low",  sttFlags:{diff:0,  negation:0, lowConf:0 }, reviewStage:"unassigned"},
     {region:"北一區", reviewer:REVIEWERS[0], sla: 4,  riskScore: 22, riskLevel:"low",  sttFlags:{diff:1,  negation:0, lowConf:2 }, reviewStage:"waiting"},
     {region:"北一區", reviewer:REVIEWERS[1], sla: 2,  riskScore: 58, riskLevel:"mid",  sttFlags:{diff:6,  negation:1, lowConf:4 }, reviewStage:"in_review"},
     {region:"北一區", reviewer:REVIEWERS[0], sla: 1,  riskScore: 84, riskLevel:"high", sttFlags:{diff:12, negation:3, lowConf:8 }, reviewStage:"returned"},
@@ -880,30 +945,35 @@ window.__MLI_DATA = {
   cases.forEach((c, i) => Object.assign(c, ENRICH[i % ENRICH.length]));
 
   // 補幾筆案件，讓清單看起來像真的後台（多業務員、多通訊處、多地區）
+  // 每筆自成一個錄音編號（群組）；A0012 刻意拆 2 場次 → 同一錄音編號下 2 個案件編號（示範一對多）
   const EXTRA = [
-    {recordingNo:"A202605220001", agent:"周永禎", agentId:"A0612", branch:"台北信義通訊處", region:"北一區", product:"安心伴你行利率變動型終身壽險",   proposer:"羅美玉",  age:70, status:"reviewing", risk:"high", score:79, sla:1, stage:"in_review",  reviewer:REVIEWERS[1]},
-    {recordingNo:"A202605220002", agent:"高雅婷", agentId:"A0518", branch:"新北板橋通訊處", region:"北一區", product:"新康健終身醫療健康保險",         proposer:"葉文清",  age:73, status:"reviewing", risk:"low",  score:20, sla:5, stage:"waiting",    reviewer:REVIEWERS[0]},
-    {recordingNo:"A202605220003", agent:"鄭子涵", agentId:"A0742", branch:"桃園中壢通訊處", region:"北二區", product:"鑫美鑫多元利率變動型終身壽險",   proposer:"許雅芳",  age:81, status:"reviewing", risk:"mid",  score:51, sla:3, stage:"in_review",  reviewer:REVIEWERS[2]},
-    {recordingNo:"A202605210008", agent:"楊志豪", agentId:"A0331", branch:"新竹竹科通訊處", region:"北二區", product:"長長久久終身健康保險",             proposer:"何宗翰",  age:68, status:"reviewing", risk:"high", score:88, sla:0, stage:"in_review",  reviewer:REVIEWERS[2]},
-    {recordingNo:"A202605210009", agent:"蔡明宏", agentId:"A0247", branch:"台中西屯通訊處", region:"中區",   product:"新美滿人生終身保險",                proposer:"呂淑芬",  age:76, status:"reviewing", risk:"mid",  score:62, sla:2, stage:"waiting",    reviewer:REVIEWERS[3]},
-    {recordingNo:"A202605200005", agent:"莊雅雯", agentId:"A0805", branch:"台中北屯通訊處", region:"中區",   product:"新住院好幫手健康保險附約",         proposer:"林文德",  age:71, status:"approved",  risk:"low",  score:15, sla:9, stage:"verified",   reviewer:REVIEWERS[3]},
-    {recordingNo:"A202605200007", agent:"潘宇翔", agentId:"A0913", branch:"台南東區通訊處", region:"南區",   product:"論重病讓你安心重大傷病終身險",     proposer:"洪美鳳",  age:69, status:"returned",  risk:"high", score:76, sla:1, stage:"returned",   reviewer:REVIEWERS[4]},
-    {recordingNo:"A202605200008", agent:"鄧家瑋", agentId:"A1024", branch:"高雄左營通訊處", region:"南區",   product:"高齡躍雨康復醫療健康保險附約",     proposer:"古天賜",  age:74, status:"reviewing", risk:"mid",  score:48, sla:4, stage:"waiting",    reviewer:null},
-    {recordingNo:"A202605190005", agent:"林佩君", agentId:"A0427", branch:"台北中山通訊處", region:"北一區", product:"新康健終身醫療健康保險",           proposer:"曾文聰",  age:70, status:"approved",  risk:"low",  score:9,  sla:12,stage:"verified",   reviewer:REVIEWERS[0]},
-    {recordingNo:"A202605190006", agent:"林佩君", agentId:"A0427", branch:"台北中山通訊處", region:"北一區", product:"鑫美鑫多元利率變動型終身壽險",     proposer:"邱永福",  age:77, status:"reviewing", risk:"high", score:73, sla:-1,stage:"in_review",    reviewer:REVIEWERS[1]},
+    {recordingNo:"A0010", caseNo:"A0010-1", sessionNo:1, date:"2026/05/22", agent:"周永禎", agentId:"A0612", branch:"台北信義通訊處", region:"北一區", product:"安心伴你行利率變動型終身壽險",   proposer:"羅美玉",  age:70, status:"reviewing", risk:"high", score:79, sla:1, stage:"in_review",  reviewer:REVIEWERS[1]},
+    {recordingNo:"A0011", caseNo:"A0011-1", sessionNo:1, date:"2026/05/22", agent:"高雅婷", agentId:"A0518", branch:"新北板橋通訊處", region:"北一區", product:"新康健終身醫療健康保險",         proposer:"葉文清",  age:73, status:"reviewing", risk:"low",  score:20, sla:5, stage:"waiting",    reviewer:REVIEWERS[0]},
+    {recordingNo:"A0012", caseNo:"A0012-1", sessionNo:1, date:"2026/05/22", agent:"鄭子涵", agentId:"A0742", branch:"桃園中壢通訊處", region:"北二區", product:"鑫美鑫多元利率變動型終身壽險",   proposer:"許雅芳",  age:81, status:"reviewing", risk:"mid",  score:51, sla:3, stage:"in_review",  reviewer:REVIEWERS[2]},
+    {recordingNo:"A0012", caseNo:"A0012-2", sessionNo:2, date:"2026/05/22", agent:"鄭子涵", agentId:"A0742", branch:"桃園中壢通訊處", region:"北二區", product:"鑫美鑫多元利率變動型終身壽險",   proposer:"許志成",  age:78, status:"reviewing", risk:"low",  score:23, sla:3, stage:"waiting",    reviewer:REVIEWERS[2]},
+    {recordingNo:"A0013", caseNo:"A0013-1", sessionNo:1, date:"2026/05/21", agent:"楊志豪", agentId:"A0331", branch:"新竹竹科通訊處", region:"北二區", product:"長長久久終身健康保險",             proposer:"何宗翰",  age:68, status:"reviewing", risk:"high", score:88, sla:0, stage:"in_review",  reviewer:REVIEWERS[2]},
+    {recordingNo:"A0014", caseNo:"A0014-1", sessionNo:1, date:"2026/05/21", agent:"蔡明宏", agentId:"A0247", branch:"台中西屯通訊處", region:"中區",   product:"新美滿人生終身保險",                proposer:"呂淑芬",  age:76, status:"reviewing", risk:"mid",  score:62, sla:2, stage:"waiting",    reviewer:REVIEWERS[3]},
+    {recordingNo:"A0015", caseNo:"A0015-1", sessionNo:1, date:"2026/05/20", agent:"莊雅雯", agentId:"A0805", branch:"台中北屯通訊處", region:"中區",   product:"新住院好幫手健康保險附約",         proposer:"林文德",  age:71, status:"approved",  risk:"low",  score:15, sla:9, stage:"verified",   reviewer:REVIEWERS[3]},
+    {recordingNo:"A0016", caseNo:"A0016-1", sessionNo:1, date:"2026/05/20", agent:"潘宇翔", agentId:"A0913", branch:"台南東區通訊處", region:"南區",   product:"論重病讓你安心重大傷病終身險",     proposer:"洪美鳳",  age:69, status:"returned",  risk:"high", score:76, sla:1, stage:"returned",   reviewer:REVIEWERS[4]},
+    {recordingNo:"A0017", caseNo:"A0017-1", sessionNo:1, date:"2026/05/20", agent:"鄧家瑋", agentId:"A1024", branch:"高雄左營通訊處", region:"南區",   product:"高齡躍雨康復醫療健康保險附約",     proposer:"古天賜",  age:74, status:"reviewing", risk:"mid",  score:48, sla:4, stage:"waiting",    reviewer:null},
+    {recordingNo:"A0018", caseNo:"A0018-1", sessionNo:1, date:"2026/05/19", agent:"林佩君", agentId:"A0427", branch:"台北中山通訊處", region:"北一區", product:"新康健終身醫療健康保險",           proposer:"曾文聰",  age:70, status:"approved",  risk:"low",  score:9,  sla:12,stage:"verified",   reviewer:REVIEWERS[0]},
+    {recordingNo:"A0019", caseNo:"A0019-1", sessionNo:1, date:"2026/05/19", agent:"林佩君", agentId:"A0427", branch:"台北中山通訊處", region:"北一區", product:"鑫美鑫多元利率變動型終身壽險",     proposer:"邱永福",  age:77, status:"reviewing", risk:"high", score:73, sla:-1,stage:"in_review",    reviewer:REVIEWERS[1]},
   ];
 
   EXTRA.forEach(x => {
+    const gd = x.recordingNo.slice(1);
     cases.push({
       recordingNo: x.recordingNo,
-      createdAt:   x.recordingNo.slice(1,5)+"/"+x.recordingNo.slice(5,7)+"/"+x.recordingNo.slice(7,9)+" 10:24",
-      updatedAt:   x.recordingNo.slice(1,5)+"/"+x.recordingNo.slice(5,7)+"/"+x.recordingNo.slice(7,9)+" 16:48",
-      policyNo:    x.status==="approved" ? "P-2026-"+x.recordingNo.slice(-7) : null,
+      caseNo:      x.caseNo,
+      sessionNo:   x.sessionNo || 1,
+      createdAt:   x.date + " 10:24",
+      updatedAt:   x.date + " 16:48",
+      policyNo:    x.status==="approved" ? "P-2026-"+gd : null,
       product:     x.product,
       roles: {
-        proposer: { name:x.proposer, age:x.age, idNo:"X"+x.recordingNo.slice(-9) },
-        insured:  { name:x.proposer, age:x.age, idNo:"X"+x.recordingNo.slice(-9) },
-        payer:    { name:x.proposer, age:x.age, idNo:"X"+x.recordingNo.slice(-9) },
+        proposer: { name:x.proposer, age:x.age, idNo:"X"+gd+"01" },
+        insured:  { name:x.proposer, age:x.age, idNo:"X"+gd+"01" },
+        payer:    { name:x.proposer, age:x.age, idNo:"X"+gd+"01" },
       },
       proposer: x.proposer, insured: x.proposer, insuredAge: x.age,
       agent: x.agent, agentId: x.agentId, branch: x.branch, region: x.region,
@@ -960,8 +1030,8 @@ window.__MLI_DATA = {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 詳情頁逐題 STT 比對範例資料
-// 對應 cases[2] = A202605200003（退回補正、Q07/Q10 有問題）
-// 結構：detail[recordingNo] = { questions: [{ no, title, type, originalScript, segments }] }
+// 對應 cases[2] = A0004-1（退回補正、Q07/Q10 有問題）
+// 結構：detail[caseNo] = { questions: [{ no, title, type, originalScript, segments }] }
 //
 // segment.diffTokens：{ t, type } where type ∈ {same|del|add|low|negation}
 //   same    — 原稿與 ASR 相同
@@ -984,11 +1054,11 @@ window.__MLI_REVIEW_DETAIL = {};
       original: text, asr: text, flags: [] };
   }
 
-  // A202605200003 — 重點異常題目
-  D["A202605200003"] = {
-    recordingNo: "A202605200003",
+  // A0004-1 — 重點異常題目
+  D["A0004-1"] = {
+    caseNo: "A0004-1",
     totalDuration: 612,
-    audioFile: "A202605200003_merged.wav",
+    audioFile: "A0004-1_merged.wav",
     summary: {
       diff: 12, negation: 3, lowConf: 8,
       coverage: 0.94,
@@ -1354,12 +1424,12 @@ window.__MLI_REVIEW_DETAIL = {};
 
   // 為其他 reviewing 案件補一個 default（內容會被縮減顯示）— 用 Q1, Q2 的較單純資料
   window.__MLI_CASES.forEach(c => {
-    if (D[c.recordingNo]) return;
+    if (D[c.caseNo]) return;
     if (c.status === "draft") return;
-    D[c.recordingNo] = {
-      recordingNo: c.recordingNo,
+    D[c.caseNo] = {
+      caseNo: c.caseNo,
       totalDuration: c.duration || 540,
-      audioFile: c.recordingNo + "_merged.wav",
+      audioFile: c.caseNo + "_merged.wav",
       summary: {
         diff: c.sttFlags?.diff ?? 2,
         negation: c.sttFlags?.negation ?? 0,
@@ -1369,13 +1439,16 @@ window.__MLI_REVIEW_DETAIL = {};
         riskScore: c.riskScore || 20,
         note: "",
       },
-      // 用 A202605200003 的 Q01 + Q02 + Q08 + Q14 範例（皆為通過題）
-      questions: [
-        D["A202605200003"].questions[0],   // Q01
-        D["A202605200003"].questions[1],   // Q02
-        D["A202605200003"].questions[7],   // Q08
-        D["A202605200003"].questions[13],  // Q14
-      ],
+      // 依風險等級挑代表題，讓「風險 ↔ AI 通過率 ↔ 詳情比對」一致：
+      //   高風險＝含 Q07+Q10 異常（2/4 通過）；中風險＝含 Q10 異常（3/4）；低風險＝全通過（4/4）
+      questions: (() => {
+        const Q = D["A0004-1"].questions;
+        const lvl = c.riskLevel || "low";
+        const idx = lvl === "high" ? [0, 6, 9, 13]
+                  : lvl === "mid"  ? [0, 1, 9, 13]
+                  :                  [0, 1, 7, 13];
+        return idx.map(i => Q[i]);
+      })(),
     };
   });
 })();
@@ -2846,7 +2919,7 @@ function ReviewListScreen({
       if (agentFilter !== "all" && c.agent !== agentFilter) return false;
       if (!kw) return true;
       const roleNames = c.roles ? Object.values(c.roles).map(r => r.name) : [];
-      return [c.recordingNo, c.policyNo || "", c.product, c.agent, c.branch, ...roleNames].some(v => v.toLowerCase().includes(kw));
+      return [c.recordingNo, c.caseNo, c.policyNo || "", c.product, c.agent, c.branch, ...roleNames].some(v => v.toLowerCase().includes(kw));
     });
     if (sort === "risk") {
       list = [...list].sort((a, b) => (b.riskScore || 0) - (a.riskScore || 0));
@@ -2881,7 +2954,7 @@ function ReviewListScreen({
     });
   };
   const toggleSelectAll = () => {
-    if (selected.size === filtered.length) setSelected(new Set());else setSelected(new Set(filtered.map(c => c.recordingNo)));
+    if (selected.size === filtered.length) setSelected(new Set());else setSelected(new Set(filtered.map(c => c.caseNo)));
   };
   return /*#__PURE__*/React.createElement("div", {
     "data-screen-label": "01 \u6848\u4EF6\u5BE9\u6838\u6E05\u55AE",
@@ -2956,7 +3029,7 @@ function ReviewListScreen({
     },
     value: keyword,
     onChange: e => setKeyword(e.target.value),
-    placeholder: "\u9304\u97F3\u7DE8\u865F / \u4FDD\u55AE\u865F / \u696D\u52D9\u54E1 / \u5BA2\u6236"
+    placeholder: "\u9304\u97F3\u7DE8\u865F / \u6848\u4EF6\u7DE8\u865F / \u4FDD\u55AE\u865F / \u696D\u52D9\u54E1 / \u5BA2\u6236"
   })), /*#__PURE__*/React.createElement(StageTabs, {
     value: statusFilter,
     onChange: setStatusFilter,
@@ -3230,9 +3303,14 @@ function ReviewListScreen({
   })), /*#__PURE__*/React.createElement("th", {
     style: {
       ...rTh,
-      width: 170
+      width: 110
     }
   }, "\u9304\u97F3\u7DE8\u865F"), /*#__PURE__*/React.createElement("th", {
+    style: {
+      ...rTh,
+      width: 130
+    }
+  }, "\u6848\u4EF6\u7DE8\u865F"), /*#__PURE__*/React.createElement("th", {
     style: {
       ...rTh
     }
@@ -3268,13 +3346,13 @@ function ReviewListScreen({
       paddingRight: 16
     }
   }, "\u72C0\u614B"))), /*#__PURE__*/React.createElement("tbody", null, filtered.map(c => /*#__PURE__*/React.createElement(ReviewRow, {
-    key: c.recordingNo,
+    key: c.caseNo,
     c: c,
-    selected: selected.has(c.recordingNo),
-    onToggle: () => toggleSelect(c.recordingNo),
-    onOpen: () => onOpen(c.recordingNo)
+    selected: selected.has(c.caseNo),
+    onToggle: () => toggleSelect(c.caseNo),
+    onOpen: () => onOpen(c.caseNo)
   })), filtered.length === 0 && /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
-    colSpan: 9,
+    colSpan: 10,
     style: {
       padding: "60px 0",
       textAlign: "center"
@@ -3434,59 +3512,6 @@ function KpiInline({
     }
   }, "\u4EF6")));
 }
-function KpiCard({
-  label,
-  value,
-  icon,
-  color,
-  emphasis,
-  alert
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: {
-      padding: "14px 16px",
-      borderTop: emphasis ? `2px solid ${color}` : undefined,
-      background: emphasis ? "#fff" : alert ? "rgba(234,82,82,.04)" : "#fff"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 8,
-      marginBottom: 8
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      width: 24,
-      height: 24,
-      borderRadius: 6,
-      background: emphasis ? "var(--primary-soft)" : "var(--primary-bg)",
-      color,
-      display: "grid",
-      placeItems: "center"
-    }
-  }, icon), /*#__PURE__*/React.createElement("span", {
-    style: {
-      font: "500 12px/1 'Noto Sans TC'",
-      color: "var(--ink-3)",
-      letterSpacing: ".04em"
-    }
-  }, label)), /*#__PURE__*/React.createElement("div", {
-    className: "ff-mont tabular",
-    style: {
-      font: "700 28px/1 Montserrat",
-      color,
-      letterSpacing: ".01em"
-    }
-  }, value, /*#__PURE__*/React.createElement("span", {
-    style: {
-      font: "400 12px/1 'Noto Sans TC'",
-      color: "var(--ink-4)",
-      marginLeft: 4
-    }
-  }, "\u4EF6")));
-}
 
 // ───────────────────────────────────────────────────────────────────────────
 function StageTabs({
@@ -3613,7 +3638,7 @@ function ReviewRow({
 
   // AI 通過率：從詳情資料取得 — 僅 reviewing / 補件審核 顯示
   const showAiPass = c.status === "reviewing" || c.status === "returned" || c.status === "resubmit";
-  const detail = (window.__MLI_REVIEW_DETAIL || {})[c.recordingNo];
+  const detail = (window.__MLI_REVIEW_DETAIL || {})[c.caseNo];
   let aiPass = null;
   if (showAiPass && detail) {
     const total = detail.questions.length;
@@ -3653,10 +3678,19 @@ function ReviewRow({
     className: "ff-mont tabular",
     style: {
       font: "600 13px/1.2 Montserrat",
+      color: "var(--ink-2)",
+      letterSpacing: ".02em"
+    }
+  }, c.recordingNo)), /*#__PURE__*/React.createElement("td", {
+    style: rTd
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ff-mont tabular",
+    style: {
+      font: "600 13px/1.2 Montserrat",
       color: "var(--primary)",
       letterSpacing: ".02em"
     }
-  }, c.recordingNo), c.policyNo ? /*#__PURE__*/React.createElement("div", {
+  }, c.caseNo), c.policyNo ? /*#__PURE__*/React.createElement("div", {
     className: "ff-mont tabular",
     style: {
       font: "500 11px/1 Montserrat",
@@ -3878,173 +3912,6 @@ function SubjectsCell({
 }
 
 // ───────────────────────────────────────────────────────────────────────────
-function RiskBubble({
-  level,
-  score
-}) {
-  const RISK = window.__MLI_RISK;
-  const r = RISK[level] || RISK.low;
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "inline-flex",
-      alignItems: "center",
-      gap: 6
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      width: 24,
-      height: 24,
-      borderRadius: "50%",
-      background: r.bg,
-      border: `1.5px solid ${r.dot}`,
-      display: "grid",
-      placeItems: "center",
-      font: "700 11px/1 'Noto Sans TC'",
-      color: r.color,
-      flexShrink: 0
-    }
-  }, r.label), /*#__PURE__*/React.createElement("span", {
-    className: "ff-mont tabular",
-    style: {
-      font: "500 11px/1 Montserrat",
-      color: "var(--ink-3)"
-    }
-  }, score));
-}
-function SttFlags({
-  flags
-}) {
-  if (!flags) return /*#__PURE__*/React.createElement("span", {
-    className: "meta"
-  }, "\u2014");
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      gap: 6
-    }
-  }, /*#__PURE__*/React.createElement(FlagPill, {
-    icon: "\u5DEE",
-    count: flags.diff,
-    color: "rgb(196,55,55)",
-    bg: "rgba(234,82,82,.10)"
-  }), /*#__PURE__*/React.createElement(FlagPill, {
-    icon: "\u5426",
-    count: flags.negation,
-    color: "rgb(178,104,12)",
-    bg: "rgba(241,160,40,.14)"
-  }), /*#__PURE__*/React.createElement(FlagPill, {
-    icon: "\u4F4E",
-    count: flags.lowConf,
-    color: "rgb(98,100,118)",
-    bg: "rgba(140,142,157,.14)"
-  }));
-}
-function FlagPill({
-  icon,
-  count,
-  color,
-  bg
-}) {
-  if (!count) return /*#__PURE__*/React.createElement("span", {
-    style: {
-      display: "inline-flex",
-      alignItems: "center",
-      gap: 3,
-      padding: "2px 5px",
-      borderRadius: 6,
-      background: "var(--primary-bg)",
-      color: "var(--ink-4)",
-      font: "500 11px/1 'Noto Sans TC'",
-      border: "1px solid var(--line-2)"
-    }
-  }, icon, /*#__PURE__*/React.createElement("span", {
-    className: "ff-mont"
-  }, "0"));
-  return /*#__PURE__*/React.createElement("span", {
-    style: {
-      display: "inline-flex",
-      alignItems: "center",
-      gap: 3,
-      padding: "2px 5px",
-      borderRadius: 6,
-      background: bg,
-      color,
-      font: "500 11px/1 'Noto Sans TC'"
-    }
-  }, icon, /*#__PURE__*/React.createElement("span", {
-    className: "ff-mont"
-  }, count));
-}
-function SlaPill({
-  days
-}) {
-  if (days < 0) return /*#__PURE__*/React.createElement("span", {
-    style: {
-      display: "inline-flex",
-      alignItems: "center",
-      gap: 4,
-      padding: "3px 8px",
-      borderRadius: 11,
-      background: "var(--danger-soft)",
-      color: "var(--danger)",
-      whiteSpace: "nowrap",
-      font: "600 11.5px/1.4 'Noto Sans TC'"
-    }
-  }, /*#__PURE__*/React.createElement(I.Warn, {
-    size: 10,
-    stroke: "var(--danger)"
-  }), " SLA \u8D85\u6642 ", -days, " \u5929");
-  if (days === 0) return /*#__PURE__*/React.createElement("span", {
-    style: {
-      display: "inline-flex",
-      alignItems: "center",
-      gap: 4,
-      padding: "3px 8px",
-      borderRadius: 11,
-      background: "var(--danger-soft)",
-      color: "var(--danger)",
-      whiteSpace: "nowrap",
-      font: "600 11.5px/1.4 'Noto Sans TC'"
-    }
-  }, "\u4ECA\u5929\u5230\u671F");
-  if (days <= 2) return /*#__PURE__*/React.createElement("span", {
-    style: {
-      display: "inline-flex",
-      alignItems: "center",
-      gap: 4,
-      padding: "3px 8px",
-      borderRadius: 11,
-      background: "var(--warn-soft)",
-      color: "rgb(178,104,12)",
-      whiteSpace: "nowrap",
-      font: "500 11.5px/1.4 'Noto Sans TC'"
-    }
-  }, "\u5269 ", /*#__PURE__*/React.createElement("span", {
-    className: "ff-mont tabular",
-    style: {
-      fontWeight: 700
-    }
-  }, days), " \u5929");
-  return /*#__PURE__*/React.createElement("span", {
-    className: "ff-mont tabular",
-    style: {
-      padding: "3px 8px",
-      borderRadius: 11,
-      background: "var(--primary-bg)",
-      color: "var(--ink-3)",
-      whiteSpace: "nowrap",
-      font: "500 11.5px/1.4 'Noto Sans TC'"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "ff-mont",
-    style: {
-      fontWeight: 700,
-      color: "var(--ink-2)"
-    }
-  }, days), " \u5929");
-}
-
-// ───────────────────────────────────────────────────────────────────────────
 function ExportModal({
   onClose
 }) {
@@ -4240,9 +4107,6 @@ const rTd = {
   background: "transparent"
 };
 window.ReviewListScreen = ReviewListScreen;
-window.RiskBubble = RiskBubble;
-window.SttFlags = SttFlags;
-window.SlaPill = SlaPill;
 
 // ── ReviewDetailScreen.jsx ──
 // ReviewDetailScreen — 內勤後台核心審核頁（V3 — 左右對調）
@@ -4337,16 +4201,31 @@ function ReviewDetailScreen({
 }) {
   const STAGE = window.__MLI_REVIEW_STAGE;
   const RISK = window.__MLI_RISK;
-  const stage = STAGE[caseInfo.reviewStage] || STAGE.waiting;
   const risk = RISK[caseInfo.riskLevel] || RISK.low;
+
+  // 退回補正：本頁可即時把案件切到「已退回」以演示流程（不影響 demo 靜態資料）
+  const [stageOverride, setStageOverride] = React.useState(null);
+  const effStage = stageOverride || caseInfo.reviewStage;
+  const stage = STAGE[effStage] || STAGE.waiting;
+  const isReturnFlow = ["returned", "resubmit"].includes(effStage);
+
+  // 退回補正多輪資料（append-only；每輪含 退回原因 / 補正音檔 / 逐字稿 / AI 質檢）
+  const rounds = window.mliCorrectionRounds(caseInfo.caseNo);
 
   // 播放狀態
   const [playing, setPlaying] = React.useState(false);
   const [currentSec, setCurrentSec] = React.useState(0);
   const [speed, setSpeed] = React.useState(1.0);
 
-  // Tab 切換（預設 ai）
-  const [tab, setTab] = React.useState("ai"); // 'ai' | 'transcript'
+  // Tab 切換（退回 / 補件審核 → 預設聚焦「退回補正」分頁）
+  const [tab, setTab] = React.useState(isReturnFlow ? "correction" : "ai");
+
+  // 切換審核案件時，重設 stageOverride 與分頁聚焦
+  React.useEffect(() => {
+    setStageOverride(null);
+    const ret = ["returned", "resubmit"].includes(caseInfo.reviewStage);
+    setTab(ret ? "correction" : "ai");
+  }, [caseInfo.caseNo]);
 
   // 動作 modal
   const [modal, setModal] = React.useState(null);
@@ -4366,7 +4245,7 @@ function ReviewDetailScreen({
   // 與 CaseDetailScreen 一致的模式：所有非「返回清單」操作整併到 overflow menu，
   // 主要決策（退回補正 / 審核通過）保留在右側 action bar
   const headerActions = React.useMemo(() => {
-    const stage = caseInfo.reviewStage;
+    const stage = effStage;
     const isVerified = stage === "verified";
     const isReturned = stage === "returned";
     // 「草稿」（尚未開始）= waiting / unassigned；「審核中 / 補件審核」= in_review / resubmit
@@ -4451,7 +4330,7 @@ function ReviewDetailScreen({
       onClick: () => setModal("delete")
     });
     return list;
-  }, [caseInfo.reviewStage]);
+  }, [effStage]);
 
   // 播放模擬
   React.useEffect(() => {
@@ -4494,7 +4373,7 @@ function ReviewDetailScreen({
         color: "var(--primary)",
         letterSpacing: ".02em"
       }
-    }, caseInfo.recordingNo), /*#__PURE__*/React.createElement("span", {
+    }, caseInfo.caseNo), /*#__PURE__*/React.createElement("span", {
       style: {
         font: "500 13px/1 'Noto Sans TC'",
         color: "var(--ink-4)",
@@ -4539,8 +4418,15 @@ function ReviewDetailScreen({
   }, /*#__PURE__*/React.createElement(TabBar, {
     tab: tab,
     setTab: setTab,
-    aiBadge: totalQ - passQ
-  }), tab === "ai" ? /*#__PURE__*/React.createElement(AIReviewView, {
+    aiBadge: totalQ - passQ,
+    showCorrection: isReturnFlow,
+    correctionStage: effStage,
+    roundCount: rounds.length
+  }), tab === "correction" ? /*#__PURE__*/React.createElement(CorrectionView, {
+    caseInfo: caseInfo,
+    rounds: rounds,
+    effStage: effStage
+  }) : tab === "ai" ? /*#__PURE__*/React.createElement(AIReviewView, {
     detail: detail,
     passQ: passQ,
     totalQ: totalQ,
@@ -4557,10 +4443,7 @@ function ReviewDetailScreen({
     setPlaying: setPlaying
   })), /*#__PURE__*/React.createElement("aside", {
     className: "rev-side"
-  }, /*#__PURE__*/React.createElement(CaseInfoCompact, {
-    caseInfo: mergedCase,
-    overrideKeys: Object.keys(caseOverrides)
-  }), /*#__PURE__*/React.createElement(AudioPlayerAdmin, {
+  }, /*#__PURE__*/React.createElement(AudioPlayerAdmin, {
     caseInfo: mergedCase,
     detail: detail,
     currentSec: currentSec,
@@ -4572,7 +4455,54 @@ function ReviewDetailScreen({
   }), uploadedAudio && /*#__PURE__*/React.createElement(UploadedAudioPlayer, {
     audio: uploadedAudio,
     onRemove: () => setUploadedAudio(null)
+  }), /*#__PURE__*/React.createElement(CaseInfoCompact, {
+    caseInfo: mergedCase,
+    overrideKeys: Object.keys(caseOverrides)
+  }), /*#__PURE__*/React.createElement(AdminCaseHistoryCard, {
+    caseInfo: mergedCase,
+    effStage: effStage,
+    rounds: rounds
+  }), effStage === "verified" ? /*#__PURE__*/React.createElement("div", {
+    className: "card",
+    style: {
+      padding: "14px 16px",
+      textAlign: "center",
+      background: "var(--ok-soft)",
+      border: "1px solid rgba(72,153,61,.3)",
+      font: "500 13px/1.5 'Noto Sans TC'",
+      color: "var(--ok)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement(I.Check, {
+    size: 15,
+    sw: 2.4,
+    stroke: "var(--ok)"
+  }), " \u672C\u6848\u4EF6\u5DF2\u5BE9\u6838\u901A\u904E\u4E26\u6B78\u6A94") : effStage === "returned" ? /*#__PURE__*/React.createElement("div", {
+    className: "card",
+    style: {
+      padding: "14px 16px",
+      background: "var(--danger-soft)",
+      border: "1px solid rgba(234,82,82,.22)",
+      display: "flex",
+      alignItems: "flex-start",
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement(I.Clock, {
+    size: 16,
+    stroke: "var(--danger)",
+    style: {
+      flexShrink: 0,
+      marginTop: 1
+    }
   }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      font: "500 12.5px/1.6 'Noto Sans TC'",
+      color: "var(--ink-2)"
+    }
+  }, "\u5DF2\u9000\u56DE\u88DC\u6B63\uFF0C\u7B49\u5F85\u696D\u52D9\u54E1\u88DC\u6B63\u5F8C\u91CD\u65B0\u9001\u51FA\u3002\u53EF\u65BC\u300C\u9000\u56DE\u88DC\u6B63\u300D\u5206\u9801\u8FFD\u8E64\u88DC\u4EF6\u9032\u5EA6\u3002")) : /*#__PURE__*/React.createElement("div", {
     className: "rev-actions"
   }, /*#__PURE__*/React.createElement("button", {
     className: "btn btn-danger",
@@ -4582,7 +4512,7 @@ function ReviewDetailScreen({
     onClick: () => setModal("return")
   }, /*#__PURE__*/React.createElement(I.Replay, {
     size: 14
-  }), " \u9000\u56DE\u88DC\u6B63"), /*#__PURE__*/React.createElement("button", {
+  }), " ", effStage === "resubmit" ? "再退回補正" : "退回補正"), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-primary",
     style: {
       flex: 1
@@ -4594,9 +4524,16 @@ function ReviewDetailScreen({
     caseInfo: mergedCase,
     detail: detail,
     onCancel: () => setModal(null),
-    onConfirm: () => {
+    onConfirm: payload => {
+      window.mliPushReturn(caseInfo.caseNo, {
+        ...payload,
+        reviewer: window.__MLI_REVIEWER_SELF && window.__MLI_REVIEWER_SELF.name || "內勤審核員",
+        returnedAt: nowStamp()
+      });
+      setStageOverride("returned");
+      setTab("correction");
       setModal(null);
-      onReturn && onReturn();
+      onReturn && onReturn(caseInfo.caseNo);
     }
   }), modal === "approve" && /*#__PURE__*/React.createElement(ApproveModal, {
     caseInfo: mergedCase,
@@ -4604,7 +4541,7 @@ function ReviewDetailScreen({
     onCancel: () => setModal(null),
     onConfirm: () => {
       setModal(null);
-      onApprove && onApprove();
+      onApprove && onApprove(caseInfo.caseNo);
     }
   }), modal === "retriggerStt" && /*#__PURE__*/React.createElement(RetriggerSttModal, {
     onCancel: () => setModal(null)
@@ -4778,7 +4715,10 @@ function ReviewActionsMenu({
 function TabBar({
   tab,
   setTab,
-  aiBadge = 0
+  aiBadge = 0,
+  showCorrection = false,
+  correctionStage,
+  roundCount = 0
 }) {
   const tabs = [{
     v: "ai",
@@ -4802,6 +4742,17 @@ function TabBar({
     }),
     badge: null
   }];
+  if (showCorrection) {
+    tabs.push({
+      v: "correction",
+      l: "退回補正",
+      icon: /*#__PURE__*/React.createElement(I.Replay, {
+        size: 13
+      }),
+      badge: roundCount > 1 ? roundCount : null,
+      accent: true
+    });
+  }
   return /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
@@ -4811,6 +4762,7 @@ function TabBar({
     }
   }, tabs.map(t => {
     const a = tab === t.v;
+    const accentColor = t.accent ? "var(--danger)" : "var(--primary)";
     return /*#__PURE__*/React.createElement("button", {
       key: t.v,
       onClick: () => setTab(t.v),
@@ -4822,17 +4774,18 @@ function TabBar({
         border: "none",
         background: "none",
         cursor: "pointer",
-        color: a ? "var(--primary)" : "var(--ink-3)",
+        color: a ? accentColor : "var(--ink-3)",
         font: a ? "600 14px/1 'Noto Sans TC'" : "500 14px/1 'Noto Sans TC'",
         letterSpacing: ".02em",
         position: "relative",
-        transition: "color .12s"
+        transition: "color .12s",
+        marginLeft: t.accent ? "auto" : 0
       }
     }, t.icon, t.l, t.badge && /*#__PURE__*/React.createElement("span", {
       style: {
         padding: "1px 6px",
         borderRadius: 8,
-        background: a ? "var(--danger)" : "var(--line)",
+        background: a ? accentColor : "var(--line)",
         color: a ? "#fff" : "var(--ink-3)",
         font: "600 10.5px/1.4 Montserrat"
       }
@@ -4843,7 +4796,7 @@ function TabBar({
         right: 0,
         bottom: -1,
         height: 2,
-        background: "var(--primary)",
+        background: accentColor,
         borderRadius: "2px 2px 0 0"
       }
     }));
@@ -6060,6 +6013,15 @@ function ReturnModal({
   const failedQ = detail.questions.filter(q => q.status !== "ok").map(q => q.no);
   const [selectedQs, setSelectedQs] = React.useState(new Set(failedQ.length ? failedQ : [detail.questions[0]?.no]));
   const [notify, setNotify] = React.useState(true);
+
+  // 需重錄的對象（可複選）— 組成退回說明之一，帶到前台顯示
+  const subjects = window.__MLI_uniqueSubjects ? window.__MLI_uniqueSubjects(caseInfo) : [];
+  const [selectedSubs, setSelectedSubs] = React.useState(new Set(subjects.map(s => s.name)));
+  const toggleSub = name => setSelectedSubs(s => {
+    const ns = new Set(s);
+    if (ns.has(name)) ns.delete(name);else ns.add(name);
+    return ns;
+  });
   const presets = {
     audio_quality: "音檔不清晰或有雜訊干擾，請重新錄製",
     incomplete: "錄音內容缺漏，請補錄缺失題目",
@@ -6228,6 +6190,50 @@ function ReturnModal({
     }));
   }))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
+      font: "500 12px/1 'Noto Sans TC'",
+      color: "var(--ink-3)",
+      marginBottom: 8,
+      letterSpacing: ".04em"
+    }
+  }, "\u9700\u91CD\u9304\u7684\u5C0D\u8C61\uFF08\u53EF\u8907\u9078\uFF09"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 6,
+      flexWrap: "wrap",
+      padding: "8px 10px",
+      borderRadius: 7,
+      background: "var(--primary-bg)",
+      border: "1px solid var(--line-2)"
+    }
+  }, subjects.map(s => {
+    const a = selectedSubs.has(s.name);
+    return /*#__PURE__*/React.createElement("button", {
+      key: s.name,
+      onClick: () => toggleSub(s.name),
+      style: {
+        padding: "5px 11px",
+        borderRadius: 12,
+        background: a ? "var(--primary-soft)" : "#fff",
+        border: `1px solid ${a ? "var(--primary)" : "var(--line)"}`,
+        color: a ? "var(--primary)" : "var(--ink-2)",
+        font: "500 12px/1 'Noto Sans TC'",
+        cursor: "pointer",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 5
+      }
+    }, /*#__PURE__*/React.createElement(I.User, {
+      size: 12,
+      stroke: a ? "var(--primary)" : "var(--ink-4)"
+    }), s.name, s.roles && s.roles.length > 0 && /*#__PURE__*/React.createElement("span", {
+      style: {
+        font: "500 10px/1 'Noto Sans TC'",
+        color: a ? "var(--primary)" : "var(--ink-4)",
+        opacity: .8
+      }
+    }, s.roles.join("")));
+  }))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
       display: "flex",
       alignItems: "baseline",
       marginBottom: 8
@@ -6300,7 +6306,12 @@ function ReturnModal({
     onClick: onCancel
   }, "\u53D6\u6D88"), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-danger",
-    onClick: onConfirm
+    onClick: () => onConfirm({
+      reasonType,
+      reasonText: text,
+      qNos: [...selectedQs].sort((a, b) => a - b),
+      subjectNames: [...selectedSubs]
+    })
   }, /*#__PURE__*/React.createElement(I.Replay, {
     size: 14
   }), " \u78BA\u8A8D\u9000\u56DE"))));
@@ -6414,8 +6425,8 @@ function ApproveModal({
       font: "400 12.5px/1.5 'Noto Sans TC'"
     }
   }, /*#__PURE__*/React.createElement(KV, {
-    label: "\u9304\u97F3\u7DE8\u865F",
-    value: caseInfo.recordingNo,
+    label: "\u6848\u4EF6\u7DE8\u865F",
+    value: caseInfo.caseNo,
     mono: true
   }), /*#__PURE__*/React.createElement(KV, {
     label: "\u5546\u54C1",
@@ -6661,7 +6672,7 @@ function RemergeModal({
     }
   }, /*#__PURE__*/React.createElement(KV, {
     label: "\u539F\u5408\u4F75\u97F3\u6A94",
-    value: `${caseInfo.recordingNo}_merged.wav`,
+    value: `${caseInfo.caseNo}_merged.wav`,
     mono: true
   }), /*#__PURE__*/React.createElement(KV, {
     label: "\u5206\u6BB5\u97F3\u6A94\u6578",
@@ -6744,7 +6755,7 @@ function DownloadModal({
     }
   }, [{
     l: "完整音檔（WAV）",
-    d: `${caseInfo.recordingNo}_merged.wav · ${fmtDur(caseInfo.duration)}`
+    d: `${caseInfo.caseNo}_merged.wav · ${fmtDur(caseInfo.duration)}`
   }, {
     l: "分段音檔（ZIP）",
     d: "14 段分題音檔打包"
@@ -7120,8 +7131,8 @@ function EditCaseModal({
       font: "400 12px/1.5 'Noto Sans TC'"
     }
   }, /*#__PURE__*/React.createElement(KV, {
-    label: "\u9304\u97F3\u7DE8\u865F",
-    value: caseInfo.recordingNo,
+    label: "\u6848\u4EF6\u7DE8\u865F",
+    value: caseInfo.caseNo,
     mono: true
   }), /*#__PURE__*/React.createElement(KV, {
     label: "\u696D\u52D9\u54E1",
@@ -7600,7 +7611,7 @@ function UploadAudioModal({
 
 // ════════════════════════════════════════════════════════════════════════════
 // DeleteCaseModal — 刪除案件（已通過案件不可用，由 ReviewActionsMenu 控制 disabled）
-// 二段式確認：必須輸入錄音編號以避免誤操作
+// 二段式確認：必須輸入案件編號以避免誤操作
 // ════════════════════════════════════════════════════════════════════════════
 function DeleteCaseModal({
   caseInfo,
@@ -7608,7 +7619,7 @@ function DeleteCaseModal({
   onConfirm
 }) {
   const [confirmText, setConfirmText] = React.useState("");
-  const canDelete = confirmText.trim() === caseInfo.recordingNo;
+  const canDelete = confirmText.trim() === caseInfo.caseNo;
   return /*#__PURE__*/React.createElement("div", {
     style: {
       position: "fixed",
@@ -7706,8 +7717,8 @@ function DeleteCaseModal({
       font: "400 12px/1.5 'Noto Sans TC'"
     }
   }, /*#__PURE__*/React.createElement(KV, {
-    label: "\u9304\u97F3\u7DE8\u865F",
-    value: caseInfo.recordingNo,
+    label: "\u6848\u4EF6\u7DE8\u865F",
+    value: caseInfo.caseNo,
     mono: true
   }), /*#__PURE__*/React.createElement(KV, {
     label: "\u5546\u54C1",
@@ -7716,13 +7727,13 @@ function DeleteCaseModal({
     label: "\u696D\u52D9\u54E1",
     value: `${caseInfo.agent} ${caseInfo.agentId}`
   })), /*#__PURE__*/React.createElement(Field, {
-    label: "\u8ACB\u8F38\u5165\u9304\u97F3\u7DE8\u865F\u4EE5\u78BA\u8A8D\u522A\u9664",
-    hint: `需與 ${caseInfo.recordingNo} 完全一致`
+    label: "\u8ACB\u8F38\u5165\u6848\u4EF6\u7DE8\u865F\u4EE5\u78BA\u8A8D\u522A\u9664",
+    hint: `需與 ${caseInfo.caseNo} 完全一致`
   }, /*#__PURE__*/React.createElement("input", {
     type: "text",
     value: confirmText,
     onChange: e => setConfirmText(e.target.value),
-    placeholder: caseInfo.recordingNo,
+    placeholder: caseInfo.caseNo,
     className: "input ff-mont",
     style: {
       width: "100%",
@@ -7756,6 +7767,911 @@ function DeleteCaseModal({
   }, /*#__PURE__*/React.createElement(I.Delete, {
     size: 14
   }), " \u78BA\u8A8D\u522A\u9664"))));
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 退回補正 Tab（CorrectionView）
+// 獨立承載「退回原因 / 補正音檔 / 補正逐字稿 / AI 補正質檢」，與第一次送審資料分離。
+// 支援多輪退回（append-only）：每一輪一張卡，新到舊排列。
+// ════════════════════════════════════════════════════════════════════════════
+function nowStamp() {
+  const d = new Date();
+  const p = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+const CORR_TEAL = "rgb(15,128,126)";
+const CORR_TEAL_BG = "rgb(224,246,245)";
+function corrSpeakerMeta(speaker) {
+  if (speaker === "agent") return SPEAKER_PALETTE[0]; // 業務員 → A（藍）
+  if (speaker === "robot") return {
+    letter: "R",
+    color: "rgb(123,109,235)",
+    bg: "rgba(123,109,235,.12)",
+    border: "rgba(123,109,235,.30)"
+  };
+  return SPEAKER_PALETTE[1]; // 客戶 → B（綠）
+}
+function CorrectionView({
+  caseInfo,
+  rounds,
+  effStage
+}) {
+  if (!rounds.length) {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        padding: "56px 40px",
+        textAlign: "center",
+        color: "var(--ink-3)"
+      }
+    }, "\u6B64\u6848\u4EF6\u5C1A\u7121\u9000\u56DE\u88DC\u6B63\u7D00\u9304");
+  }
+  const latest = rounds[rounds.length - 1];
+  const ordered = [...rounds].reverse(); // 新 → 舊
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 18
+    }
+  }, ordered.map(r => /*#__PURE__*/React.createElement(CorrectionRoundCard, {
+    key: r.round,
+    round: r,
+    caseInfo: caseInfo,
+    isLatest: r.round === rounds.length,
+    totalRounds: rounds.length
+  })));
+}
+
+// 單輪退回補正卡
+function CorrectionRoundCard({
+  round,
+  caseInfo,
+  isLatest,
+  totalRounds
+}) {
+  const submitted = round.status === "submitted";
+  const statusMeta = submitted ? {
+    label: "已補正送出 · 待複審",
+    color: CORR_TEAL,
+    bg: CORR_TEAL_BG
+  } : {
+    label: "等待業務員補正中",
+    color: "var(--danger)",
+    bg: "var(--danger-soft)"
+  };
+  return /*#__PURE__*/React.createElement("section", {
+    className: "card",
+    style: {
+      padding: 0,
+      overflow: "hidden",
+      borderColor: isLatest ? submitted ? "rgba(15,128,126,.35)" : "rgba(234,82,82,.3)" : "var(--line-2)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "13px 20px",
+      borderBottom: "1px solid var(--line-2)",
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      background: isLatest ? submitted ? "rgba(15,128,126,.05)" : "rgba(234,82,82,.04)" : "var(--primary-soft-2)"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 26,
+      height: 26,
+      borderRadius: 8,
+      flexShrink: 0,
+      background: submitted ? CORR_TEAL_BG : "var(--danger-soft)",
+      color: submitted ? CORR_TEAL : "var(--danger)",
+      display: "grid",
+      placeItems: "center",
+      font: "700 12px/1 Montserrat"
+    },
+    className: "ff-mont"
+  }, round.round), /*#__PURE__*/React.createElement("span", {
+    style: {
+      font: "700 14px/1 'Noto Sans TC'",
+      color: "var(--ink)",
+      letterSpacing: ".02em"
+    }
+  }, round.returnedAt, " \u9000\u56DE"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 5,
+      padding: "3px 10px",
+      borderRadius: 11,
+      background: statusMeta.bg,
+      color: statusMeta.color,
+      font: "500 11.5px/1.4 'Noto Sans TC'"
+    }
+  }, /*#__PURE__*/React.createElement(Dot, {
+    color: statusMeta.color,
+    size: 6
+  }), " ", statusMeta.label), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "meta"
+  }, "\u9000\u56DE\u5BE9\u6838\u54E1 \xB7 ", round.reviewer)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "18px 20px 20px",
+      display: "flex",
+      flexDirection: "column",
+      gap: 18
+    }
+  }, /*#__PURE__*/React.createElement(CorrBlock, {
+    icon: /*#__PURE__*/React.createElement(I.Warn, {
+      size: 13,
+      stroke: "var(--danger)"
+    }),
+    title: "\u9000\u56DE\u539F\u56E0",
+    tint: "var(--danger)"
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "12px 14px",
+      borderRadius: 8,
+      background: "var(--danger-soft)",
+      border: "1px solid rgba(234,82,82,.2)",
+      font: "400 13px/1.75 'Noto Sans TC'",
+      color: "var(--ink-2)"
+    }
+  }, round.reasonText)), /*#__PURE__*/React.createElement(CorrBlock, {
+    icon: /*#__PURE__*/React.createElement(I.Headset, {
+      size: 13,
+      stroke: CORR_TEAL
+    }),
+    title: "\u88DC\u6B63\u97F3\u6A94",
+    tint: CORR_TEAL,
+    badge: submitted ? "整段 / 上傳 · 1 完整音檔" : null
+  }, round.audio ? /*#__PURE__*/React.createElement(CorrectionAudioPlayer, {
+    audio: round.audio,
+    roundNo: round.round
+  }) : /*#__PURE__*/React.createElement(CorrEmpty, {
+    text: "\u7B49\u5F85\u696D\u52D9\u54E1\u88DC\u6B63\u5F8C\u4E0A\u50B3\uFF0C\u88DC\u6B63\u97F3\u6A94\u5C07\u7368\u7ACB\u65BC\u539F\u59CB\u5B8C\u6574\u97F3\u6A94\u4FDD\u5B58\u3002"
+  })), /*#__PURE__*/React.createElement(CorrBlock, {
+    icon: /*#__PURE__*/React.createElement(I.Script, {
+      size: 13,
+      stroke: CORR_TEAL
+    }),
+    title: "\u88DC\u6B63\u9010\u5B57\u7A3F\uFF08STT\uFF09",
+    tint: CORR_TEAL
+  }, submitted && round.transcript.length ? /*#__PURE__*/React.createElement(CorrTranscript, {
+    lines: round.transcript
+  }) : /*#__PURE__*/React.createElement(CorrEmpty, {
+    text: "\u6536\u5230\u88DC\u6B63\u97F3\u6A94\u5F8C\uFF0C\u7CFB\u7D71\u5C07\u91CD\u65B0\u57F7\u884C STT \u97F3\u6A94\u8F49\u6587\u5B57\uFF0C\u7D50\u679C\u986F\u793A\u65BC\u6B64\u3002"
+  })), /*#__PURE__*/React.createElement(CorrBlock, {
+    icon: /*#__PURE__*/React.createElement(I.Check, {
+      size: 13,
+      stroke: CORR_TEAL
+    }),
+    title: "AI \u5BE9\u6838\u6BD4\u5C0D\uFF08\u88DC\u6B63\u8CEA\u6AA2\uFF09",
+    tint: CORR_TEAL
+  }, submitted && round.ai ? /*#__PURE__*/React.createElement(CorrAIReport, {
+    ai: round.ai
+  }) : /*#__PURE__*/React.createElement(CorrEmpty, {
+    text: "\u9010\u5B57\u7A3F\u7522\u751F\u5F8C\uFF0C\u7CFB\u7D71\u5C07\u518D\u6B21\u547C\u53EB LLM \u6A21\u578B\u9032\u884C\u88DC\u6B63\u8CEA\u6AA2\uFF0C\u7D50\u679C\u986F\u793A\u65BC\u6B64\u3002"
+  }))));
+}
+function CorrBlock({
+  icon,
+  title,
+  tint,
+  badge,
+  children
+}) {
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 7,
+      marginBottom: 10
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 22,
+      height: 22,
+      borderRadius: 6,
+      flexShrink: 0,
+      background: "var(--primary-soft-2)",
+      display: "grid",
+      placeItems: "center"
+    }
+  }, icon), /*#__PURE__*/React.createElement("span", {
+    style: {
+      font: "700 13px/1 'Noto Sans TC'",
+      color: "var(--ink)",
+      letterSpacing: ".02em"
+    }
+  }, title), badge && /*#__PURE__*/React.createElement("span", {
+    style: {
+      padding: "2px 8px",
+      borderRadius: 9,
+      background: CORR_TEAL_BG,
+      color: CORR_TEAL,
+      font: "500 10.5px/1.4 'Noto Sans TC'"
+    }
+  }, badge)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      paddingLeft: 29
+    }
+  }, children));
+}
+function CorrEmpty({
+  text
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "18px 16px",
+      borderRadius: 9,
+      border: "1px dashed var(--line-3)",
+      background: "var(--primary-bg)",
+      display: "flex",
+      alignItems: "center",
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("svg", {
+    className: "spin",
+    width: 16,
+    height: 16,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    style: {
+      flexShrink: 0
+    }
+  }, /*#__PURE__*/React.createElement("circle", {
+    cx: "12",
+    cy: "12",
+    r: "9",
+    stroke: "var(--line-2)",
+    strokeWidth: "2.5"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M12 3a9 9 0 0 1 9 9",
+    stroke: "var(--ink-4)",
+    strokeWidth: "2.5",
+    strokeLinecap: "round"
+  })), /*#__PURE__*/React.createElement("span", {
+    style: {
+      font: "400 12.5px/1.6 'Noto Sans TC'",
+      color: "var(--ink-3)"
+    }
+  }, text));
+}
+
+// 補正逐字稿（語者分群，連續呈現）
+function CorrTranscript({
+  lines
+}) {
+  const speakers = [];
+  const seen = new Set();
+  lines.forEach(l => {
+    const m = corrSpeakerMeta(l.speaker);
+    if (!seen.has(m.letter)) {
+      seen.add(m.letter);
+      speakers.push(m);
+    }
+  });
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      borderRadius: 9,
+      border: "1px solid var(--line-2)",
+      overflow: "hidden"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "8px 14px",
+      borderBottom: "1px solid var(--line-2)",
+      background: "var(--primary-soft-2)",
+      display: "flex",
+      alignItems: "center",
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "meta",
+    style: {
+      letterSpacing: ".06em"
+    }
+  }, "\u8A9E\u8005"), speakers.map(sp => /*#__PURE__*/React.createElement(SpeakerChip, {
+    key: sp.letter,
+    speakerMeta: sp
+  })), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "meta"
+  }, "STT \u91CD\u8DD1\u7D50\u679C")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "14px 16px",
+      display: "flex",
+      flexDirection: "column",
+      gap: 10
+    }
+  }, lines.map((seg, i) => {
+    const sp = corrSpeakerMeta(seg.speaker);
+    const lowConf = seg.confidence !== undefined && seg.confidence < 0.6;
+    return /*#__PURE__*/React.createElement("div", {
+      key: i,
+      style: {
+        display: "grid",
+        gridTemplateColumns: "52px 22px 1fr",
+        gap: 10,
+        alignItems: "flex-start"
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "ff-mont tabular",
+      style: {
+        font: "500 11.5px/1.7 Montserrat",
+        color: "var(--ink-4)",
+        paddingTop: 1
+      }
+    }, fmtDur(seg.startSec)), /*#__PURE__*/React.createElement("span", {
+      style: {
+        paddingTop: 1
+      }
+    }, /*#__PURE__*/React.createElement(SpeakerChip, {
+      speakerMeta: sp
+    })), /*#__PURE__*/React.createElement("div", {
+      style: {
+        font: "400 13px/1.7 'Noto Sans TC'",
+        color: "var(--ink)",
+        textWrap: "pretty"
+      }
+    }, seg.asr, lowConf && /*#__PURE__*/React.createElement("span", {
+      style: {
+        marginLeft: 6,
+        padding: "0 6px",
+        borderRadius: 3,
+        background: "rgba(241,160,40,.16)",
+        color: "rgb(151,89,15)",
+        font: "600 10px/1.4 'Noto Sans TC'"
+      }
+    }, "\u4F4E\u4FE1\u5FC3")));
+  })));
+}
+
+// AI 補正質檢報告
+function CorrAIReport({
+  ai
+}) {
+  const pass = ai.passRate >= 90;
+  const scoreColor = pass ? "var(--ok)" : ai.passRate >= 70 ? "var(--warn)" : "var(--danger)";
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 14,
+      padding: "14px 16px",
+      borderRadius: 9,
+      background: pass ? "rgba(72,153,61,.06)" : "rgba(241,160,40,.06)",
+      border: `1px solid ${pass ? "rgba(72,153,61,.3)" : "rgba(241,160,40,.3)"}`
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingRight: 14,
+      borderRight: "1px solid var(--line-2)",
+      minWidth: 88
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "baseline",
+      gap: 1
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ff-mont tabular",
+    style: {
+      font: "700 26px/1 Montserrat",
+      color: scoreColor
+    }
+  }, ai.passRate), /*#__PURE__*/React.createElement("span", {
+    style: {
+      font: "500 13px/1 Montserrat",
+      color: scoreColor
+    }
+  }, "%")), /*#__PURE__*/React.createElement("span", {
+    style: {
+      marginTop: 6,
+      font: "500 10.5px/1 'Noto Sans TC'",
+      color: "var(--ink-4)",
+      letterSpacing: ".04em"
+    }
+  }, "\u88DC\u6B63\u901A\u904E\u7387")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      font: "400 13px/1.7 'Noto Sans TC'",
+      color: "var(--ink-2)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      font: "600 11px/1 'Noto Sans TC'",
+      color: pass ? "var(--ok)" : "var(--warn)",
+      letterSpacing: ".06em",
+      marginBottom: 7,
+      display: "flex",
+      alignItems: "center",
+      gap: 5
+    }
+  }, /*#__PURE__*/React.createElement(I.Info, {
+    size: 11,
+    stroke: pass ? "var(--ok)" : "var(--warn)"
+  }), " AI \u88DC\u6B63\u8CEA\u6AA2\u7D50\u8AD6"), ai.summary)), ai.items.map((it, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      display: "flex",
+      gap: 10,
+      padding: "12px 14px",
+      borderRadius: 9,
+      border: "1px solid var(--line-2)",
+      background: "#fff"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 18,
+      height: 18,
+      borderRadius: "50%",
+      flexShrink: 0,
+      marginTop: 1,
+      background: it.pass ? "var(--ok)" : "var(--danger)",
+      color: "#fff",
+      display: "grid",
+      placeItems: "center"
+    }
+  }, it.pass ? /*#__PURE__*/React.createElement(I.Check, {
+    size: 10,
+    sw: 3,
+    stroke: "#fff"
+  }) : /*#__PURE__*/React.createElement(I.X, {
+    size: 9,
+    sw: 3,
+    stroke: "#fff"
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      font: "600 13px/1.3 'Noto Sans TC'",
+      color: "var(--ink)",
+      marginBottom: 4
+    }
+  }, it.title), /*#__PURE__*/React.createElement("div", {
+    style: {
+      font: "400 12.5px/1.65 'Noto Sans TC'",
+      color: "var(--ink-2)",
+      textWrap: "pretty"
+    }
+  }, it.note)))));
+}
+
+// 補正音檔播放器（自含播放模擬，teal 色系標示為補正版本）
+function CorrectionAudioPlayer({
+  audio,
+  roundNo
+}) {
+  const [playing, setPlaying] = React.useState(false);
+  const [currentSec, setCurrentSec] = React.useState(0);
+  const [speed, setSpeed] = React.useState(1.0);
+  const total = audio.durationSec || 0;
+  const progress = total > 0 ? currentSec / total : 0;
+  React.useEffect(() => {
+    if (!playing) return;
+    const id = setInterval(() => {
+      setCurrentSec(s => {
+        const next = s + 0.5 * speed;
+        if (next >= total) {
+          setPlaying(false);
+          return total;
+        }
+        return next;
+      });
+    }, 250);
+    return () => clearInterval(id);
+  }, [playing, speed, total]);
+  return /*#__PURE__*/React.createElement("section", {
+    style: {
+      padding: "14px 16px",
+      borderRadius: 10,
+      border: `1px solid rgba(15,128,126,.3)`,
+      background: "linear-gradient(180deg, rgba(15,128,126,.05), #fff 30%)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      marginBottom: 10
+    }
+  }, /*#__PURE__*/React.createElement(I.Headset, {
+    size: 14,
+    stroke: CORR_TEAL
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      font: "700 12px/1 'Noto Sans TC'",
+      color: "var(--ink-3)",
+      letterSpacing: ".06em"
+    }
+  }, "\u88DC\u6B63\u97F3\u6A94"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      padding: "1px 7px",
+      borderRadius: 8,
+      background: CORR_TEAL_BG,
+      color: CORR_TEAL,
+      font: "600 9.5px/1.3 'Noto Sans TC'"
+    }
+  }, "\u7B2C ", roundNo, " \u6B21"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "ff-mont tabular",
+    style: {
+      font: "500 11px/1 Montserrat",
+      color: "var(--ink-4)"
+    }
+  }, fmtDur(currentSec), " / ", fmtDur(total))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative",
+      padding: "10px 8px 4px",
+      borderRadius: 8,
+      background: "rgba(15,128,126,.06)",
+      border: "1px solid var(--line-2)",
+      marginBottom: 10
+    }
+  }, /*#__PURE__*/React.createElement(StaticWaveform, {
+    progress: progress,
+    bars: 60,
+    height: 42,
+    color: CORR_TEAL,
+    muted: "var(--line-3)"
+  }), /*#__PURE__*/React.createElement("input", {
+    type: "range",
+    className: "rng",
+    min: 0,
+    max: total,
+    step: 1,
+    value: currentSec,
+    onChange: e => setCurrentSec(parseInt(e.target.value)),
+    style: {
+      marginTop: 6,
+      accentColor: CORR_TEAL
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setCurrentSec(s => Math.max(0, s - 5)),
+    className: "btn btn-quiet btn-sm",
+    style: {
+      padding: "0 8px",
+      height: 32
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ff-mont",
+    style: {
+      font: "600 10.5px/1 Montserrat"
+    }
+  }, "-5s")), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setPlaying(p => !p),
+    style: {
+      width: 42,
+      height: 42,
+      borderRadius: "50%",
+      background: CORR_TEAL,
+      color: "#fff",
+      display: "grid",
+      placeItems: "center",
+      cursor: "pointer",
+      boxShadow: "0 2px 8px rgba(15,128,126,.3)",
+      border: "none"
+    }
+  }, playing ? /*#__PURE__*/React.createElement(I.Pause, {
+    size: 18,
+    stroke: "#fff"
+  }) : /*#__PURE__*/React.createElement(I.Play, {
+    size: 18,
+    stroke: "#fff"
+  })), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setCurrentSec(s => Math.min(total, s + 5)),
+    className: "btn btn-quiet btn-sm",
+    style: {
+      padding: "0 8px",
+      height: 32
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ff-mont",
+    style: {
+      font: "600 10.5px/1 Montserrat"
+    }
+  }, "+5s")), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1
+    }
+  }), /*#__PURE__*/React.createElement("select", {
+    value: speed,
+    onChange: e => setSpeed(parseFloat(e.target.value)),
+    className: "input",
+    style: {
+      height: 30,
+      padding: "0 6px",
+      font: "500 11px/1 Montserrat",
+      width: 64,
+      fontSize: 11
+    }
+  }, /*#__PURE__*/React.createElement("option", {
+    value: "0.5"
+  }, "0.5\xD7"), /*#__PURE__*/React.createElement("option", {
+    value: "0.75"
+  }, "0.75\xD7"), /*#__PURE__*/React.createElement("option", {
+    value: "1"
+  }, "1.0\xD7"), /*#__PURE__*/React.createElement("option", {
+    value: "1.25"
+  }, "1.25\xD7"), /*#__PURE__*/React.createElement("option", {
+    value: "1.5"
+  }, "1.5\xD7"), /*#__PURE__*/React.createElement("option", {
+    value: "2"
+  }, "2.0\xD7"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 8,
+      display: "flex",
+      alignItems: "center",
+      gap: 6,
+      font: "400 11px/1.3 'Noto Sans TC'",
+      color: "var(--ink-4)"
+    }
+  }, /*#__PURE__*/React.createElement(I.Doc, {
+    size: 11,
+    stroke: "var(--ink-4)"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "ff-mont tabular",
+    style: {
+      fontSize: 11,
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap",
+      flex: 1
+    }
+  }, audio.name), /*#__PURE__*/React.createElement("span", {
+    style: {
+      whiteSpace: "nowrap"
+    }
+  }, audio.sizeMB ? `${audio.sizeMB} MB` : ""), /*#__PURE__*/React.createElement("span", null, "\xB7"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      whiteSpace: "nowrap"
+    }
+  }, audio.uploadedAt)));
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 案件歷程（後台側欄時間軸）— 比照前台 CaseHistoryCard，依 reviewStage + 補正輪生成里程碑
+// ════════════════════════════════════════════════════════════════════════════
+function adminTlIcon(icon) {
+  const c = "#fff";
+  if (icon === "doc") return /*#__PURE__*/React.createElement(I.Doc, {
+    size: 13,
+    stroke: c,
+    sw: 2
+  });
+  if (icon === "send") return /*#__PURE__*/React.createElement(I.Upload, {
+    size: 13,
+    stroke: c,
+    sw: 2.2
+  });
+  if (icon === "warn") return /*#__PURE__*/React.createElement(I.Warn, {
+    size: 13,
+    stroke: c,
+    sw: 2.2
+  });
+  if (icon === "clock") return /*#__PURE__*/React.createElement(I.Clock, {
+    size: 13,
+    stroke: c,
+    sw: 2.2
+  });
+  if (icon === "check") return /*#__PURE__*/React.createElement(I.Check, {
+    size: 13,
+    stroke: c,
+    sw: 3
+  });
+  return /*#__PURE__*/React.createElement(I.Doc, {
+    size: 13,
+    stroke: c
+  });
+}
+function buildAdminTimeline(caseInfo, effStage, rounds) {
+  const dpart = s => (s || "").split(" ")[0];
+  const created = dpart(caseInfo.createdAt);
+  const updated = dpart(caseInfo.updatedAt);
+  const nodes = [{
+    key: "create",
+    icon: "doc",
+    label: "建立案件",
+    date: created || "—",
+    state: "done"
+  }];
+  const submitCurrent = ["waiting", "unassigned", "in_review"].includes(effStage);
+  nodes.push({
+    key: "submit",
+    icon: "send",
+    label: "送出審核",
+    date: updated || "—",
+    state: submitCurrent ? "current" : "done"
+  });
+  (rounds || []).forEach((r, i) => {
+    nodes.push({
+      key: "ret" + i,
+      icon: "warn",
+      label: "退回補正",
+      date: dpart(r.returnedAt) || "—",
+      tone: "danger",
+      state: "done"
+    });
+    if (r.status === "submitted") {
+      nodes.push({
+        key: "corr" + i,
+        icon: "send",
+        label: "補正送出",
+        date: dpart(r.audio && r.audio.uploadedAt) || "—",
+        tone: "teal",
+        state: "done"
+      });
+    }
+  });
+  if (effStage === "returned") {
+    nodes.push({
+      key: "await",
+      icon: "clock",
+      label: "等待業務員補正",
+      date: "進行中",
+      tone: "danger",
+      state: "current"
+    });
+  } else if (effStage === "resubmit") {
+    nodes.push({
+      key: "recheck",
+      icon: "clock",
+      label: "補件審核中",
+      date: "審核中",
+      tone: "teal",
+      state: "current"
+    });
+  } else if (effStage === "verified") {
+    nodes.push({
+      key: "approve",
+      icon: "check",
+      label: "審核通過",
+      date: updated || "—",
+      tone: "ok",
+      state: "done"
+    });
+  }
+  return nodes;
+}
+function AdminCaseHistoryCard({
+  caseInfo,
+  effStage,
+  rounds
+}) {
+  const nodes = buildAdminTimeline(caseInfo, effStage, rounds);
+  const stageMeta = window.__MLI_REVIEW_STAGE[effStage] || window.__MLI_REVIEW_STAGE.waiting;
+  const toneColor = tone => tone === "danger" ? "var(--danger)" : tone === "teal" ? CORR_TEAL : tone === "ok" ? "var(--ok)" : "var(--primary)";
+  return /*#__PURE__*/React.createElement("section", {
+    className: "card",
+    style: {
+      padding: 0,
+      overflow: "hidden"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "13px 16px",
+      borderBottom: "1px solid var(--line-2)",
+      display: "flex",
+      alignItems: "center",
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement(I.Clock, {
+    size: 14,
+    stroke: "var(--primary)"
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      font: "700 12px/1 'Noto Sans TC'",
+      color: "var(--ink-3)",
+      letterSpacing: ".08em"
+    }
+  }, "\u6848\u4EF6\u6B77\u7A0B"), /*#__PURE__*/React.createElement("span", {
+    className: "meta",
+    style: {
+      marginLeft: "auto"
+    }
+  }, "\u91CD\u9EDE\u6642\u9593\u9EDE")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "15px 16px 8px"
+    }
+  }, nodes.map((n, i) => {
+    const last = i === nodes.length - 1;
+    const isCurrent = n.state === "current";
+    const nodeColor = isCurrent ? toneColor(n.tone) : n.tone ? toneColor(n.tone) : "var(--primary)";
+    return /*#__PURE__*/React.createElement("div", {
+      key: n.key,
+      style: {
+        display: "flex",
+        gap: 12
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        width: 24,
+        flexShrink: 0
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: isCurrent ? "pulse" : "",
+      style: {
+        width: 24,
+        height: 24,
+        borderRadius: "50%",
+        flexShrink: 0,
+        background: nodeColor,
+        display: "grid",
+        placeItems: "center"
+      }
+    }, adminTlIcon(n.icon)), !last && /*#__PURE__*/React.createElement("span", {
+      style: {
+        flex: 1,
+        width: 2,
+        minHeight: 16,
+        background: "var(--line-2)",
+        marginTop: 3,
+        marginBottom: 3
+      }
+    })), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0,
+        paddingBottom: last ? 4 : 14
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "baseline",
+        gap: 8
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        font: "600 13px/1.3 'Noto Sans TC'",
+        color: "var(--ink)"
+      }
+    }, n.label), isCurrent && /*#__PURE__*/React.createElement("span", {
+      style: {
+        padding: "1px 7px",
+        borderRadius: 9,
+        background: stageMeta.bg,
+        color: stageMeta.color,
+        font: "600 9.5px/1.5 'Noto Sans TC'"
+      }
+    }, "\u76EE\u524D\u72C0\u614B")), /*#__PURE__*/React.createElement("div", {
+      className: "ff-mont tabular",
+      style: {
+        marginTop: 3,
+        font: "500 11px/1.4 Montserrat",
+        color: "var(--ink-4)"
+      }
+    }, n.date)));
+  })));
 }
 window.ReviewDetailScreen = ReviewDetailScreen;
 
@@ -8964,630 +9880,6 @@ function ChartCard({
 window.QualityReportScreen = QualityReportScreen;
 
 // ── AdminScreens.jsx ──
-// ManualUploadScreen — 手動上傳音檔（F-106）
-// 內勤補件/特殊案件用：填寫案件欄位 + 上傳音檔，系統觸發 STT 處理
-//
-// 與業務員前台 EntryScreen 的差異：
-//   - 內勤可手動指定 / 編輯所有欄位（含業務員、通訊處）
-//   - 一次完成：案件欄位 + 上傳音檔 一步到位
-//   - 上傳後直接進入待審核佇列
-
-function ManualUploadScreen({
-  onBack,
-  onSubmitted
-}) {
-  const [step, setStep] = React.useState(1); // 1: 填欄位 + 選檔 | 2: 處理中 | 3: 完成
-  const [form, setForm] = React.useState({
-    product: "",
-    proposer: "",
-    proposerId: "",
-    proposerAge: "",
-    insured: "",
-    insuredId: "",
-    insuredAge: "",
-    payerSame: true,
-    agent: "林佩君",
-    agentId: "A0427",
-    branch: "台北中山通訊處",
-    note: ""
-  });
-  const [file, setFile] = React.useState(null);
-  const handleSubmit = () => {
-    setStep(2);
-    setTimeout(() => setStep(3), 2200);
-  };
-  return /*#__PURE__*/React.createElement("div", {
-    "data-screen-label": "03 \u624B\u52D5\u4E0A\u50B3\u97F3\u6A94",
-    className: "fadeup",
-    style: {
-      padding: "18px 28px 60px"
-    }
-  }, /*#__PURE__*/React.createElement(AdminSubHeader, {
-    title: "\u624B\u52D5\u4E0A\u50B3\u97F3\u6A94",
-    crumbs: ["內勤審核後台", "錄音作業", "手動上傳"],
-    desc: "\u88DC\u4EF6\u6216\u7279\u6B8A\u6848\u4EF6\u7528\uFF1A\u586B\u5BEB\u6848\u4EF6\u8CC7\u8A0A\u4E26\u4E0A\u50B3\u97F3\u6A94\uFF0C\u7CFB\u7D71\u5C07\u81EA\u52D5\u89F8\u767C STT \u8655\u7406",
-    right: /*#__PURE__*/React.createElement("button", {
-      className: "btn btn-quiet btn-sm",
-      onClick: onBack
-    }, /*#__PURE__*/React.createElement(I.ChevronL, {
-      size: 11
-    }), " \u8FD4\u56DE")
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 8,
-      margin: "18px 0 20px"
-    }
-  }, /*#__PURE__*/React.createElement(Step, {
-    n: 1,
-    label: "\u586B\u5BEB\u6848\u4EF6\u8CC7\u8A0A",
-    active: step >= 1,
-    done: step > 1
-  }), /*#__PURE__*/React.createElement(Line, {
-    done: step > 1
-  }), /*#__PURE__*/React.createElement(Step, {
-    n: 2,
-    label: "\u4E0A\u50B3\u8655\u7406",
-    active: step >= 2,
-    done: step > 2
-  }), /*#__PURE__*/React.createElement(Line, {
-    done: step > 2
-  }), /*#__PURE__*/React.createElement(Step, {
-    n: 3,
-    label: "\u9001\u5165\u5BE9\u6838\u4F47\u5217",
-    active: step >= 3
-  })), step === 1 && /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "grid",
-      gridTemplateColumns: "minmax(0,1fr) 360px",
-      gap: 20
-    }
-  }, /*#__PURE__*/React.createElement("section", {
-    className: "card",
-    style: {
-      padding: 24
-    }
-  }, /*#__PURE__*/React.createElement("h3", {
-    style: {
-      margin: "0 0 16px",
-      font: "700 15px/1 'Noto Sans TC'",
-      color: "var(--ink)",
-      letterSpacing: ".04em"
-    }
-  }, "\u6848\u4EF6\u8CC7\u8A0A"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "grid",
-      gridTemplateColumns: "1fr 1fr",
-      gap: 14
-    }
-  }, /*#__PURE__*/React.createElement(Field, {
-    label: "\u4FDD\u96AA\u5546\u54C1",
-    required: true
-  }, /*#__PURE__*/React.createElement("select", {
-    className: "input",
-    value: form.product,
-    onChange: e => setForm({
-      ...form,
-      product: e.target.value
-    })
-  }, /*#__PURE__*/React.createElement("option", {
-    value: ""
-  }, "\u8ACB\u9078\u64C7\u5546\u54C1"), window.__MLI_PRODUCTS.map(p => /*#__PURE__*/React.createElement("option", {
-    key: p.code,
-    value: p.name
-  }, p.code, " \xB7 ", p.name)))), /*#__PURE__*/React.createElement(Field, {
-    label: "\u6848\u4EF6\u4F86\u6E90",
-    hint: "\u88DC\u4EF6\u6848\u4EF6\u8ACB\u9078\u64C7\u5C0D\u61C9\u4F86\u6E90\u7CFB\u7D71"
-  }, /*#__PURE__*/React.createElement("select", {
-    className: "input"
-  }, /*#__PURE__*/React.createElement("option", null, "\u5EFA\u8B70\u66F8\u7CFB\u7D71"), /*#__PURE__*/React.createElement("option", null, "\u884C\u52D5\u6295\u4FDD\u7CFB\u7D71"), /*#__PURE__*/React.createElement("option", null, "\u5167\u52E4\u88DC\u4EF6")))), /*#__PURE__*/React.createElement(SectionDivider, {
-    label: "\u8981\u4FDD\u4EBA\u8CC7\u8A0A"
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "grid",
-      gridTemplateColumns: "2fr 2fr 1fr",
-      gap: 14
-    }
-  }, /*#__PURE__*/React.createElement(Field, {
-    label: "\u59D3\u540D",
-    required: true
-  }, /*#__PURE__*/React.createElement("input", {
-    className: "input",
-    value: form.proposer,
-    onChange: e => setForm({
-      ...form,
-      proposer: e.target.value
-    }),
-    placeholder: "\u8ACB\u8F38\u5165\u8981\u4FDD\u4EBA\u59D3\u540D"
-  })), /*#__PURE__*/React.createElement(Field, {
-    label: "\u8EAB\u5206\u8B49\u5B57\u865F",
-    required: true
-  }, /*#__PURE__*/React.createElement("input", {
-    className: "input ff-mont",
-    value: form.proposerId,
-    onChange: e => setForm({
-      ...form,
-      proposerId: e.target.value
-    }),
-    placeholder: "A123456789",
-    style: {
-      letterSpacing: ".08em"
-    }
-  })), /*#__PURE__*/React.createElement(Field, {
-    label: "\u5E74\u9F61",
-    required: true
-  }, /*#__PURE__*/React.createElement("input", {
-    className: "input ff-mont",
-    type: "number",
-    value: form.proposerAge,
-    onChange: e => setForm({
-      ...form,
-      proposerAge: e.target.value
-    }),
-    placeholder: "65"
-  }))), /*#__PURE__*/React.createElement(SectionDivider, {
-    label: "\u88AB\u4FDD\u96AA\u4EBA\u8CC7\u8A0A"
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginBottom: 12
-    }
-  }, /*#__PURE__*/React.createElement("label", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 6,
-      font: "500 12.5px/1 'Noto Sans TC'",
-      color: "var(--ink-2)",
-      cursor: "pointer"
-    }
-  }, /*#__PURE__*/React.createElement("input", {
-    type: "checkbox",
-    defaultChecked: false,
-    style: {
-      accentColor: "var(--primary)"
-    }
-  }), "\u88AB\u4FDD\u96AA\u4EBA\u540C\u8981\u4FDD\u4EBA")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "grid",
-      gridTemplateColumns: "2fr 2fr 1fr",
-      gap: 14
-    }
-  }, /*#__PURE__*/React.createElement(Field, {
-    label: "\u59D3\u540D",
-    required: true
-  }, /*#__PURE__*/React.createElement("input", {
-    className: "input",
-    placeholder: "\u8ACB\u8F38\u5165\u88AB\u4FDD\u96AA\u4EBA\u59D3\u540D"
-  })), /*#__PURE__*/React.createElement(Field, {
-    label: "\u8EAB\u5206\u8B49\u5B57\u865F",
-    required: true
-  }, /*#__PURE__*/React.createElement("input", {
-    className: "input ff-mont",
-    placeholder: "A223456789",
-    style: {
-      letterSpacing: ".08em"
-    }
-  })), /*#__PURE__*/React.createElement(Field, {
-    label: "\u5E74\u9F61",
-    required: true
-  }, /*#__PURE__*/React.createElement("input", {
-    className: "input ff-mont",
-    type: "number",
-    placeholder: "65"
-  }))), /*#__PURE__*/React.createElement(SectionDivider, {
-    label: "\u7E73\u6B3E\u4EBA\u8CC7\u8A0A"
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginBottom: 12
-    }
-  }, /*#__PURE__*/React.createElement("label", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 6,
-      font: "500 12.5px/1 'Noto Sans TC'",
-      color: "var(--ink-2)",
-      cursor: "pointer"
-    }
-  }, /*#__PURE__*/React.createElement("input", {
-    type: "checkbox",
-    checked: form.payerSame,
-    onChange: e => setForm({
-      ...form,
-      payerSame: e.target.checked
-    }),
-    style: {
-      accentColor: "var(--primary)"
-    }
-  }), "\u7E73\u6B3E\u4EBA\u540C\u8981\u4FDD\u4EBA")), !form.payerSame && /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "grid",
-      gridTemplateColumns: "2fr 2fr 1fr",
-      gap: 14
-    }
-  }, /*#__PURE__*/React.createElement(Field, {
-    label: "\u59D3\u540D"
-  }, /*#__PURE__*/React.createElement("input", {
-    className: "input"
-  })), /*#__PURE__*/React.createElement(Field, {
-    label: "\u8EAB\u5206\u8B49\u5B57\u865F"
-  }, /*#__PURE__*/React.createElement("input", {
-    className: "input ff-mont"
-  })), /*#__PURE__*/React.createElement(Field, {
-    label: "\u5E74\u9F61"
-  }, /*#__PURE__*/React.createElement("input", {
-    className: "input ff-mont",
-    type: "number"
-  }))), /*#__PURE__*/React.createElement(SectionDivider, {
-    label: "\u696D\u52D9\u54E1\u8CC7\u8A0A"
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "grid",
-      gridTemplateColumns: "2fr 1fr 2fr",
-      gap: 14
-    }
-  }, /*#__PURE__*/React.createElement(Field, {
-    label: "\u696D\u52D9\u54E1\u59D3\u540D"
-  }, /*#__PURE__*/React.createElement("input", {
-    className: "input",
-    value: form.agent,
-    onChange: e => setForm({
-      ...form,
-      agent: e.target.value
-    })
-  })), /*#__PURE__*/React.createElement(Field, {
-    label: "\u696D\u52D9\u54E1\u4EE3\u865F"
-  }, /*#__PURE__*/React.createElement("input", {
-    className: "input ff-mont",
-    value: form.agentId,
-    onChange: e => setForm({
-      ...form,
-      agentId: e.target.value
-    }),
-    style: {
-      letterSpacing: ".08em"
-    }
-  })), /*#__PURE__*/React.createElement(Field, {
-    label: "\u6240\u5C6C\u901A\u8A0A\u8655"
-  }, /*#__PURE__*/React.createElement("select", {
-    className: "input",
-    value: form.branch,
-    onChange: e => setForm({
-      ...form,
-      branch: e.target.value
-    })
-  }, window.__MLI_BRANCHES.flatMap(r => r.branches).map(b => /*#__PURE__*/React.createElement("option", {
-    key: b
-  }, b))))), /*#__PURE__*/React.createElement(SectionDivider, {
-    label: "\u88DC\u4EF6\u539F\u56E0"
-  }), /*#__PURE__*/React.createElement("textarea", {
-    value: form.note,
-    onChange: e => setForm({
-      ...form,
-      note: e.target.value
-    }),
-    placeholder: "\u8ACB\u8AAA\u660E\u672C\u6B21\u88DC\u4EF6\u539F\u56E0\uFF0C\u4F8B\u5982\uFF1A\u539F\u59CB\u9304\u97F3\u907A\u5931\u3001\u696D\u52D9\u54E1\u7AEF\u7DB2\u8DEF\u4E2D\u65B7\u672A\u4E0A\u50B3\u5B8C\u6210\u3001\u539F\u59CB\u6848\u4EF6\u7279\u6B8A\u8655\u7406\u7B49",
-    style: {
-      width: "100%",
-      minHeight: 80,
-      resize: "vertical",
-      padding: "10px 14px",
-      borderRadius: 8,
-      border: "1px solid var(--line)",
-      font: "400 13px/1.6 'Noto Sans TC'",
-      color: "var(--ink)",
-      outline: "none"
-    }
-  })), /*#__PURE__*/React.createElement("aside", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: 14
-    }
-  }, /*#__PURE__*/React.createElement("section", {
-    className: "card",
-    style: {
-      padding: 20
-    }
-  }, /*#__PURE__*/React.createElement("h3", {
-    style: {
-      margin: "0 0 12px",
-      font: "700 14px/1 'Noto Sans TC'",
-      color: "var(--ink)",
-      letterSpacing: ".04em"
-    }
-  }, /*#__PURE__*/React.createElement(I.Upload, {
-    size: 14,
-    stroke: "var(--primary)",
-    style: {
-      verticalAlign: -2,
-      marginRight: 6
-    }
-  }), "\u97F3\u6A94\u4E0A\u50B3"), !file ? /*#__PURE__*/React.createElement("div", {
-    onClick: () => setFile({
-      name: "manual_upload_20260523.wav",
-      size: "4.2 MB"
-    }),
-    style: {
-      padding: "30px 16px",
-      borderRadius: 10,
-      border: "2px dashed rgba(73,99,250,.4)",
-      background: "var(--primary-soft-2)",
-      textAlign: "center",
-      cursor: "pointer"
-    }
-  }, /*#__PURE__*/React.createElement(I.Upload, {
-    size: 28,
-    stroke: "var(--primary)",
-    sw: 1.6
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      font: "500 13px/1.4 'Noto Sans TC'",
-      color: "var(--ink-2)",
-      marginTop: 8
-    }
-  }, "\u9EDE\u64CA\u6216\u62D6\u66F3\u97F3\u6A94\u81F3\u6B64"), /*#__PURE__*/React.createElement("div", {
-    className: "meta",
-    style: {
-      marginTop: 6,
-      fontSize: 11
-    }
-  }, "\u652F\u63F4 mp3 / mp4 / m4a / wav", /*#__PURE__*/React.createElement("br", null), "\u55AE\u6A94\u4E0A\u9650 100 MB")) : /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: "14px 12px",
-      borderRadius: 10,
-      background: "var(--primary-bg)",
-      border: "1px solid var(--line-2)"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 8,
-      marginBottom: 8
-    }
-  }, /*#__PURE__*/React.createElement(I.Doc, {
-    size: 18,
-    stroke: "var(--primary)"
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      flex: 1,
-      minWidth: 0
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "ff-mont tabular",
-    style: {
-      font: "500 12px/1.3 Montserrat",
-      color: "var(--ink)"
-    }
-  }, file.name), /*#__PURE__*/React.createElement("div", {
-    className: "meta",
-    style: {
-      marginTop: 3,
-      fontSize: 11
-    }
-  }, file.size, " \xB7 WAV \xB7 09:24")), /*#__PURE__*/React.createElement("button", {
-    onClick: () => setFile(null),
-    style: {
-      padding: 4,
-      color: "var(--ink-4)"
-    }
-  }, /*#__PURE__*/React.createElement(I.X, {
-    size: 14
-  }))), /*#__PURE__*/React.createElement(StaticWaveform, {
-    progress: 0,
-    bars: 32,
-    height: 28,
-    color: "var(--primary-2)",
-    muted: "var(--line-3)"
-  }))), /*#__PURE__*/React.createElement("section", {
-    className: "card",
-    style: {
-      padding: "14px 16px",
-      background: "var(--warn-soft)",
-      border: "1px solid rgba(241,160,40,.3)"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      gap: 8
-    }
-  }, /*#__PURE__*/React.createElement(I.Info, {
-    size: 14,
-    stroke: "rgb(151,89,15)",
-    style: {
-      flexShrink: 0,
-      marginTop: 2
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      font: "400 12px/1.55 'Noto Sans TC'",
-      color: "rgb(151,89,15)"
-    }
-  }, /*#__PURE__*/React.createElement("b", {
-    style: {
-      display: "block",
-      marginBottom: 4
-    }
-  }, "\u63D0\u9192"), "\u4E0A\u50B3\u5F8C\u7CFB\u7D71\u6703\u81EA\u52D5\u53D6\u5F97\u65B0\u7684\u9304\u97F3\u7DE8\u865F\uFF0C\u4E26\u89F8\u767C STT \u6BD4\u5C0D\u8655\u7406\u3002 \u8655\u7406\u5B8C\u6210\u5F8C\u6848\u4EF6\u5C07\u51FA\u73FE\u5728\u300C\u5F85\u6211\u5BE9\u6838\u300D\u6E05\u55AE\u4E2D\u3002"))), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary btn-lg",
-    disabled: !file,
-    onClick: handleSubmit,
-    style: {
-      width: "100%"
-    }
-  }, /*#__PURE__*/React.createElement(I.Upload, {
-    size: 15
-  }), " \u9001\u51FA\u4E26\u958B\u59CB\u8655\u7406"), /*#__PURE__*/React.createElement("section", {
-    style: {
-      padding: "10px 14px",
-      borderRadius: 10,
-      background: "var(--primary-soft-2)",
-      border: "1px dashed rgba(73,99,250,.25)",
-      font: "400 11.5px/1.5 'Noto Sans TC'",
-      color: "var(--ink-3)",
-      display: "flex",
-      alignItems: "center",
-      gap: 8,
-      flexWrap: "wrap"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      font: "600 11px/1 'Noto Sans TC'",
-      color: "var(--primary)",
-      letterSpacing: ".06em"
-    }
-  }, "\u5C0D\u61C9\u529F\u80FD"), /*#__PURE__*/React.createElement(FCode, {
-    code: "F-106",
-    label: "\u624B\u52D5\u4E0A\u50B3\u97F3\u6A94"
-  }), /*#__PURE__*/React.createElement(FCode, {
-    code: "F-201",
-    label: "\u97F3\u6A94\u4E0A\u50B3\u8655\u7406"
-  }), /*#__PURE__*/React.createElement(FCode, {
-    code: "F-203",
-    label: "STT \u89F8\u767C"
-  })))), step === 2 && /*#__PURE__*/React.createElement("section", {
-    className: "card",
-    style: {
-      padding: "40px 28px",
-      maxWidth: 560,
-      margin: "40px auto",
-      textAlign: "center"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      width: 64,
-      height: 64,
-      borderRadius: "50%",
-      background: "var(--primary-soft)",
-      display: "grid",
-      placeItems: "center",
-      margin: "0 auto 16px"
-    }
-  }, /*#__PURE__*/React.createElement("svg", {
-    className: "spin",
-    width: 32,
-    height: 32,
-    viewBox: "0 0 24 24",
-    fill: "none"
-  }, /*#__PURE__*/React.createElement("circle", {
-    cx: "12",
-    cy: "12",
-    r: "9",
-    stroke: "var(--primary-soft)",
-    strokeWidth: "2.5"
-  }), /*#__PURE__*/React.createElement("path", {
-    d: "M12 3a9 9 0 0 1 9 9",
-    stroke: "var(--primary)",
-    strokeWidth: "2.5",
-    strokeLinecap: "round"
-  }))), /*#__PURE__*/React.createElement("h3", {
-    style: {
-      margin: "0 0 8px",
-      font: "700 17px/1.3 'Noto Sans TC'",
-      color: "var(--ink)"
-    }
-  }, "\u8655\u7406\u4E2D\u2026"), /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: "0 0 20px",
-      font: "400 13px/1.6 'Noto Sans TC'",
-      color: "var(--ink-3)"
-    }
-  }, "\u6B63\u5728\u4E0A\u50B3\u97F3\u6A94\u4E26\u5EFA\u7ACB\u6848\u4EF6\uFF0C\u9810\u8A08 30 \u79D2\u5167\u5B8C\u6210"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: 10,
-      textAlign: "left",
-      maxWidth: 380,
-      margin: "0 auto"
-    }
-  }, /*#__PURE__*/React.createElement(StepLine, {
-    label: "\u5EFA\u7ACB\u6848\u4EF6\u7DE8\u865F",
-    done: true
-  }), /*#__PURE__*/React.createElement(StepLine, {
-    label: "\u4E0A\u50B3\u97F3\u6A94\u81F3 Object Storage",
-    done: true
-  }), /*#__PURE__*/React.createElement(StepLine, {
-    label: "\u89F8\u767C STT \u6BD4\u5C0D\u5F15\u64CE",
-    loading: true
-  }), /*#__PURE__*/React.createElement(StepLine, {
-    label: "\u9001\u5165\u5F85\u5BE9\u6838\u4F47\u5217"
-  }))), step === 3 && /*#__PURE__*/React.createElement("section", {
-    className: "card",
-    style: {
-      padding: "40px 28px",
-      maxWidth: 560,
-      margin: "40px auto",
-      textAlign: "center"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      width: 72,
-      height: 72,
-      borderRadius: "50%",
-      background: "var(--ok-soft)",
-      display: "grid",
-      placeItems: "center",
-      margin: "0 auto 16px"
-    }
-  }, /*#__PURE__*/React.createElement(I.Check, {
-    size: 36,
-    stroke: "var(--ok)",
-    sw: 2.6
-  })), /*#__PURE__*/React.createElement("h3", {
-    style: {
-      margin: "0 0 6px",
-      font: "700 18px/1.3 'Noto Sans TC'",
-      color: "var(--ink)"
-    }
-  }, "\u4E0A\u50B3\u5B8C\u6210"), /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: "0 0 20px",
-      font: "400 13px/1.6 'Noto Sans TC'",
-      color: "var(--ink-3)"
-    }
-  }, "\u6848\u4EF6\u5DF2\u53D6\u5F97\u65B0\u9304\u97F3\u7DE8\u865F\u4E26\u9001\u5165\u5F85\u5BE9\u6838\u4F47\u5217"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: "14px 18px",
-      borderRadius: 10,
-      background: "var(--primary-bg)",
-      border: "1px solid var(--line-2)",
-      display: "inline-flex",
-      flexDirection: "column",
-      gap: 6,
-      textAlign: "left",
-      font: "400 12.5px/1.5 'Noto Sans TC'",
-      color: "var(--ink-2)",
-      minWidth: 300
-    }
-  }, /*#__PURE__*/React.createElement(KV, {
-    label: "\u9304\u97F3\u7DE8\u865F",
-    value: "A202605230099",
-    mono: true
-  }), /*#__PURE__*/React.createElement(KV, {
-    label: "\u5546\u54C1",
-    value: form.product || "（未填）"
-  }), /*#__PURE__*/React.createElement(KV, {
-    label: "STT \u8655\u7406",
-    value: "3 \u5206\u9418\u5F8C\u5B8C\u6210"
-  })), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      gap: 10,
-      justifyContent: "center",
-      marginTop: 24
-    }
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-quiet",
-    onClick: onSubmitted
-  }, "\u8FD4\u56DE\u6E05\u55AE"), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-primary",
-    onClick: () => setStep(1)
-  }, "\u518D\u4E0A\u50B3\u4E00\u7B46"))));
-}
-
 // ════════════════════════════════════════════════════════════════════════════
 // CreateCaseAdmin — 內勤代建立錄音案件（F-105）
 // 與業務員前台流程幾乎相同，但內勤可指定業務員與通訊處
@@ -9784,22 +10076,22 @@ function CreateCaseAdminScreen({
       color: "var(--ink-3)",
       letterSpacing: ".04em"
     }
-  }, "A20260523", /*#__PURE__*/React.createElement("span", {
+  }, "A00", /*#__PURE__*/React.createElement("span", {
     style: {
       color: "var(--ink-4)"
     }
-  }, "XXXX")), /*#__PURE__*/React.createElement("div", {
+  }, "XX")), /*#__PURE__*/React.createElement("div", {
     className: "meta",
     style: {
       marginTop: 8,
       fontSize: 11
     }
-  }, "\u78BA\u8A8D\u5F8C\u7CFB\u7D71\u5C07\u81EA\u52D5\u914D\u767C 4 \u78BC\u6D41\u6C34\u865F"))), /*#__PURE__*/React.createElement("button", {
+  }, "\u78BA\u8A8D\u5F8C\u7CFB\u7D71\u81EA\u52D5\u914D\u767C\u9304\u97F3\u7DE8\u865F\uFF0C\u4E26\u4F9D\u5834\u6B21\u62C6\u51FA\u6848\u4EF6\u7DE8\u865F"))), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-primary btn-lg",
     style: {
       width: "100%"
     },
-    onClick: () => setRecordingNo("A202605230100")
+    onClick: () => setRecordingNo("A0023")
   }, /*#__PURE__*/React.createElement(I.Plus, {
     size: 15
   }), " \u53D6\u5F97\u9304\u97F3\u7DE8\u865F"), /*#__PURE__*/React.createElement("section", {
@@ -9873,11 +10165,13 @@ function CreateCaseAdminScreen({
     }
   }, recordingNo)), /*#__PURE__*/React.createElement("p", {
     style: {
-      margin: "14px 0 0",
-      font: "400 12px/1.55 'Noto Sans TC'",
+      margin: "10px 0 0",
+      font: "400 11.5px/1.5 'Noto Sans TC'",
       color: "var(--ink-3)"
     }
-  }, "\u696D\u52D9\u54E1\u53EF\u4F7F\u7528\u5EFA\u8B70\u66F8 APP \u6216 Web \u7AEF\u767B\u5165\u5F8C\u63A5\u7E8C\u9304\u97F3\u4F5C\u696D\u3002")), /*#__PURE__*/React.createElement("button", {
+  }, "\u500B\u5225\u6848\u4EF6\u7DE8\u865F\u5C07\u70BA ", /*#__PURE__*/React.createElement("span", {
+    className: "ff-mont"
+  }, recordingNo, "-1"), "\uFF08\u4F9D\u5834\u6B21\u905E\u589E\uFF09\u3002 \u696D\u52D9\u54E1\u53EF\u4F7F\u7528\u5EFA\u8B70\u66F8 APP \u6216 Web \u7AEF\u767B\u5165\u5F8C\u63A5\u7E8C\u9304\u97F3\u4F5C\u696D\u3002")), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-primary btn-lg",
     onClick: onCreated,
     style: {
@@ -9902,49 +10196,49 @@ function LogsScreen({
     time: "2026/05/23 14:32:18",
     user: "王怡萱 (E102934)",
     action: "審核通過",
-    target: "A202605200005",
+    target: "A0015-1",
     detail: "送 BPM、產生 PDF"
   }, {
     time: "2026/05/23 14:18:45",
     user: "王怡萱 (E102934)",
     action: "退回補正",
-    target: "A202605200007",
+    target: "A0016-1",
     detail: "原因：音檔不清晰"
   }, {
     time: "2026/05/23 13:55:09",
     user: "王怡萱 (E102934)",
     action: "下載音檔",
-    target: "A202605200005",
+    target: "A0015-1",
     detail: "_merged.wav (5.2 MB)"
   }, {
     time: "2026/05/23 13:42:11",
     user: "陳俊宏 (E121095)",
     action: "重新觸發 STT",
-    target: "A202605210008",
+    target: "A0013-1",
     detail: ""
   }, {
     time: "2026/05/23 11:20:33",
     user: "王怡萱 (E102934)",
     action: "檢視案件",
-    target: "A202605210002",
+    target: "A0003-1",
     detail: ""
   }, {
     time: "2026/05/23 11:08:22",
     user: "張嘉玲 (E133247)",
     action: "建立案件",
-    target: "A202605230098",
+    target: "A0021-1",
     detail: "手動建立"
   }, {
     time: "2026/05/23 10:55:14",
     user: "王怡萱 (E102934)",
     action: "手動上傳音檔",
-    target: "A202605230097",
+    target: "A0020-1",
     detail: "補件案件"
   }, {
     time: "2026/05/23 09:48:02",
     user: "王怡萱 (E102934)",
     action: "重新合併音檔",
-    target: "A202605200008",
+    target: "A0017-1",
     detail: "分段音檔重組"
   }, {
     time: "2026/05/23 09:12:50",
@@ -9956,7 +10250,7 @@ function LogsScreen({
     time: "2026/05/22 18:25:33",
     user: "王怡萱 (E102934)",
     action: "審核通過",
-    target: "A202605190005",
+    target: "A0018-1",
     detail: "送 BPM"
   }];
   const actionColor = a => {
@@ -10180,103 +10474,6 @@ function LogsScreen({
 }
 
 // ────────── helpers ──────────
-function Step({
-  n,
-  label,
-  active,
-  done
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 8
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      width: 26,
-      height: 26,
-      borderRadius: "50%",
-      background: done ? "var(--ok)" : active ? "var(--primary)" : "var(--line-2)",
-      color: done || active ? "#fff" : "var(--ink-4)",
-      display: "grid",
-      placeItems: "center",
-      font: "700 12.5px/1 Montserrat"
-    }
-  }, done ? /*#__PURE__*/React.createElement(I.Check, {
-    size: 14,
-    stroke: "#fff",
-    sw: 2.6
-  }) : n), /*#__PURE__*/React.createElement("span", {
-    style: {
-      font: "500 13px/1 'Noto Sans TC'",
-      color: active ? "var(--ink)" : "var(--ink-3)",
-      letterSpacing: ".04em"
-    }
-  }, label));
-}
-function Line({
-  done
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      flex: "0 0 36px",
-      height: 2,
-      background: done ? "var(--ok)" : "var(--line-2)",
-      borderRadius: 1
-    }
-  });
-}
-function StepLine({
-  label,
-  loading,
-  done
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 10,
-      padding: "6px 10px",
-      background: done ? "var(--ok-soft)" : loading ? "var(--primary-soft)" : "transparent",
-      borderRadius: 6,
-      font: "400 13px/1.4 'Noto Sans TC'",
-      color: "var(--ink-2)"
-    }
-  }, done ? /*#__PURE__*/React.createElement(I.Check, {
-    size: 14,
-    stroke: "var(--ok)",
-    sw: 2.6
-  }) : loading ? /*#__PURE__*/React.createElement("svg", {
-    className: "spin",
-    width: 14,
-    height: 14,
-    viewBox: "0 0 24 24",
-    fill: "none"
-  }, /*#__PURE__*/React.createElement("circle", {
-    cx: "12",
-    cy: "12",
-    r: "9",
-    stroke: "var(--primary-soft)",
-    strokeWidth: "2.5"
-  }), /*#__PURE__*/React.createElement("path", {
-    d: "M12 3a9 9 0 0 1 9 9",
-    stroke: "var(--primary)",
-    strokeWidth: "2.5",
-    strokeLinecap: "round"
-  })) : /*#__PURE__*/React.createElement("span", {
-    style: {
-      width: 14,
-      height: 14,
-      borderRadius: "50%",
-      border: "2px solid var(--line-3)"
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: done ? "rgb(58,124,49)" : loading ? "var(--primary)" : "var(--ink-3)"
-    }
-  }, label));
-}
 function Field({
   label,
   required,
@@ -10337,7 +10534,6 @@ function SectionDivider({
     }
   }));
 }
-window.ManualUploadScreen = ManualUploadScreen;
 window.CreateCaseAdminScreen = CreateCaseAdminScreen;
 window.LogsScreen = LogsScreen;
 
@@ -10348,18 +10544,18 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "showFCodes": true,
   "viewMode": "compare",
   "highlightMode": "both",
-  "demoCase": "A202605200003"
+  "demoCase": "A0004-1"
 } /*EDITMODE-END*/;
 function AdminApp() {
-  const cases = window.__MLI_CASES;
+  const [cases, setCases] = React.useState(window.__MLI_CASES);
   const detailMap = window.__MLI_REVIEW_DETAIL;
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
 
   // Routing
-  const [page, setPage] = React.useState("review_detail");
+  const [page, setPage] = React.useState("review_list");
   const [activeCaseNo, setActiveCaseNo] = React.useState(t.demoCase);
-  const activeCase = cases.find(c => c.recordingNo === activeCaseNo) || cases[2];
-  const activeDetail = detailMap[activeCaseNo] || detailMap[activeCase.recordingNo] || detailMap["A202605200003"];
+  const activeCase = cases.find(c => c.caseNo === activeCaseNo) || cases[2];
+  const activeDetail = detailMap[activeCaseNo] || detailMap[activeCase.caseNo] || detailMap["A0004-1"];
 
   // F-code legend toggle
   React.useEffect(() => {
@@ -10373,6 +10569,24 @@ function AdminApp() {
     setPage("review_detail");
   };
   const goBack = () => setPage("review_list");
+
+  // 審核通過：回寫案件狀態（清單即時反映）並返回清單
+  const goApprove = no => {
+    setCases(cs => cs.map(c => c.caseNo === no ? {
+      ...c,
+      status: "approved",
+      reviewStage: "verified"
+    } : c));
+    setPage("review_list");
+  };
+  // 退回補正：回寫案件狀態（清單即時反映）；停留詳情以便檢視「退回補正」分頁
+  const goReturn = no => {
+    setCases(cs => cs.map(c => c.caseNo === no ? {
+      ...c,
+      status: "returned",
+      reviewStage: "returned"
+    } : c));
+  };
 
   // Expose nav globally (for PPTX export and external automation)
   React.useEffect(() => {
@@ -10408,8 +10622,8 @@ function AdminApp() {
     caseInfo: activeCase,
     detail: activeDetail,
     onBack: goBack,
-    onApprove: goBack,
-    onReturn: goBack
+    onApprove: goApprove,
+    onReturn: goReturn
   }), page === "quality_report" && /*#__PURE__*/React.createElement(QualityReportScreen, {
     cases: cases,
     detailMap: detailMap
@@ -10449,9 +10663,9 @@ function AdminApp() {
   }), /*#__PURE__*/React.createElement(TweakSelect, {
     label: "\u6848\u4EF6\u7DE8\u865F",
     value: activeCaseNo,
-    options: cases.filter(c => detailMap[c.recordingNo]).map(c => ({
-      value: c.recordingNo,
-      label: `${c.recordingNo} · ${window.__MLI_RISK[c.riskLevel]?.label || "?"}風險 · ${c.proposer} · ${c.product.slice(0, 12)}`
+    options: cases.filter(c => detailMap[c.caseNo]).map(c => ({
+      value: c.caseNo,
+      label: `${c.caseNo} · ${window.__MLI_RISK[c.riskLevel]?.label || "?"}風險 · ${c.proposer} · ${c.product.slice(0, 12)}`
     })),
     onChange: setActiveCaseNo
   })), /*#__PURE__*/React.createElement(TweakSection, {
@@ -10467,7 +10681,7 @@ function AdminApp() {
       font: "11.5px/1.55 'Noto Sans TC'",
       color: "rgba(41,38,27,.55)"
     }
-  }, /*#__PURE__*/React.createElement("b", null, "\u5F8C\u53F0\u7279\u8272"), /*#__PURE__*/React.createElement("br", null), "\u2022 \u5DE6\u5074 rail nav + \u8F03\u5BC6\u7684\u8CC7\u8A0A\u5BC6\u5EA6", /*#__PURE__*/React.createElement("br", null), "\u2022 \u6848\u4EF6\u6E05\u55AE\u652F\u63F4\uFF1A\u98A8\u96AA\u5206\u6578\u3001SLA \u5012\u6578\u3001\u6279\u6B21\u64CD\u4F5C\u3001\u9032\u968E\u7BE9\u9078", /*#__PURE__*/React.createElement("br", null), "\u2022 \u5BE9\u6838\u8A73\u60C5\u9801\uFF1A\u5DE6\u64AD\u653E\u5668 / \u7AE0\u7BC0 + \u53F3\u9010\u984C STT vs \u539F\u7A3F\u4E26\u6392", /*#__PURE__*/React.createElement("br", null), "\u2022 \u6574\u5408 5 \u7A2E\u89D2\u8272\u8272\u584A\uFF08\u6A5F/\u696D/\u8981/\u88AB/\u7E73\uFF09", /*#__PURE__*/React.createElement("br", null), "\u2022 \u5DEE\u7570\u6A19\u793A\uFF1A\u7D05\u522A\u9664 / \u7DA0\u65B0\u589E / \u9EC3\u4F4E\u4FE1\u5FC3 / \u7D05\u7C97\u9AD4\u5426\u5B9A", /*#__PURE__*/React.createElement("br", null), "\u2022 \u63A8\u85A6\u5207\u63DB\u5230\u300CA202605200003\u300D\u67E5\u770B\u9AD8\u98A8\u96AA\u6848\u4EF6\uFF08Q07/Q10 \u6709\u5B8C\u6574\u7570\u5E38\u7BC4\u4F8B\uFF09")), tweaksDomNode));
+  }, /*#__PURE__*/React.createElement("b", null, "\u5F8C\u53F0\u7279\u8272"), /*#__PURE__*/React.createElement("br", null), "\u2022 \u5DE6\u5074 rail nav + \u8F03\u5BC6\u7684\u8CC7\u8A0A\u5BC6\u5EA6", /*#__PURE__*/React.createElement("br", null), "\u2022 \u6848\u4EF6\u6E05\u55AE\u652F\u63F4\uFF1A\u98A8\u96AA\u5206\u6578\u3001SLA \u5012\u6578\u3001\u6279\u6B21\u64CD\u4F5C\u3001\u9032\u968E\u7BE9\u9078", /*#__PURE__*/React.createElement("br", null), "\u2022 \u5BE9\u6838\u8A73\u60C5\u9801\uFF1A\u5DE6\u64AD\u653E\u5668 / \u7AE0\u7BC0 + \u53F3\u9010\u984C STT vs \u539F\u7A3F\u4E26\u6392", /*#__PURE__*/React.createElement("br", null), "\u2022 \u6574\u5408 5 \u7A2E\u89D2\u8272\u8272\u584A\uFF08\u6A5F/\u696D/\u8981/\u88AB/\u7E73\uFF09", /*#__PURE__*/React.createElement("br", null), "\u2022 \u5DEE\u7570\u6A19\u793A\uFF1A\u7D05\u522A\u9664 / \u7DA0\u65B0\u589E / \u9EC3\u4F4E\u4FE1\u5FC3 / \u7D05\u7C97\u9AD4\u5426\u5B9A", /*#__PURE__*/React.createElement("br", null), "\u2022 \u63A8\u85A6\u5207\u63DB\u5230\u300CA0004-1\u300D\u67E5\u770B\u9AD8\u98A8\u96AA\u6848\u4EF6\uFF08Q07/Q10 \u6709\u5B8C\u6574\u7570\u5E38\u7BC4\u4F8B\uFF09")), tweaksDomNode));
 }
 ReactDOM.createRoot(document.getElementById("root")).render(/*#__PURE__*/React.createElement(AdminApp, null));
 </script>

@@ -55,16 +55,31 @@ function SpeakerChip({ speakerMeta, size = "sm" }) {
 function ReviewDetailScreen({ caseInfo, detail, onBack, onApprove, onReturn }) {
   const STAGE  = window.__MLI_REVIEW_STAGE;
   const RISK   = window.__MLI_RISK;
-  const stage  = STAGE[caseInfo.reviewStage] || STAGE.waiting;
   const risk   = RISK[caseInfo.riskLevel] || RISK.low;
+
+  // 退回補正：本頁可即時把案件切到「已退回」以演示流程（不影響 demo 靜態資料）
+  const [stageOverride, setStageOverride] = React.useState(null);
+  const effStage = stageOverride || caseInfo.reviewStage;
+  const stage  = STAGE[effStage] || STAGE.waiting;
+  const isReturnFlow = ["returned", "resubmit"].includes(effStage);
+
+  // 退回補正多輪資料（append-only；每輪含 退回原因 / 補正音檔 / 逐字稿 / AI 質檢）
+  const rounds = window.mliCorrectionRounds(caseInfo.caseNo);
 
   // 播放狀態
   const [playing, setPlaying]   = React.useState(false);
   const [currentSec, setCurrentSec] = React.useState(0);
   const [speed, setSpeed]       = React.useState(1.0);
 
-  // Tab 切換（預設 ai）
-  const [tab, setTab] = React.useState("ai"); // 'ai' | 'transcript'
+  // Tab 切換（退回 / 補件審核 → 預設聚焦「退回補正」分頁）
+  const [tab, setTab] = React.useState(isReturnFlow ? "correction" : "ai");
+
+  // 切換審核案件時，重設 stageOverride 與分頁聚焦
+  React.useEffect(() => {
+    setStageOverride(null);
+    const ret = ["returned", "resubmit"].includes(caseInfo.reviewStage);
+    setTab(ret ? "correction" : "ai");
+  }, [caseInfo.caseNo]);
 
   // 動作 modal
   const [modal, setModal] = React.useState(null);
@@ -81,7 +96,7 @@ function ReviewDetailScreen({ caseInfo, detail, onBack, onApprove, onReturn }) {
   // 與 CaseDetailScreen 一致的模式：所有非「返回清單」操作整併到 overflow menu，
   // 主要決策（退回補正 / 審核通過）保留在右側 action bar
   const headerActions = React.useMemo(() => {
-    const stage = caseInfo.reviewStage;
+    const stage = effStage;
     const isVerified = stage === "verified";
     const isReturned = stage === "returned";
     // 「草稿」（尚未開始）= waiting / unassigned；「審核中 / 補件審核」= in_review / resubmit
@@ -160,7 +175,7 @@ function ReviewDetailScreen({ caseInfo, detail, onBack, onApprove, onReturn }) {
     });
 
     return list;
-  }, [caseInfo.reviewStage]);
+  }, [effStage]);
 
   // 播放模擬
   React.useEffect(() => {
@@ -197,7 +212,7 @@ function ReviewDetailScreen({ caseInfo, detail, onBack, onApprove, onReturn }) {
         title={
           <>
             <span className="ff-mont tabular" style={{font:"600 18px/1 Montserrat", color:"var(--primary)", letterSpacing:".02em"}}>
-              {caseInfo.recordingNo}
+              {caseInfo.caseNo}
             </span>
             <span style={{font:"500 13px/1 'Noto Sans TC'", color:"var(--ink-4)", marginLeft:10}}>· {caseInfo.product}</span>
           </>
@@ -229,9 +244,13 @@ function ReviewDetailScreen({ caseInfo, detail, onBack, onApprove, onReturn }) {
 
           <TabBar tab={tab} setTab={setTab}
             aiBadge={totalQ - passQ}
-            />
+            showCorrection={isReturnFlow}
+            correctionStage={effStage}
+            roundCount={rounds.length}/>
 
-          {tab === "ai" ? (
+          {tab === "correction" ? (
+            <CorrectionView caseInfo={caseInfo} rounds={rounds} effStage={effStage}/>
+          ) : tab === "ai" ? (
             <AIReviewView detail={detail} passQ={passQ} totalQ={totalQ} passRate={passRate}
               onSeek={seek} currentSec={currentSec}/>
           ) : tab === "transcript" ? (
@@ -243,36 +262,71 @@ function ReviewDetailScreen({ caseInfo, detail, onBack, onApprove, onReturn }) {
           )}
         </main>
 
-        {/* ─── SIDE (RIGHT) — 案件資訊 / 完整音檔 / 操作 ─── */}
+        {/* ─── SIDE (RIGHT) — 完整音檔 / 案件資訊 / 案件歷程 / 操作 ─── */}
         <aside className="rev-side">
-          <CaseInfoCompact caseInfo={mergedCase} overrideKeys={Object.keys(caseOverrides)}/>
-
+          {/* (1) 完整音檔 */}
           <AudioPlayerAdmin caseInfo={mergedCase} detail={detail}
             currentSec={currentSec} setCurrentSec={setCurrentSec}
             playing={playing} setPlaying={setPlaying}
             speed={speed} setSpeed={setSpeed}/>
 
-          {/* 內勤補上傳的音檔 — 上傳後才顯示 */}
+          {/* 內勤補上傳的音檔 — 上傳後才顯示（緊接完整音檔下方） */}
           {uploadedAudio && (
             <UploadedAudioPlayer audio={uploadedAudio} onRemove={()=>setUploadedAudio(null)}/>
           )}
 
-          {/* Action bar — 主要操作 */}
-          <div className="rev-actions">
-            <button className="btn btn-danger" style={{flex:1}} onClick={()=>setModal("return")}>
-              <I.Replay size={14}/> 退回補正
-            </button>
-            <button className="btn btn-primary" style={{flex:1}} onClick={()=>setModal("approve")}>
-              <I.Check size={14}/> 審核通過
-            </button>
-          </div>
+          {/* (2) 案件資訊 */}
+          <CaseInfoCompact caseInfo={mergedCase} overrideKeys={Object.keys(caseOverrides)}/>
+
+          {/* (3) 案件歷程 */}
+          <AdminCaseHistoryCard caseInfo={mergedCase} effStage={effStage} rounds={rounds}/>
+
+          {/* Action bar — 依審核階段動態呈現 */}
+          {effStage === "verified" ? (
+            <div className="card" style={{padding:"14px 16px", textAlign:"center",
+              background:"var(--ok-soft)", border:"1px solid rgba(72,153,61,.3)",
+              font:"500 13px/1.5 'Noto Sans TC'", color:"var(--ok)",
+              display:"flex", alignItems:"center", justifyContent:"center", gap:8}}>
+              <I.Check size={15} sw={2.4} stroke="var(--ok)"/> 本案件已審核通過並歸檔
+            </div>
+          ) : effStage === "returned" ? (
+            <div className="card" style={{padding:"14px 16px",
+              background:"var(--danger-soft)", border:"1px solid rgba(234,82,82,.22)",
+              display:"flex", alignItems:"flex-start", gap:10}}>
+              <I.Clock size={16} stroke="var(--danger)" style={{flexShrink:0, marginTop:1}}/>
+              <div style={{font:"500 12.5px/1.6 'Noto Sans TC'", color:"var(--ink-2)"}}>
+                已退回補正，等待業務員補正後重新送出。可於「退回補正」分頁追蹤補件進度。
+              </div>
+            </div>
+          ) : (
+            <div className="rev-actions">
+              <button className="btn btn-danger" style={{flex:1}} onClick={()=>setModal("return")}>
+                <I.Replay size={14}/> {effStage === "resubmit" ? "再退回補正" : "退回補正"}
+              </button>
+              <button className="btn btn-primary" style={{flex:1}} onClick={()=>setModal("approve")}>
+                <I.Check size={14}/> 審核通過
+              </button>
+            </div>
+          )}
         </aside>
 
       </div>
 
       {/* Modals */}
-      {modal === "return"       && <ReturnModal caseInfo={mergedCase} detail={detail} onCancel={()=>setModal(null)} onConfirm={()=>{ setModal(null); onReturn && onReturn(); }}/>}
-      {modal === "approve"      && <ApproveModal caseInfo={mergedCase} detail={detail} onCancel={()=>setModal(null)} onConfirm={()=>{ setModal(null); onApprove && onApprove(); }}/>}
+      {modal === "return"       && <ReturnModal caseInfo={mergedCase} detail={detail}
+                                      onCancel={()=>setModal(null)}
+                                      onConfirm={(payload)=>{
+                                        window.mliPushReturn(caseInfo.caseNo, {
+                                          ...payload,
+                                          reviewer: (window.__MLI_REVIEWER_SELF && window.__MLI_REVIEWER_SELF.name) || "內勤審核員",
+                                          returnedAt: nowStamp(),
+                                        });
+                                        setStageOverride("returned");
+                                        setTab("correction");
+                                        setModal(null);
+                                        onReturn && onReturn(caseInfo.caseNo);
+                                      }}/>}
+      {modal === "approve"      && <ApproveModal caseInfo={mergedCase} detail={detail} onCancel={()=>setModal(null)} onConfirm={()=>{ setModal(null); onApprove && onApprove(caseInfo.caseNo); }}/>}
       {modal === "retriggerStt" && <RetriggerSttModal onCancel={()=>setModal(null)}/>}
       {modal === "remerge"      && <RemergeModal caseInfo={mergedCase} onCancel={()=>setModal(null)}/>}
       {modal === "download"     && <DownloadModal caseInfo={mergedCase} onCancel={()=>setModal(null)}/>}
@@ -400,34 +454,40 @@ function ReviewActionsMenu({ actions }) {
 // ════════════════════════════════════════════════════════════════════════════
 // Tab Bar
 // ════════════════════════════════════════════════════════════════════════════
-function TabBar({ tab, setTab, aiBadge = 0 }) {
+function TabBar({ tab, setTab, aiBadge = 0, showCorrection = false, correctionStage, roundCount = 0 }) {
   const tabs = [
     { v: "ai",         l: "AI 審核比對", icon: <I.Check size={13}/>,  badge: aiBadge > 0 ? aiBadge : null },
     { v: "transcript", l: "逐字稿",       icon: <I.Script size={13}/>, badge: null },
     { v: "recording",  l: "錄音檔",       icon: <I.Wave size={13}/>,   badge: null },
   ];
+  if (showCorrection) {
+    tabs.push({ v: "correction", l: "退回補正", icon: <I.Replay size={13}/>,
+      badge: roundCount > 1 ? roundCount : null, accent: true });
+  }
   return (
     <div style={{
       display:"flex", borderBottom:"1px solid var(--line)", marginBottom:18, gap:4,
     }}>
       {tabs.map(t => {
         const a = tab === t.v;
+        const accentColor = t.accent ? "var(--danger)" : "var(--primary)";
         return (
           <button key={t.v} onClick={()=>setTab(t.v)} style={{
             display:"inline-flex", alignItems:"center", gap:7,
             padding:"10px 18px", border:"none", background:"none", cursor:"pointer",
-            color: a ? "var(--primary)" : "var(--ink-3)",
+            color: a ? accentColor : "var(--ink-3)",
             font: a ? "600 14px/1 'Noto Sans TC'" : "500 14px/1 'Noto Sans TC'",
             letterSpacing:".02em",
             position:"relative",
             transition:"color .12s",
+            marginLeft: t.accent ? "auto" : 0,
           }}>
             {t.icon}
             {t.l}
             {t.badge && (
               <span style={{
                 padding:"1px 6px", borderRadius:8,
-                background: a ? "var(--danger)" : "var(--line)",
+                background: a ? accentColor : "var(--line)",
                 color: a ? "#fff" : "var(--ink-3)",
                 font:"600 10.5px/1.4 Montserrat",
               }}>{t.badge}</span>
@@ -435,7 +495,7 @@ function TabBar({ tab, setTab, aiBadge = 0 }) {
             {a && (
               <span style={{
                 position:"absolute", left:0, right:0, bottom:-1,
-                height:2, background:"var(--primary)", borderRadius:"2px 2px 0 0",
+                height:2, background:accentColor, borderRadius:"2px 2px 0 0",
               }}/>
             )}
           </button>
@@ -1115,6 +1175,11 @@ function ReturnModal({ caseInfo, detail, onCancel, onConfirm }) {
   const [selectedQs, setSelectedQs] = React.useState(new Set(failedQ.length ? failedQ : [detail.questions[0]?.no]));
   const [notify, setNotify] = React.useState(true);
 
+  // 需重錄的對象（可複選）— 組成退回說明之一，帶到前台顯示
+  const subjects = (window.__MLI_uniqueSubjects ? window.__MLI_uniqueSubjects(caseInfo) : []);
+  const [selectedSubs, setSelectedSubs] = React.useState(new Set(subjects.map(s => s.name)));
+  const toggleSub = (name) => setSelectedSubs(s => { const ns = new Set(s); if (ns.has(name)) ns.delete(name); else ns.add(name); return ns; });
+
   const presets = {
     audio_quality:  "音檔不清晰或有雜訊干擾，請重新錄製",
     incomplete:     "錄音內容缺漏，請補錄缺失題目",
@@ -1193,6 +1258,34 @@ function ReturnModal({ caseInfo, detail, onCancel, onConfirm }) {
           </div>
 
           <div>
+            <div style={{font:"500 12px/1 'Noto Sans TC'", color:"var(--ink-3)", marginBottom:8, letterSpacing:".04em"}}>需重錄的對象（可複選）</div>
+            <div style={{display:"flex", gap:6, flexWrap:"wrap", padding:"8px 10px", borderRadius:7,
+              background:"var(--primary-bg)", border:"1px solid var(--line-2)"}}>
+              {subjects.map(s => {
+                const a = selectedSubs.has(s.name);
+                return (
+                  <button key={s.name} onClick={()=>toggleSub(s.name)} style={{
+                    padding:"5px 11px", borderRadius:12,
+                    background: a ? "var(--primary-soft)" : "#fff",
+                    border:`1px solid ${a ? "var(--primary)" : "var(--line)"}`,
+                    color: a ? "var(--primary)" : "var(--ink-2)",
+                    font:"500 12px/1 'Noto Sans TC'", cursor:"pointer",
+                    display:"inline-flex", alignItems:"center", gap:5,
+                  }}>
+                    <I.User size={12} stroke={a ? "var(--primary)" : "var(--ink-4)"}/>
+                    {s.name}
+                    {s.roles && s.roles.length > 0 && (
+                      <span style={{font:"500 10px/1 'Noto Sans TC'", color: a ? "var(--primary)" : "var(--ink-4)", opacity:.8}}>
+                        {s.roles.join("")}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
             <div style={{display:"flex", alignItems:"baseline", marginBottom:8}}>
               <span style={{font:"500 12px/1 'Noto Sans TC'", color:"var(--ink-3)", letterSpacing:".04em"}}>退回說明（將通知業務員）</span>
               <span className="meta" style={{marginLeft:"auto"}}>{text.length}/300</span>
@@ -1225,7 +1318,12 @@ function ReturnModal({ caseInfo, detail, onCancel, onConfirm }) {
         <div style={{padding:"16px 28px", borderTop:"1px solid var(--line-2)",
           display:"flex", gap:10, justifyContent:"flex-end"}}>
           <button className="btn btn-quiet" onClick={onCancel}>取消</button>
-          <button className="btn btn-danger" onClick={onConfirm}>
+          <button className="btn btn-danger" onClick={()=>onConfirm({
+            reasonType,
+            reasonText: text,
+            qNos: [...selectedQs].sort((a,b)=>a-b),
+            subjectNames: [...selectedSubs],
+          })}>
             <I.Replay size={14}/> 確認退回
           </button>
         </div>
@@ -1271,7 +1369,7 @@ function ApproveModal({ caseInfo, detail, onCancel, onConfirm }) {
 
           <div className="card" style={{padding:"10px 14px", background:"var(--primary-bg)", border:"1px solid var(--line-2)",
             display:"flex", flexDirection:"column", gap:6, font:"400 12.5px/1.5 'Noto Sans TC'"}}>
-            <KV label="錄音編號" value={caseInfo.recordingNo} mono/>
+            <KV label="案件編號" value={caseInfo.caseNo} mono/>
             <KV label="商品" value={caseInfo.product}/>
             <KV label="要保人/被保險人" value={`${caseInfo.proposer} / ${caseInfo.insured}`}/>
             <KV label="AI 通過率" value={`${Math.round(passQ/totalQ*100)}% (${passQ}/${totalQ})`}/>
@@ -1353,7 +1451,7 @@ function RemergeModal({ caseInfo, onCancel }) {
         </div>
         <div style={{padding:"10px 14px", borderRadius:8, background:"var(--primary-bg)",
           marginBottom:18, display:"flex", flexDirection:"column", gap:5, font:"400 12px/1.5 'Noto Sans TC'", color:"var(--ink-3)"}}>
-          <KV label="原合併音檔" value={`${caseInfo.recordingNo}_merged.wav`} mono/>
+          <KV label="原合併音檔" value={`${caseInfo.caseNo}_merged.wav`} mono/>
           <KV label="分段音檔數" value="14 段"/>
           <KV label="預估時間" value="約 30 秒"/>
         </div>
@@ -1380,7 +1478,7 @@ function DownloadModal({ caseInfo, onCancel }) {
         </p>
         <div style={{display:"flex", flexDirection:"column", gap:8, margin:"14px 0 18px"}}>
           {[
-            {l:"完整音檔（WAV）",  d:`${caseInfo.recordingNo}_merged.wav · ${fmtDur(caseInfo.duration)}`},
+            {l:"完整音檔（WAV）",  d:`${caseInfo.caseNo}_merged.wav · ${fmtDur(caseInfo.duration)}`},
             {l:"分段音檔（ZIP）",  d:"14 段分題音檔打包"},
             {l:"逐字稿（PDF）",    d:"STT 結果 + 原稿並排報告"},
             {l:"逐字稿（DOCX）",   d:"可編輯版本"},
@@ -1557,7 +1655,7 @@ function EditCaseModal({ caseInfo, overrides, onCancel, onConfirm }) {
           {/* 唯讀資訊 */}
           <div className="card" style={{padding:"10px 14px", background:"var(--primary-bg)", border:"1px solid var(--line-2)",
             display:"flex", flexDirection:"column", gap:5, font:"400 12px/1.5 'Noto Sans TC'"}}>
-            <KV label="錄音編號" value={caseInfo.recordingNo} mono/>
+            <KV label="案件編號" value={caseInfo.caseNo} mono/>
             <KV label="業務員"   value={`${caseInfo.agent} ${caseInfo.agentId}`}/>
             <KV label="通訊處"   value={caseInfo.branch}/>
           </div>
@@ -1813,11 +1911,11 @@ function UploadAudioModal({ caseInfo, onCancel, onConfirm }) {
 
 // ════════════════════════════════════════════════════════════════════════════
 // DeleteCaseModal — 刪除案件（已通過案件不可用，由 ReviewActionsMenu 控制 disabled）
-// 二段式確認：必須輸入錄音編號以避免誤操作
+// 二段式確認：必須輸入案件編號以避免誤操作
 // ════════════════════════════════════════════════════════════════════════════
 function DeleteCaseModal({ caseInfo, onCancel, onConfirm }) {
   const [confirmText, setConfirmText] = React.useState("");
-  const canDelete = confirmText.trim() === caseInfo.recordingNo;
+  const canDelete = confirmText.trim() === caseInfo.caseNo;
 
   return (
     <div style={{position:"fixed", inset:0, zIndex:200, background:"rgba(41,47,84,.4)", display:"grid", placeItems:"center"}}>
@@ -1848,14 +1946,14 @@ function DeleteCaseModal({ caseInfo, onCancel, onConfirm }) {
 
           <div className="card" style={{padding:"10px 14px", background:"var(--primary-bg)", border:"1px solid var(--line-2)",
             display:"flex", flexDirection:"column", gap:5, font:"400 12px/1.5 'Noto Sans TC'"}}>
-            <KV label="錄音編號" value={caseInfo.recordingNo} mono/>
+            <KV label="案件編號" value={caseInfo.caseNo} mono/>
             <KV label="商品" value={caseInfo.product}/>
             <KV label="業務員" value={`${caseInfo.agent} ${caseInfo.agentId}`}/>
           </div>
 
-          <Field label="請輸入錄音編號以確認刪除" hint={`需與 ${caseInfo.recordingNo} 完全一致`}>
+          <Field label="請輸入案件編號以確認刪除" hint={`需與 ${caseInfo.caseNo} 完全一致`}>
             <input type="text" value={confirmText} onChange={e=>setConfirmText(e.target.value)}
-              placeholder={caseInfo.recordingNo} className="input ff-mont"
+              placeholder={caseInfo.caseNo} className="input ff-mont"
               style={{width:"100%", padding:"10px 12px", borderRadius:8,
                 border:`1px solid ${confirmText && !canDelete ? "var(--danger)" : "var(--line)"}`,
                 font:"500 13.5px/1.3 Montserrat", color:"var(--ink)", outline:"none", letterSpacing:".04em"}}/>
@@ -1872,6 +1970,395 @@ function DeleteCaseModal({ caseInfo, onCancel, onConfirm }) {
         </div>
       </div>
     </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 退回補正 Tab（CorrectionView）
+// 獨立承載「退回原因 / 補正音檔 / 補正逐字稿 / AI 補正質檢」，與第一次送審資料分離。
+// 支援多輪退回（append-only）：每一輪一張卡，新到舊排列。
+// ════════════════════════════════════════════════════════════════════════════
+function nowStamp() {
+  const d = new Date(); const p = (n)=>String(n).padStart(2,"0");
+  return `${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+const CORR_TEAL = "rgb(15,128,126)";
+const CORR_TEAL_BG = "rgb(224,246,245)";
+
+function corrSpeakerMeta(speaker) {
+  if (speaker === "agent") return SPEAKER_PALETTE[0];                  // 業務員 → A（藍）
+  if (speaker === "robot") return { letter:"R", color:"rgb(123,109,235)", bg:"rgba(123,109,235,.12)", border:"rgba(123,109,235,.30)" };
+  return SPEAKER_PALETTE[1];                                          // 客戶 → B（綠）
+}
+
+function CorrectionView({ caseInfo, rounds, effStage }) {
+  if (!rounds.length) {
+    return (
+      <div style={{padding:"56px 40px", textAlign:"center", color:"var(--ink-3)"}}>
+        此案件尚無退回補正紀錄
+      </div>
+    );
+  }
+  const latest = rounds[rounds.length - 1];
+  const ordered = [...rounds].reverse(); // 新 → 舊
+  return (
+    <div style={{display:"flex", flexDirection:"column", gap:18}}>
+      {ordered.map((r) => (
+        <CorrectionRoundCard key={r.round} round={r} caseInfo={caseInfo}
+          isLatest={r.round === rounds.length} totalRounds={rounds.length}/>
+      ))}
+    </div>
+  );
+}
+
+// 單輪退回補正卡
+function CorrectionRoundCard({ round, caseInfo, isLatest, totalRounds }) {
+  const submitted = round.status === "submitted";
+  const statusMeta = submitted
+    ? { label:"已補正送出 · 待複審", color:CORR_TEAL, bg:CORR_TEAL_BG }
+    : { label:"等待業務員補正中",   color:"var(--danger)", bg:"var(--danger-soft)" };
+
+  return (
+    <section className="card" style={{padding:0, overflow:"hidden",
+      borderColor: isLatest ? (submitted ? "rgba(15,128,126,.35)" : "rgba(234,82,82,.3)") : "var(--line-2)"}}>
+
+      {/* 卡頭 */}
+      <div style={{padding:"13px 20px", borderBottom:"1px solid var(--line-2)",
+        display:"flex", alignItems:"center", gap:10,
+        background: isLatest ? (submitted ? "rgba(15,128,126,.05)" : "rgba(234,82,82,.04)") : "var(--primary-soft-2)"}}>
+        <span style={{width:26, height:26, borderRadius:8, flexShrink:0,
+          background: submitted ? CORR_TEAL_BG : "var(--danger-soft)",
+          color: submitted ? CORR_TEAL : "var(--danger)",
+          display:"grid", placeItems:"center", font:"700 12px/1 Montserrat"}} className="ff-mont">
+          {round.round}
+        </span>
+        <span style={{font:"700 14px/1 'Noto Sans TC'", color:"var(--ink)", letterSpacing:".02em"}}>
+          {round.returnedAt} 退回
+        </span>
+        <span style={{display:"inline-flex", alignItems:"center", gap:5,
+          padding:"3px 10px", borderRadius:11, background:statusMeta.bg, color:statusMeta.color,
+          font:"500 11.5px/1.4 'Noto Sans TC'"}}>
+          <Dot color={statusMeta.color} size={6}/> {statusMeta.label}
+        </span>
+        <span style={{flex:1}}/>
+        <span className="meta">退回審核員 · {round.reviewer}</span>
+      </div>
+
+      <div style={{padding:"18px 20px 20px", display:"flex", flexDirection:"column", gap:18}}>
+
+        {/* ① 退回原因 */}
+        <CorrBlock icon={<I.Warn size={13} stroke="var(--danger)"/>} title="退回原因" tint="var(--danger)">
+          <div style={{padding:"12px 14px", borderRadius:8,
+            background:"var(--danger-soft)", border:"1px solid rgba(234,82,82,.2)",
+            font:"400 13px/1.75 'Noto Sans TC'", color:"var(--ink-2)"}}>
+            {round.reasonText}
+          </div>
+        </CorrBlock>
+
+        {/* ② 補正音檔 */}
+        <CorrBlock icon={<I.Headset size={13} stroke={CORR_TEAL}/>} title="補正音檔" tint={CORR_TEAL}
+          badge={submitted ? "整段 / 上傳 · 1 完整音檔" : null}>
+          {round.audio
+            ? <CorrectionAudioPlayer audio={round.audio} roundNo={round.round}/>
+            : <CorrEmpty text="等待業務員補正後上傳，補正音檔將獨立於原始完整音檔保存。"/>}
+        </CorrBlock>
+
+        {/* ③ 補正逐字稿 */}
+        <CorrBlock icon={<I.Script size={13} stroke={CORR_TEAL}/>} title="補正逐字稿（STT）" tint={CORR_TEAL}>
+          {submitted && round.transcript.length
+            ? <CorrTranscript lines={round.transcript}/>
+            : <CorrEmpty text="收到補正音檔後，系統將重新執行 STT 音檔轉文字，結果顯示於此。"/>}
+        </CorrBlock>
+
+        {/* ④ AI 審核比對（補正質檢） */}
+        <CorrBlock icon={<I.Check size={13} stroke={CORR_TEAL}/>} title="AI 審核比對（補正質檢）" tint={CORR_TEAL}>
+          {submitted && round.ai
+            ? <CorrAIReport ai={round.ai}/>
+            : <CorrEmpty text="逐字稿產生後，系統將再次呼叫 LLM 模型進行補正質檢，結果顯示於此。"/>}
+        </CorrBlock>
+      </div>
+    </section>
+  );
+}
+
+function CorrBlock({ icon, title, tint, badge, children }) {
+  return (
+    <div>
+      <div style={{display:"flex", alignItems:"center", gap:7, marginBottom:10}}>
+        <span style={{width:22, height:22, borderRadius:6, flexShrink:0,
+          background:"var(--primary-soft-2)", display:"grid", placeItems:"center"}}>{icon}</span>
+        <span style={{font:"700 13px/1 'Noto Sans TC'", color:"var(--ink)", letterSpacing:".02em"}}>{title}</span>
+        {badge && (
+          <span style={{padding:"2px 8px", borderRadius:9, background:CORR_TEAL_BG, color:CORR_TEAL,
+            font:"500 10.5px/1.4 'Noto Sans TC'"}}>{badge}</span>
+        )}
+      </div>
+      <div style={{paddingLeft:29}}>{children}</div>
+    </div>
+  );
+}
+
+function CorrEmpty({ text }) {
+  return (
+    <div style={{padding:"18px 16px", borderRadius:9, border:"1px dashed var(--line-3)",
+      background:"var(--primary-bg)", display:"flex", alignItems:"center", gap:10}}>
+      <svg className="spin" width={16} height={16} viewBox="0 0 24 24" fill="none" style={{flexShrink:0}}>
+        <circle cx="12" cy="12" r="9" stroke="var(--line-2)" strokeWidth="2.5"/>
+        <path d="M12 3a9 9 0 0 1 9 9" stroke="var(--ink-4)" strokeWidth="2.5" strokeLinecap="round"/>
+      </svg>
+      <span style={{font:"400 12.5px/1.6 'Noto Sans TC'", color:"var(--ink-3)"}}>{text}</span>
+    </div>
+  );
+}
+
+// 補正逐字稿（語者分群，連續呈現）
+function CorrTranscript({ lines }) {
+  const speakers = [];
+  const seen = new Set();
+  lines.forEach(l => { const m = corrSpeakerMeta(l.speaker); if (!seen.has(m.letter)) { seen.add(m.letter); speakers.push(m); } });
+  return (
+    <div style={{borderRadius:9, border:"1px solid var(--line-2)", overflow:"hidden"}}>
+      <div style={{padding:"8px 14px", borderBottom:"1px solid var(--line-2)", background:"var(--primary-soft-2)",
+        display:"flex", alignItems:"center", gap:8}}>
+        <span className="meta" style={{letterSpacing:".06em"}}>語者</span>
+        {speakers.map(sp => <SpeakerChip key={sp.letter} speakerMeta={sp}/>)}
+        <span style={{flex:1}}/>
+        <span className="meta">STT 重跑結果</span>
+      </div>
+      <div style={{padding:"14px 16px", display:"flex", flexDirection:"column", gap:10}}>
+        {lines.map((seg, i) => {
+          const sp = corrSpeakerMeta(seg.speaker);
+          const lowConf = seg.confidence !== undefined && seg.confidence < 0.6;
+          return (
+            <div key={i} style={{display:"grid", gridTemplateColumns:"52px 22px 1fr", gap:10, alignItems:"flex-start"}}>
+              <span className="ff-mont tabular" style={{font:"500 11.5px/1.7 Montserrat", color:"var(--ink-4)", paddingTop:1}}>
+                {fmtDur(seg.startSec)}
+              </span>
+              <span style={{paddingTop:1}}><SpeakerChip speakerMeta={sp}/></span>
+              <div style={{font:"400 13px/1.7 'Noto Sans TC'", color:"var(--ink)", textWrap:"pretty"}}>
+                {seg.asr}
+                {lowConf && (
+                  <span style={{marginLeft:6, padding:"0 6px", borderRadius:3,
+                    background:"rgba(241,160,40,.16)", color:"rgb(151,89,15)",
+                    font:"600 10px/1.4 'Noto Sans TC'"}}>低信心</span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// AI 補正質檢報告
+function CorrAIReport({ ai }) {
+  const pass = ai.passRate >= 90;
+  const scoreColor = pass ? "var(--ok)" : ai.passRate >= 70 ? "var(--warn)" : "var(--danger)";
+  return (
+    <div style={{display:"flex", flexDirection:"column", gap:12}}>
+      {/* 摘要 */}
+      <div style={{display:"flex", gap:14, padding:"14px 16px", borderRadius:9,
+        background: pass ? "rgba(72,153,61,.06)" : "rgba(241,160,40,.06)",
+        border:`1px solid ${pass ? "rgba(72,153,61,.3)" : "rgba(241,160,40,.3)"}`}}>
+        <div style={{display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
+          paddingRight:14, borderRight:"1px solid var(--line-2)", minWidth:88}}>
+          <div style={{display:"flex", alignItems:"baseline", gap:1}}>
+            <span className="ff-mont tabular" style={{font:"700 26px/1 Montserrat", color:scoreColor}}>{ai.passRate}</span>
+            <span style={{font:"500 13px/1 Montserrat", color:scoreColor}}>%</span>
+          </div>
+          <span style={{marginTop:6, font:"500 10.5px/1 'Noto Sans TC'", color:"var(--ink-4)", letterSpacing:".04em"}}>補正通過率</span>
+        </div>
+        <div style={{flex:1, font:"400 13px/1.7 'Noto Sans TC'", color:"var(--ink-2)"}}>
+          <div style={{font:"600 11px/1 'Noto Sans TC'", color: pass ? "var(--ok)" : "var(--warn)",
+            letterSpacing:".06em", marginBottom:7, display:"flex", alignItems:"center", gap:5}}>
+            <I.Info size={11} stroke={pass ? "var(--ok)" : "var(--warn)"}/> AI 補正質檢結論
+          </div>
+          {ai.summary}
+        </div>
+      </div>
+      {/* 逐項判定 */}
+      {ai.items.map((it, i) => (
+        <div key={i} style={{display:"flex", gap:10, padding:"12px 14px", borderRadius:9,
+          border:"1px solid var(--line-2)", background:"#fff"}}>
+          <span style={{width:18, height:18, borderRadius:"50%", flexShrink:0, marginTop:1,
+            background: it.pass ? "var(--ok)" : "var(--danger)", color:"#fff",
+            display:"grid", placeItems:"center"}}>
+            {it.pass ? <I.Check size={10} sw={3} stroke="#fff"/> : <I.X size={9} sw={3} stroke="#fff"/>}
+          </span>
+          <div style={{flex:1, minWidth:0}}>
+            <div style={{font:"600 13px/1.3 'Noto Sans TC'", color:"var(--ink)", marginBottom:4}}>{it.title}</div>
+            <div style={{font:"400 12.5px/1.65 'Noto Sans TC'", color:"var(--ink-2)", textWrap:"pretty"}}>{it.note}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// 補正音檔播放器（自含播放模擬，teal 色系標示為補正版本）
+function CorrectionAudioPlayer({ audio, roundNo }) {
+  const [playing, setPlaying] = React.useState(false);
+  const [currentSec, setCurrentSec] = React.useState(0);
+  const [speed, setSpeed] = React.useState(1.0);
+  const total = audio.durationSec || 0;
+  const progress = total > 0 ? currentSec / total : 0;
+
+  React.useEffect(() => {
+    if (!playing) return;
+    const id = setInterval(() => {
+      setCurrentSec(s => { const next = s + 0.5 * speed; if (next >= total) { setPlaying(false); return total; } return next; });
+    }, 250);
+    return () => clearInterval(id);
+  }, [playing, speed, total]);
+
+  return (
+    <section style={{padding:"14px 16px", borderRadius:10,
+      border:`1px solid rgba(15,128,126,.3)`, background:"linear-gradient(180deg, rgba(15,128,126,.05), #fff 30%)"}}>
+      <div style={{display:"flex", alignItems:"center", gap:8, marginBottom:10}}>
+        <I.Headset size={14} stroke={CORR_TEAL}/>
+        <span style={{font:"700 12px/1 'Noto Sans TC'", color:"var(--ink-3)", letterSpacing:".06em"}}>補正音檔</span>
+        <span style={{padding:"1px 7px", borderRadius:8, background:CORR_TEAL_BG, color:CORR_TEAL,
+          font:"600 9.5px/1.3 'Noto Sans TC'"}}>第 {roundNo} 次</span>
+        <span style={{flex:1}}/>
+        <span className="ff-mont tabular" style={{font:"500 11px/1 Montserrat", color:"var(--ink-4)"}}>
+          {fmtDur(currentSec)} / {fmtDur(total)}
+        </span>
+      </div>
+
+      <div style={{position:"relative", padding:"10px 8px 4px", borderRadius:8,
+        background:"rgba(15,128,126,.06)", border:"1px solid var(--line-2)", marginBottom:10}}>
+        <StaticWaveform progress={progress} bars={60} height={42} color={CORR_TEAL} muted="var(--line-3)"/>
+        <input type="range" className="rng" min={0} max={total} step={1}
+          value={currentSec} onChange={e=>setCurrentSec(parseInt(e.target.value))}
+          style={{marginTop:6, accentColor:CORR_TEAL}}/>
+      </div>
+
+      <div style={{display:"flex", alignItems:"center", gap:8}}>
+        <button onClick={()=>setCurrentSec(s=>Math.max(0,s-5))} className="btn btn-quiet btn-sm" style={{padding:"0 8px", height:32}}>
+          <span className="ff-mont" style={{font:"600 10.5px/1 Montserrat"}}>-5s</span>
+        </button>
+        <button onClick={()=>setPlaying(p=>!p)} style={{width:42, height:42, borderRadius:"50%",
+          background:CORR_TEAL, color:"#fff", display:"grid", placeItems:"center", cursor:"pointer",
+          boxShadow:"0 2px 8px rgba(15,128,126,.3)", border:"none"}}>
+          {playing ? <I.Pause size={18} stroke="#fff"/> : <I.Play size={18} stroke="#fff"/>}
+        </button>
+        <button onClick={()=>setCurrentSec(s=>Math.min(total,s+5))} className="btn btn-quiet btn-sm" style={{padding:"0 8px", height:32}}>
+          <span className="ff-mont" style={{font:"600 10.5px/1 Montserrat"}}>+5s</span>
+        </button>
+        <span style={{flex:1}}/>
+        <select value={speed} onChange={e=>setSpeed(parseFloat(e.target.value))}
+          className="input" style={{height:30, padding:"0 6px", font:"500 11px/1 Montserrat", width:64, fontSize:11}}>
+          <option value="0.5">0.5×</option>
+          <option value="0.75">0.75×</option>
+          <option value="1">1.0×</option>
+          <option value="1.25">1.25×</option>
+          <option value="1.5">1.5×</option>
+          <option value="2">2.0×</option>
+        </select>
+      </div>
+
+      <div style={{marginTop:8, display:"flex", alignItems:"center", gap:6, font:"400 11px/1.3 'Noto Sans TC'", color:"var(--ink-4)"}}>
+        <I.Doc size={11} stroke="var(--ink-4)"/>
+        <span className="ff-mont tabular" style={{fontSize:11, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", flex:1}}>
+          {audio.name}
+        </span>
+        <span style={{whiteSpace:"nowrap"}}>{audio.sizeMB ? `${audio.sizeMB} MB` : ""}</span>
+        <span>·</span>
+        <span style={{whiteSpace:"nowrap"}}>{audio.uploadedAt}</span>
+      </div>
+    </section>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 案件歷程（後台側欄時間軸）— 比照前台 CaseHistoryCard，依 reviewStage + 補正輪生成里程碑
+// ════════════════════════════════════════════════════════════════════════════
+function adminTlIcon(icon) {
+  const c = "#fff";
+  if (icon === "doc")   return <I.Doc size={13} stroke={c} sw={2}/>;
+  if (icon === "send")  return <I.Upload size={13} stroke={c} sw={2.2}/>;
+  if (icon === "warn")  return <I.Warn size={13} stroke={c} sw={2.2}/>;
+  if (icon === "clock") return <I.Clock size={13} stroke={c} sw={2.2}/>;
+  if (icon === "check") return <I.Check size={13} stroke={c} sw={3}/>;
+  return <I.Doc size={13} stroke={c}/>;
+}
+
+function buildAdminTimeline(caseInfo, effStage, rounds) {
+  const dpart = (s) => (s || "").split(" ")[0];
+  const created = dpart(caseInfo.createdAt);
+  const updated = dpart(caseInfo.updatedAt);
+  const nodes = [{ key:"create", icon:"doc", label:"建立案件", date:created || "—", state:"done" }];
+
+  const submitCurrent = ["waiting", "unassigned", "in_review"].includes(effStage);
+  nodes.push({ key:"submit", icon:"send", label:"送出審核", date:updated || "—",
+    state: submitCurrent ? "current" : "done" });
+
+  (rounds || []).forEach((r, i) => {
+    nodes.push({ key:"ret"+i, icon:"warn", label:"退回補正", date:dpart(r.returnedAt) || "—",
+      tone:"danger", state:"done" });
+    if (r.status === "submitted") {
+      nodes.push({ key:"corr"+i, icon:"send", label:"補正送出",
+        date: dpart(r.audio && r.audio.uploadedAt) || "—", tone:"teal", state:"done" });
+    }
+  });
+
+  if (effStage === "returned") {
+    nodes.push({ key:"await", icon:"clock", label:"等待業務員補正", date:"進行中", tone:"danger", state:"current" });
+  } else if (effStage === "resubmit") {
+    nodes.push({ key:"recheck", icon:"clock", label:"補件審核中", date:"審核中", tone:"teal", state:"current" });
+  } else if (effStage === "verified") {
+    nodes.push({ key:"approve", icon:"check", label:"審核通過", date:updated || "—", tone:"ok", state:"done" });
+  }
+  return nodes;
+}
+
+function AdminCaseHistoryCard({ caseInfo, effStage, rounds }) {
+  const nodes = buildAdminTimeline(caseInfo, effStage, rounds);
+  const stageMeta = window.__MLI_REVIEW_STAGE[effStage] || window.__MLI_REVIEW_STAGE.waiting;
+  const toneColor = (tone) => tone === "danger" ? "var(--danger)"
+    : tone === "teal" ? CORR_TEAL : tone === "ok" ? "var(--ok)" : "var(--primary)";
+  return (
+    <section className="card" style={{padding:0, overflow:"hidden"}}>
+      <div style={{padding:"13px 16px", borderBottom:"1px solid var(--line-2)", display:"flex", alignItems:"center", gap:8}}>
+        <I.Clock size={14} stroke="var(--primary)"/>
+        <span style={{font:"700 12px/1 'Noto Sans TC'", color:"var(--ink-3)", letterSpacing:".08em"}}>案件歷程</span>
+        <span className="meta" style={{marginLeft:"auto"}}>重點時間點</span>
+      </div>
+      <div style={{padding:"15px 16px 8px"}}>
+        {nodes.map((n, i) => {
+          const last = i === nodes.length - 1;
+          const isCurrent = n.state === "current";
+          const nodeColor = isCurrent ? toneColor(n.tone) : (n.tone ? toneColor(n.tone) : "var(--primary)");
+          return (
+            <div key={n.key} style={{display:"flex", gap:12}}>
+              <div style={{display:"flex", flexDirection:"column", alignItems:"center", width:24, flexShrink:0}}>
+                <span className={isCurrent ? "pulse" : ""} style={{
+                  width:24, height:24, borderRadius:"50%", flexShrink:0, background:nodeColor,
+                  display:"grid", placeItems:"center",
+                }}>
+                  {adminTlIcon(n.icon)}
+                </span>
+                {!last && <span style={{flex:1, width:2, minHeight:16, background:"var(--line-2)", marginTop:3, marginBottom:3}}/>}
+              </div>
+              <div style={{flex:1, minWidth:0, paddingBottom: last ? 4 : 14}}>
+                <div style={{display:"flex", alignItems:"baseline", gap:8}}>
+                  <span style={{font:"600 13px/1.3 'Noto Sans TC'", color:"var(--ink)"}}>{n.label}</span>
+                  {isCurrent && (
+                    <span style={{padding:"1px 7px", borderRadius:9, background:stageMeta.bg, color:stageMeta.color,
+                      font:"600 9.5px/1.5 'Noto Sans TC'"}}>目前狀態</span>
+                  )}
+                </div>
+                <div className="ff-mont tabular" style={{marginTop:3, font:"500 11px/1.4 Montserrat", color:"var(--ink-4)"}}>
+                  {n.date}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 

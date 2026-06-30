@@ -37,7 +37,7 @@ function ReviewListScreen({ cases, onOpen, onCreate }) {
       if (agentFilter !== "all" && c.agent !== agentFilter) return false;
       if (!kw) return true;
       const roleNames = c.roles ? Object.values(c.roles).map(r => r.name) : [];
-      return [c.recordingNo, c.policyNo || "", c.product, c.agent, c.branch, ...roleNames]
+      return [c.recordingNo, c.caseNo, c.policyNo || "", c.product, c.agent, c.branch, ...roleNames]
         .some(v => v.toLowerCase().includes(kw));
     });
     if (sort === "risk") {
@@ -75,7 +75,7 @@ function ReviewListScreen({ cases, onOpen, onCreate }) {
   };
   const toggleSelectAll = () => {
     if (selected.size === filtered.length) setSelected(new Set());
-    else setSelected(new Set(filtered.map(c=>c.recordingNo)));
+    else setSelected(new Set(filtered.map(c=>c.caseNo)));
   };
 
   return (
@@ -108,7 +108,7 @@ function ReviewListScreen({ cases, onOpen, onCreate }) {
           <I.Search size={14} stroke="var(--ink-4)" style={{position:"absolute", left:12, top:10}}/>
           <input className="input" style={{width:"100%", paddingLeft:34, height:34, fontSize:13}}
             value={keyword} onChange={e=>setKeyword(e.target.value)}
-            placeholder="錄音編號 / 保單號 / 業務員 / 客戶"/>
+            placeholder="錄音編號 / 案件編號 / 保單號 / 業務員 / 客戶"/>
         </div>
         <StageTabs value={statusFilter} onChange={setStatusFilter} cases={cases}/>
         <span style={{flex:1}}/>
@@ -234,7 +234,8 @@ function ReviewListScreen({ cases, onOpen, onCreate }) {
                     indeterminate={selected.size>0 && selected.size<filtered.length}
                     onChange={toggleSelectAll}/>
                 </th>
-                <th style={{...rTh, width:170}}>錄音編號</th>
+                <th style={{...rTh, width:110}}>錄音編號</th>
+                <th style={{...rTh, width:130}}>案件編號</th>
                 <th style={{...rTh}}>商品</th>
                 <th style={{...rTh, width:190}}>錄音對象</th>
                 <th style={{...rTh, width:130}}>業務員</th>
@@ -246,13 +247,13 @@ function ReviewListScreen({ cases, onOpen, onCreate }) {
             </thead>
             <tbody>
               {filtered.map(c => (
-                <ReviewRow key={c.recordingNo} c={c}
-                  selected={selected.has(c.recordingNo)}
-                  onToggle={()=>toggleSelect(c.recordingNo)}
-                  onOpen={()=>onOpen(c.recordingNo)}/>
+                <ReviewRow key={c.caseNo} c={c}
+                  selected={selected.has(c.caseNo)}
+                  onToggle={()=>toggleSelect(c.caseNo)}
+                  onOpen={()=>onOpen(c.caseNo)}/>
               ))}
               {filtered.length === 0 && (
-                <tr><td colSpan={9} style={{padding:"60px 0", textAlign:"center"}}>
+                <tr><td colSpan={10} style={{padding:"60px 0", textAlign:"center"}}>
 
                   <I.Search size={28} stroke="var(--ink-4)" style={{marginBottom:8}}/>
                   <div style={{font:"500 14px/1.4 'Noto Sans TC'", color:"var(--ink-3)"}}>找不到符合條件的案件</div>
@@ -309,25 +310,6 @@ function KpiInline({ label, value, color, accent, alert }) {
       <span style={{font:"500 11.5px/1 'Noto Sans TC'", color:"var(--ink-3)", letterSpacing:".04em", paddingLeft: accent ? 8 : 0}}>{label}</span>
       <div className="ff-mont tabular" style={{font:"700 22px/1 Montserrat", color: alert ? color : "var(--ink)", letterSpacing:".01em", paddingLeft: accent ? 8 : 0}}>
         {value}<span style={{font:"400 11px/1 'Noto Sans TC'", color:"var(--ink-4)", marginLeft:4}}>件</span>
-      </div>
-    </div>
-  );
-}
-
-function KpiCard({ label, value, icon, color, emphasis, alert }) {
-  return (
-    <div className="card" style={{
-      padding:"14px 16px",
-      borderTop: emphasis ? `2px solid ${color}` : undefined,
-      background: emphasis ? "#fff" : (alert ? "rgba(234,82,82,.04)" : "#fff"),
-    }}>
-      <div style={{display:"flex", alignItems:"center", gap:8, marginBottom:8}}>
-        <span style={{width:24, height:24, borderRadius:6, background: emphasis ? "var(--primary-soft)" : "var(--primary-bg)",
-          color, display:"grid", placeItems:"center"}}>{icon}</span>
-        <span style={{font:"500 12px/1 'Noto Sans TC'", color:"var(--ink-3)", letterSpacing:".04em"}}>{label}</span>
-      </div>
-      <div className="ff-mont tabular" style={{font:"700 28px/1 Montserrat", color, letterSpacing:".01em"}}>
-        {value}<span style={{font:"400 12px/1 'Noto Sans TC'", color:"var(--ink-4)", marginLeft:4}}>件</span>
       </div>
     </div>
   );
@@ -398,7 +380,7 @@ function ReviewRow({ c, selected, onToggle, onOpen }) {
 
   // AI 通過率：從詳情資料取得 — 僅 reviewing / 補件審核 顯示
   const showAiPass = c.status === "reviewing" || c.status === "returned" || c.status === "resubmit";
-  const detail = (window.__MLI_REVIEW_DETAIL || {})[c.recordingNo];
+  const detail = (window.__MLI_REVIEW_DETAIL || {})[c.caseNo];
   let aiPass = null;
   if (showAiPass && detail) {
     const total = detail.questions.length;
@@ -418,8 +400,13 @@ function ReviewRow({ c, selected, onToggle, onOpen }) {
         <Checkbox checked={selected} onChange={onToggle}/>
       </td>
       <td style={rTd}>
-        <div className="ff-mont tabular" style={{font:"600 13px/1.2 Montserrat", color:"var(--primary)", letterSpacing:".02em"}}>
+        <div className="ff-mont tabular" style={{font:"600 13px/1.2 Montserrat", color:"var(--ink-2)", letterSpacing:".02em"}}>
           {c.recordingNo}
+        </div>
+      </td>
+      <td style={rTd}>
+        <div className="ff-mont tabular" style={{font:"600 13px/1.2 Montserrat", color:"var(--primary)", letterSpacing:".02em"}}>
+          {c.caseNo}
         </div>
         {c.policyNo ? (
           <div className="ff-mont tabular" style={{font:"500 11px/1 Montserrat", color:"var(--ink-4)", marginTop:4}}>
@@ -514,82 +501,6 @@ function SubjectsCell({ subjects }) {
 }
 
 // ───────────────────────────────────────────────────────────────────────────
-function RiskBubble({ level, score }) {
-  const RISK = window.__MLI_RISK;
-  const r = RISK[level] || RISK.low;
-  return (
-    <div style={{display:"inline-flex", alignItems:"center", gap:6}}>
-      <span style={{
-        width:24, height:24, borderRadius:"50%", background:r.bg,
-        border:`1.5px solid ${r.dot}`,
-        display:"grid", placeItems:"center",
-        font:"700 11px/1 'Noto Sans TC'", color:r.color, flexShrink:0,
-      }}>{r.label}</span>
-      <span className="ff-mont tabular" style={{font:"500 11px/1 Montserrat", color:"var(--ink-3)"}}>{score}</span>
-    </div>
-  );
-}
-
-function SttFlags({ flags }) {
-  if (!flags) return <span className="meta">—</span>;
-  return (
-    <div style={{display:"flex", gap:6}}>
-      <FlagPill icon="差" count={flags.diff}     color="rgb(196,55,55)"  bg="rgba(234,82,82,.10)"/>
-      <FlagPill icon="否" count={flags.negation} color="rgb(178,104,12)" bg="rgba(241,160,40,.14)"/>
-      <FlagPill icon="低" count={flags.lowConf}  color="rgb(98,100,118)" bg="rgba(140,142,157,.14)"/>
-    </div>
-  );
-}
-
-function FlagPill({ icon, count, color, bg }) {
-  if (!count) return (
-    <span style={{display:"inline-flex", alignItems:"center", gap:3, padding:"2px 5px", borderRadius:6,
-      background:"var(--primary-bg)", color:"var(--ink-4)",
-      font:"500 11px/1 'Noto Sans TC'", border:"1px solid var(--line-2)"}}>
-      {icon}<span className="ff-mont">0</span>
-    </span>
-  );
-  return (
-    <span style={{display:"inline-flex", alignItems:"center", gap:3, padding:"2px 5px", borderRadius:6,
-      background:bg, color,
-      font:"500 11px/1 'Noto Sans TC'"}}>
-      {icon}<span className="ff-mont">{count}</span>
-    </span>
-  );
-}
-
-function SlaPill({ days }) {
-  if (days < 0) return (
-    <span style={{display:"inline-flex", alignItems:"center", gap:4, padding:"3px 8px", borderRadius:11,
-      background:"var(--danger-soft)", color:"var(--danger)", whiteSpace:"nowrap",
-      font:"600 11.5px/1.4 'Noto Sans TC'"}}>
-      <I.Warn size={10} stroke="var(--danger)"/> SLA 超時 {-days} 天
-    </span>
-  );
-  if (days === 0) return (
-    <span style={{display:"inline-flex", alignItems:"center", gap:4, padding:"3px 8px", borderRadius:11,
-      background:"var(--danger-soft)", color:"var(--danger)", whiteSpace:"nowrap",
-      font:"600 11.5px/1.4 'Noto Sans TC'"}}>
-      今天到期
-    </span>
-  );
-  if (days <= 2) return (
-    <span style={{display:"inline-flex", alignItems:"center", gap:4, padding:"3px 8px", borderRadius:11,
-      background:"var(--warn-soft)", color:"rgb(178,104,12)", whiteSpace:"nowrap",
-      font:"500 11.5px/1.4 'Noto Sans TC'"}}>
-      剩 <span className="ff-mont tabular" style={{fontWeight:700}}>{days}</span> 天
-    </span>
-  );
-  return (
-    <span className="ff-mont tabular" style={{padding:"3px 8px", borderRadius:11,
-      background:"var(--primary-bg)", color:"var(--ink-3)", whiteSpace:"nowrap",
-      font:"500 11.5px/1.4 'Noto Sans TC'"}}>
-      <span className="ff-mont" style={{fontWeight:700, color:"var(--ink-2)"}}>{days}</span> 天
-    </span>
-  );
-}
-
-// ───────────────────────────────────────────────────────────────────────────
 function ExportModal({ onClose }) {
   const [fmt, setFmt] = React.useState("xlsx");
   return (
@@ -666,6 +577,3 @@ const rTd = {
 };
 
 window.ReviewListScreen = ReviewListScreen;
-window.RiskBubble = RiskBubble;
-window.SttFlags = SttFlags;
-window.SlaPill = SlaPill;

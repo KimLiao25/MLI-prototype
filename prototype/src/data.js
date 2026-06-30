@@ -1,7 +1,9 @@
 // 案件範例資料 + 題目腳本
 //
-// 編碼邏輯：
-//   錄音編號 = A + YYYYMMDD + XXXX(4 碼流水號)，例：A202605210001
+// 編碼邏輯（兩層）：
+//   recordingNo（錄音編號）= 整組建立母體，一張保單一次建立共用一個群組號，例：A0001
+//   caseNo（案件編號）     = 群組下的個別案件（一場次一個），格式 {recordingNo}-{場次}，例：A0001-1、A0001-2
+//   一個 recordingNo 可勾稽多個 caseNo（一對多）；caseNo 為系統內部唯一鍵。
 //
 // 審核狀態（v2 — 對齊 v1 待確認 #4 結論，5 種）：
 //   draft        草稿     — 業務員建立但尚未送出審核
@@ -101,8 +103,53 @@ const QUESTIONS = [
 //   #7 要保 = 被保 = 繳款                          — 審核中
 //   #8 三人皆不同                                    — 退回補正
 window.__MLI_CASES = [
+  // ── 範例群組 A0001：同一保單 3 位錄音對象、分 2 場次 → 1 個錄音編號、2 個案件編號 ──
+  //    場次1：陳志明(要)＋陳麗華(被) → A0001-1　／　場次2：陳國強(繳) → A0001-2
   {
-    recordingNo: "A202605210001",
+    recordingNo: "A0001",
+    caseNo:      "A0001-1",
+    sessionNo:   1,
+    createdAt:   "2026/05/22 10:05",
+    updatedAt:   "2026/05/22 10:05",
+    policyNo:    null,
+    product:     "鑫美鑫多元利率變動型終身壽險",
+    roles: {
+      proposer: { name: "陳志明", age: 73, idNo: "C168294017" },
+      insured:  { name: "陳麗華", age: 71, idNo: "C279305128" },
+    },
+    agent:    "林佩君",  agentId: "A0427",
+    branch:   "台北中山通訊處",
+    channel:  "iPad（行銷系統）",
+    duration: 0,
+    status:   "draft",
+    source:   "建議書系統",
+    note:     "",
+    progress: { total: 14, recorded: 0, skipped: 0 },
+  },
+  {
+    recordingNo: "A0001",
+    caseNo:      "A0001-2",
+    sessionNo:   2,
+    createdAt:   "2026/05/22 10:05",
+    updatedAt:   "2026/05/22 10:05",
+    policyNo:    null,
+    product:     "鑫美鑫多元利率變動型終身壽險",
+    roles: {
+      payer:    { name: "陳國強", age: 69, idNo: "C381426239" },
+    },
+    agent:    "林佩君",  agentId: "A0427",
+    branch:   "台北中山通訊處",
+    channel:  "iPad（行銷系統）",
+    duration: 0,
+    status:   "draft",
+    source:   "建議書系統",
+    note:     "",
+    progress: { total: 14, recorded: 0, skipped: 0 },
+  },
+  {
+    recordingNo: "A0002",
+    caseNo:      "A0002-1",
+    sessionNo:   1,
     createdAt:   "2026/05/21 14:08",
     updatedAt:   "2026/05/21 14:46",
     policyNo:    null,
@@ -119,10 +166,12 @@ window.__MLI_CASES = [
     status:   "draft",
     source:   "建議書系統",
     note:     "",
-    progress: { total: 14, recorded: 3, skipped: 0 },
+    progress: { total: 14, recorded: 7, skipped: 0 },
   },
   {
-    recordingNo: "A202605210002",
+    recordingNo: "A0003",
+    caseNo:      "A0003-1",
+    sessionNo:   1,
     createdAt:   "2026/05/21 11:23",
     updatedAt:   "2026/05/21 13:08",
     policyNo:    null,
@@ -142,7 +191,9 @@ window.__MLI_CASES = [
     progress: { total: 14, recorded: 14, skipped: 0 },
   },
   {
-    recordingNo: "A202605200003",
+    recordingNo: "A0004",
+    caseNo:      "A0004-1",
+    sessionNo:   1,
     createdAt:   "2026/05/20 16:42",
     updatedAt:   "2026/05/21 09:18",
     policyNo:    null,
@@ -162,7 +213,9 @@ window.__MLI_CASES = [
     progress: { total: 14, recorded: 14, skipped: 0 },
   },
   {
-    recordingNo: "A202605190001",
+    recordingNo: "A0005",
+    caseNo:      "A0005-1",
+    sessionNo:   1,
     createdAt:   "2026/05/19 10:11",
     updatedAt:   "2026/05/19 15:33",
     policyNo:    "P-2026-0048120",     // 已通過 + 核保成功，後端已核發保單號
@@ -182,7 +235,9 @@ window.__MLI_CASES = [
     progress: { total: 14, recorded: 14, skipped: 0 },
   },
   {
-    recordingNo: "A202605180001",
+    recordingNo: "A0006",
+    caseNo:      "A0006-1",
+    sessionNo:   1,
     createdAt:   "2026/05/18 14:55",
     updatedAt:   "2026/05/19 11:02",
     policyNo:    null,
@@ -202,7 +257,9 @@ window.__MLI_CASES = [
     progress: { total: 14, recorded: 14, skipped: 0 },
   },
   {
-    recordingNo: "A202605210003",
+    recordingNo: "A0007",
+    caseNo:      "A0007-1",
+    sessionNo:   1,
     createdAt:   "2026/05/21 09:02",
     updatedAt:   "2026/05/21 09:02",
     policyNo:    null,
@@ -222,7 +279,9 @@ window.__MLI_CASES = [
     progress: { total: 14, recorded: 0, skipped: 0 },
   },
   {
-    recordingNo: "A202605170002",
+    recordingNo: "A0008",
+    caseNo:      "A0008-1",
+    sessionNo:   1,
     createdAt:   "2026/05/17 13:20",
     updatedAt:   "2026/05/18 10:44",
     policyNo:    null,
@@ -242,7 +301,9 @@ window.__MLI_CASES = [
     progress: { total: 14, recorded: 14, skipped: 0 },
   },
   {
-    recordingNo: "A202605150001",
+    recordingNo: "A0009",
+    caseNo:      "A0009-1",
+    sessionNo:   1,
     createdAt:   "2026/05/15 15:48",
     updatedAt:   "2026/05/16 14:21",
     policyNo:    null,
@@ -265,9 +326,11 @@ window.__MLI_CASES = [
 
 // 向後相容：把 roles 攤平成舊欄位（proposer / insured / insuredAge）給其他畫面使用
 window.__MLI_CASES.forEach(c => {
-  c.proposer   = c.roles.proposer.name;
-  c.insured    = c.roles.insured.name;
-  c.insuredAge = c.roles.insured.age;
+  const r = c.roles || {};
+  const any = r.proposer || r.insured || r.payer || {};
+  c.proposer   = (r.proposer || any).name;
+  c.insured    = (r.insured  || any).name;
+  c.insuredAge = (r.insured  || any).age;
 });
 
 window.__MLI_QUESTIONS = QUESTIONS;

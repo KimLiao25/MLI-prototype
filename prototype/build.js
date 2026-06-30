@@ -20,6 +20,7 @@ console.log('Babel loaded, version:', Babel.version || '(unknown)');
 const SOURCES = [
   { file: 'data.js',                jsx: false },
   { file: 'recProgress.js',         jsx: false },
+  { file: 'correction.js',          jsx: false },
   { file: 'tweaks-panel.jsx',       jsx: true  },
   { file: 'icons.jsx',              jsx: true  },
   { file: 'Header.jsx',             jsx: true  },
@@ -33,6 +34,7 @@ const SOURCES = [
   { file: 'EntryScreen.jsx',        jsx: true  },
   { file: 'RecordingScreen.jsx',    jsx: true  },
   { file: 'WholeRecordingScreen.jsx',jsx: true },
+  { file: 'SubmitCheckModal.jsx',   jsx: true  },
   { file: 'UploadScreen.jsx',       jsx: true  },
   { file: 'app.jsx',                jsx: true  },
 ];

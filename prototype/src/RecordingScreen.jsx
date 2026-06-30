@@ -407,14 +407,9 @@ function ActiveQuestionCard({ q, onUpdate, onPrev, onNext, hasNext, hasPrev, onC
 // ─────────────────────────────────────────────────────────────
 // Right-side case info sidebar (compact)
 // ─────────────────────────────────────────────────────────────
-function CaseSidebar({ caseInfo, subjects, sessionKeys, subjectDone, completedSessions, isLastSession,
-                      questions, onSessionComplete, onBackToCase }) {
-  const total = questions.length;
-  const done = questions.filter(q => q.status === "recorded" || q.status === "skipped").length;
-  const sessionComplete = done === total;
-
-  // Aggregated elapsed
-  const totalElapsed = questions.reduce((sum, q) => sum + (q.duration || 0), 0);
+function CaseSidebar({ caseInfo, subjects, subjectDone, totalQ, onOpenCheck }) {
+  const total = subjects.length;
+  const done = subjects.filter(s => subjectDone && subjectDone[s.key]).length;
 
   return (
     <aside style={{width: 300, flexShrink: 0, display:"flex", flexDirection:"column", gap:16,
@@ -424,62 +419,23 @@ function CaseSidebar({ caseInfo, subjects, sessionKeys, subjectDone, completedSe
       <CaseInfoSummary caseInfo={caseInfo}
         customers={subjects && subjects.length ? subjects.map(s => ({ name: s.name, idNo: s.idNo, roles: s.roleKeys })) : undefined}/>
 
-      {/* Summary + finish */}
+      {/* 送出入口 */}
       <section className="card" style={{padding: 20}}>
-        <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:14}}>
-          <span style={{font:"700 14px/1 'Noto Sans TC'",color:"var(--ink)",letterSpacing:".04em"}}>本場錄音</span>
-          <span className="tabular ff-mont" style={{font:"600 13px/1 Montserrat",color:"var(--ink-3)"}}>{fmtTime(totalElapsed)}</span>
+        <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:12}}>
+          <span style={{font:"700 14px/1 'Noto Sans TC'",color:"var(--ink)",letterSpacing:".04em"}}>整體進度</span>
+          <span className="tabular ff-mont" style={{font:"600 13px/1 Montserrat",color: done===total ? "var(--ok)" : "var(--ink-3)"}}>
+            {done} <span style={{color:"var(--ink-4)"}}>/ {total}</span> 位
+          </span>
         </div>
 
-        <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom: 16}}>
-          <StatChip n={questions.filter(q=>q.status==="recorded").length} l="已錄" color="var(--ok)"/>
-          <StatChip n={questions.filter(q=>q.status==="skipped").length} l="跳過" color="var(--ink-3)"/>
-        </div>
-
-        <button className="btn btn-primary" style={{width:"100%"}}
-          disabled={!sessionComplete} onClick={onSessionComplete}>
-          {isLastSession
-            ? <><I.Upload size={16}/> 完成本場並送出</>
-            : <><I.User size={16}/> 完成本場，錄製下一位</>}
+        <button className="btn btn-primary" style={{width:"100%"}} onClick={onOpenCheck}>
+          <I.Upload size={16}/> 送出前檢核
         </button>
-        {!sessionComplete ? (
-          <div className="meta" style={{textAlign:"center",marginTop:8, color:"var(--warn)"}}>
-            本場尚有 {total - done} 題未完成
-          </div>
-        ) : !isLastSession ? (
-          <div className="meta" style={{textAlign:"center",marginTop:8}}>
-            本場已錄滿，尚有對象未錄音，送出已鎖定
-          </div>
-        ) : null}
-      </section>
-
-      {/* 音檔彙整 */}
-      <section className="card" style={{padding: 20}}>
-        <div style={{font:"700 14px/1 'Noto Sans TC'",color:"var(--ink)",marginBottom:12}}>音檔彙整</div>
-        <FileCountSummary completedSessions={completedSessions || []} subjects={subjects || []}/>
+        <div className="meta" style={{marginTop:10, lineHeight:1.5}}>
+          每題小音檔錄完即時上傳，無須一次錄完。可隨時打開檢核視窗確認進度，全數完成即可送出合併。
+        </div>
       </section>
     </aside>
-  );
-}
-
-function Mini({ label, value, strong, mono }) {
-  return (
-    <div>
-      <div style={{font:"400 11px/1 'Noto Sans TC'",color:"var(--ink-4)",letterSpacing:".08em",marginBottom:4}}>{label}</div>
-      <div className={mono?"tabular ff-mont":""} style={{
-        font: strong ? "500 14px/1.4 'Noto Sans TC'" : (mono ? "500 12.5px/1.3 Montserrat" : "400 13px/1.4 'Noto Sans TC'"),
-        color: "var(--ink)",
-      }}>{value}</div>
-    </div>
-  );
-}
-
-function StatChip({ n, l, color }) {
-  return (
-    <div style={{padding:"10px 12px", borderRadius:8, background:"var(--primary-bg)", border:"1px solid var(--line-2)"}}>
-      <div className="tabular ff-mont" style={{font:"700 22px/1 Montserrat",color}}>{n}</div>
-      <div style={{font:"400 11px/1 'Noto Sans TC'",color:"var(--ink-3)",marginTop:4}}>{l}</div>
-    </div>
   );
 }
 
@@ -529,8 +485,8 @@ function ConfirmModal({ kind, onConfirm, onCancel }) {
 // ─────────────────────────────────────────────────────────────
 // Main recording screen
 // ─────────────────────────────────────────────────────────────
-function RecordingScreen({ caseInfo, tts, setTts, questions, setQuestions, onFinish, tweaks, onBackToCase, onBackToList,
-                          subjects = [], sessionKeys = [], subjectDone = {}, completedSessions = [], isLastSession = true, onSessionComplete }) {
+function RecordingScreen({ caseInfo, tts, setTts, questions, setQuestions, tweaks, onBackToList,
+                          subjects = [], sessionKeys = [], subjectDone = {}, onOpenCheck }) {
   const [active, setActive] = React.useState(1);
   const [modal, setModal] = React.useState(null); // {kind, qNo}
 
@@ -560,18 +516,15 @@ function RecordingScreen({ caseInfo, tts, setTts, questions, setQuestions, onFin
   return (
     <>
       <SubHeader title="錄音作業"
-        crumbs={["我的案件", caseInfo.product]}
         right={
-          <button className="btn btn-quiet" onClick={onBackToList}>
-            <I.ChevronL size={14}/> 返回案件清單
-          </button>
+          <div style={{display:"flex", gap:10}}>
+            <button className="btn btn-quiet" onClick={onBackToList}>
+              <I.ChevronL size={14}/> 返回案件清單
+            </button>
+          </div>
         }/>
 
       <div data-screen-label="03 錄音作業" style={{padding: "20px 40px 40px"}}>
-        {subjects.length > 0 && (
-          <SubjectProgressBar subjects={subjects} sessionKeys={sessionKeys} subjectDone={subjectDone}
-            note={`本次錄音對象：${sessionSubjects.map(s=>s.name).join("、") || "—"}　·　分題方式完成 ${questions.length} 題即產生 ${questions.length} 個小音檔`}/>
-        )}
         <div style={{display:"flex", gap: 20, alignItems:"flex-start"}}>
           <QuestionList questions={questions} active={active} onJump={setActive} tweaks={tweaks}/>
 
@@ -589,9 +542,8 @@ function RecordingScreen({ caseInfo, tts, setTts, questions, setQuestions, onFin
             />
           </main>
 
-          <CaseSidebar caseInfo={caseInfo} subjects={subjects} sessionKeys={sessionKeys}
-            subjectDone={subjectDone} completedSessions={completedSessions} isLastSession={isLastSession}
-            questions={questions} onSessionComplete={onSessionComplete} onBackToCase={onBackToCase}/>
+          <CaseSidebar caseInfo={caseInfo} subjects={subjects} subjectDone={subjectDone}
+            totalQ={questions.length} onOpenCheck={onOpenCheck}/>
         </div>
       </div>
 

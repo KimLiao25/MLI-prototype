@@ -6,7 +6,7 @@
 function CaseListScreen({ cases, onOpen, onNew, currentAgent, progressMap = {} }) {
   const STATUS = window.__MLI_STATUS;
   const totalQ = window.__MLI_QUESTIONS.length;
-  const effStatus = (c) => (progressMap[c.recordingNo] ? progressMap[c.recordingNo].status : c.status);
+  const effStatus = (c) => (progressMap[c.caseNo] ? progressMap[c.caseNo].status : c.status);
 
   const [keyword, setKeyword] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("all");
@@ -21,7 +21,7 @@ function CaseListScreen({ cases, onOpen, onNew, currentAgent, progressMap = {} }
       if (channelFilter !== "all" && !c.channel.startsWith(channelFilter)) return false;
       if (!kw) return true;
       const roleNames = c.roles ? Object.values(c.roles).map(r => r.name) : [];
-      return [c.recordingNo, c.policyNo || "", c.product, ...roleNames]
+      return [c.recordingNo, c.caseNo, c.policyNo || "", c.product, ...roleNames]
         .some(v => v.toLowerCase().includes(kw));
     });
     if (sort === "updated_desc") list = [...list].sort((a,b) => b.updatedAt.localeCompare(a.updatedAt));
@@ -54,7 +54,7 @@ function CaseListScreen({ cases, onOpen, onNew, currentAgent, progressMap = {} }
           <I.Search size={16} stroke="var(--ink-4)" style={{position:"absolute", left:14, top:12}}/>
           <input className="input" style={{width:"100%", paddingLeft: 38}} value={keyword}
             onChange={e=>setKeyword(e.target.value)}
-            placeholder="搜尋錄音編號 / 保單號 / 商品 / 要保人 / 被保人 / 繳款人"/>
+            placeholder="搜尋錄音編號 / 案件編號 / 保單號 / 商品 / 要保人 / 被保人 / 繳款人"/>
           {keyword && (
             <button onClick={()=>setKeyword("")}
               style={{position:"absolute", right:10, top:10, padding:6, borderRadius:6, color:"var(--ink-4)"}}>
@@ -97,12 +97,14 @@ function CaseListScreen({ cases, onOpen, onNew, currentAgent, progressMap = {} }
       {/* ─── Cases table ─── */}
       <section className="card" style={{overflow:"hidden"}}>
         <div style={{overflowX:"auto"}}>
-          <table style={{width:"100%", borderCollapse:"collapse", minWidth: 1180}}>
+          <table style={{width:"100%", borderCollapse:"collapse", minWidth: 1260}}>
             <thead>
               <tr style={{background:"var(--primary-bg)", borderBottom:"1px solid var(--line-2)"}}>
-                <th style={{...listTh, width: 170}}>錄音編號</th>
-                <th style={{...listTh, width: 280}}>商品 / 保單號</th>
-                <th style={{...listTh, width: 300}}>錄音對象</th>
+                <th style={{...listTh, width: 110}}>錄音編號</th>
+                <th style={{...listTh, width: 130}}>案件編號</th>
+                <th style={{...listTh, width: 260}}>商品 / 保單號</th>
+                <th style={{...listTh, width: 230}}>錄音對象</th>
+                <th style={{...listTh, width: 150}}>進度</th>
                 <th style={{...listTh, width: 110}}>審核狀態</th>
                 <th style={{...listTh, width: 150}}>更新時間</th>
                 <th style={{...listTh, width: 100, textAlign:"right"}}>操作</th>
@@ -110,11 +112,11 @@ function CaseListScreen({ cases, onOpen, onNew, currentAgent, progressMap = {} }
             </thead>
             <tbody>
               {filtered.map((c) => (
-                <CaseRow key={c.recordingNo} c={c} STATUS={STATUS} prog={progressMap[c.recordingNo]} totalQ={totalQ} onOpen={() => onOpen(c.recordingNo)}/>
+                <CaseRow key={c.caseNo} c={c} STATUS={STATUS} prog={progressMap[c.caseNo]} totalQ={totalQ} onOpen={() => onOpen(c.caseNo)}/>
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={6} style={{padding:"60px 0", textAlign:"center"}}>
+                  <td colSpan={8} style={{padding:"60px 0", textAlign:"center"}}>
                     <I.Search size={28} stroke="var(--ink-4)" style={{marginBottom:8}}/>
                     <div style={{font:"500 14px/1.4 'Noto Sans TC'", color:"var(--ink-3)"}}>
                       找不到符合條件的案件
@@ -166,8 +168,13 @@ function CaseRow({ c, STATUS, prog, totalQ, onOpen }) {
     onMouseEnter={e=>e.currentTarget.style.background="var(--primary-soft-2)"}
     onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
       <td style={listTd}>
-        <div className="ff-mont tabular" style={{font:"600 13.5px/1.2 Montserrat", color:"var(--primary)", letterSpacing:".02em"}}>
+        <div className="ff-mont tabular" style={{font:"600 13.5px/1.2 Montserrat", color:"var(--ink-2)", letterSpacing:".02em"}}>
           {c.recordingNo}
+        </div>
+      </td>
+      <td style={listTd}>
+        <div className="ff-mont tabular" style={{font:"600 13.5px/1.2 Montserrat", color:"var(--primary)", letterSpacing:".02em"}}>
+          {c.caseNo}
         </div>
       </td>
       <td style={listTd}>
@@ -179,7 +186,17 @@ function CaseRow({ c, STATUS, prog, totalQ, onOpen }) {
         )}
       </td>
       <td style={listTd}>
-        <SubjectsWithProgress disp={disp} showProgress={dispStatus === "draft"}/>
+        <SubjectsWithProgress disp={disp} showProgress={false}/>
+      </td>
+      <td style={listTd}>
+        {dispStatus === "draft"
+          ? (prog && prog.method
+              ? <CaseProgressCell cp={window.buildCaseProgress(c, prog, totalQ)}/>
+              : <span style={{display:"inline-flex", alignItems:"center", gap:6,
+                  font:"400 12px/1.4 'Noto Sans TC'", color:"var(--ink-4)"}}>
+                  <I.Info size={12} stroke="var(--ink-4)"/> 尚未選擇錄音方式
+                </span>)
+          : <span className="meta">—</span>}
       </td>
       <td style={listTd}>
         <span style={{display:"inline-flex", alignItems:"center", gap:6,
@@ -198,6 +215,24 @@ function CaseRow({ c, STATUS, prog, totalQ, onOpen }) {
         </button>
       </td>
     </tr>
+  );
+}
+
+// 案件層級進度（一案一進度，僅草稿顯示）：單一 X/Y + 進度條（v1 風格）
+function CaseProgressCell({ cp }) {
+  const pct = cp.total ? cp.done / cp.total * 100 : 0;
+  return (
+    <>
+      <div style={{display:"flex", alignItems:"baseline", gap:6, marginBottom:5}}>
+        <span className="ff-mont tabular" style={{font:"600 13.5px/1 Montserrat", color: cp.complete ? "var(--ok)" : "var(--ink)"}}>
+          {cp.done}/{cp.total}
+        </span>
+        <span className="meta">{cp.method === "whole" ? "整段" : "分題"}</span>
+      </div>
+      <div style={{height:5, borderRadius:3, background:"var(--line-2)", overflow:"hidden"}}>
+        <div style={{width:`${pct}%`, height:"100%", background: cp.complete ? "var(--ok)" : "var(--primary)", transition:"width .3s"}}/>
+      </div>
+    </>
   );
 }
 
@@ -225,32 +260,6 @@ function SubjectsWithProgress({ disp, showProgress }) {
               進度 <span className="tabular" style={{font:"600 12.5px/1 Montserrat", color: s.complete ? "var(--ok)" : "var(--ink-2)"}}>{s.done}/{s.total}</span>
             </span>
           )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// 錄音對象儲存格（舊，保留）：去重合併的角色 + 姓名後接關係標籤
-function SubjectsCell({ subjects }) {
-  return (
-    <div style={{display:"flex", flexDirection:"column", gap:6}}>
-      {subjects.map((s, i) => (
-        <div key={i} style={{display:"flex", alignItems:"center", gap:8}}>
-          <span style={{font:"500 13.5px/1 'Noto Sans TC'", color:"var(--ink)"}}>
-            {s.name}
-          </span>
-          <div style={{display:"flex", gap:3}}>
-            {s.roles.map(r => (
-              <span key={r} style={{
-                display:"inline-grid", placeItems:"center",
-                width:18, height:18, borderRadius:4,
-                background:"var(--primary-soft)",
-                color:"var(--primary)",
-                font:"600 11px/1 'Noto Sans TC'",
-              }}>{r}</span>
-            ))}
-          </div>
         </div>
       ))}
     </div>

@@ -4,20 +4,20 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "showFCodes": true,
   "viewMode": "compare",
   "highlightMode": "both",
-  "demoCase": "A202605200003"
+  "demoCase": "A0004-1"
 }/*EDITMODE-END*/;
 
 function AdminApp() {
-  const cases = window.__MLI_CASES;
+  const [cases, setCases] = React.useState(window.__MLI_CASES);
   const detailMap = window.__MLI_REVIEW_DETAIL;
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
 
   // Routing
-  const [page, setPage] = React.useState("review_detail");
+  const [page, setPage] = React.useState("review_list");
   const [activeCaseNo, setActiveCaseNo] = React.useState(t.demoCase);
 
-  const activeCase = cases.find(c => c.recordingNo === activeCaseNo) || cases[2];
-  const activeDetail = detailMap[activeCaseNo] || detailMap[activeCase.recordingNo] || detailMap["A202605200003"];
+  const activeCase = cases.find(c => c.caseNo === activeCaseNo) || cases[2];
+  const activeDetail = detailMap[activeCaseNo] || detailMap[activeCase.caseNo] || detailMap["A0004-1"];
 
   // F-code legend toggle
   React.useEffect(() => {
@@ -29,6 +29,16 @@ function AdminApp() {
 
   const goOpen = (no) => { setActiveCaseNo(no); setPage("review_detail"); };
   const goBack = () => setPage("review_list");
+
+  // 審核通過：回寫案件狀態（清單即時反映）並返回清單
+  const goApprove = (no) => {
+    setCases(cs => cs.map(c => c.caseNo === no ? { ...c, status: "approved", reviewStage: "verified" } : c));
+    setPage("review_list");
+  };
+  // 退回補正：回寫案件狀態（清單即時反映）；停留詳情以便檢視「退回補正」分頁
+  const goReturn = (no) => {
+    setCases(cs => cs.map(c => c.caseNo === no ? { ...c, status: "returned", reviewStage: "returned" } : c));
+  };
 
   // Expose nav globally (for PPTX export and external automation)
   React.useEffect(() => {
@@ -59,8 +69,8 @@ function AdminApp() {
               {page === "review_detail" && (
                 <ReviewDetailScreen caseInfo={activeCase} detail={activeDetail}
                   onBack={goBack}
-                  onApprove={goBack}
-                  onReturn={goBack}/>
+                  onApprove={goApprove}
+                  onReturn={goReturn}/>
               )}
 
               {page === "quality_report" && (
@@ -99,10 +109,10 @@ function AdminApp() {
               <TweakSection label="切換審核案件"/>
               <TweakSelect label="案件編號" value={activeCaseNo}
                 options={cases
-                  .filter(c => detailMap[c.recordingNo])
+                  .filter(c => detailMap[c.caseNo])
                   .map(c => ({
-                    value: c.recordingNo,
-                    label: `${c.recordingNo} · ${window.__MLI_RISK[c.riskLevel]?.label || "?"}風險 · ${c.proposer} · ${c.product.slice(0,12)}`,
+                    value: c.caseNo,
+                    label: `${c.caseNo} · ${window.__MLI_RISK[c.riskLevel]?.label || "?"}風險 · ${c.proposer} · ${c.product.slice(0,12)}`,
                   }))}
                 onChange={setActiveCaseNo}/>
             </>
@@ -120,7 +130,7 @@ function AdminApp() {
             • 審核詳情頁：左播放器 / 章節 + 右逐題 STT vs 原稿並排<br/>
             • 整合 5 種角色色塊（機/業/要/被/繳）<br/>
             • 差異標示：紅刪除 / 綠新增 / 黃低信心 / 紅粗體否定<br/>
-            • 推薦切換到「A202605200003」查看高風險案件（Q07/Q10 有完整異常範例）
+            • 推薦切換到「A0004-1」查看高風險案件（Q07/Q10 有完整異常範例）
           </div>
         </TweaksPanel>,
         tweaksDomNode

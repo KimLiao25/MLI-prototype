@@ -33,6 +33,8 @@
 
   // 既有 8 筆案件擴充
   const ENRICH = [
+    {region:"北一區", reviewer:null,         sla: 6,  riskScore: 10, riskLevel:"low",  sttFlags:{diff:0,  negation:0, lowConf:0 }, reviewStage:"unassigned"},
+    {region:"北一區", reviewer:null,         sla: 6,  riskScore: 10, riskLevel:"low",  sttFlags:{diff:0,  negation:0, lowConf:0 }, reviewStage:"unassigned"},
     {region:"北一區", reviewer:REVIEWERS[0], sla: 4,  riskScore: 22, riskLevel:"low",  sttFlags:{diff:1,  negation:0, lowConf:2 }, reviewStage:"waiting"},
     {region:"北一區", reviewer:REVIEWERS[1], sla: 2,  riskScore: 58, riskLevel:"mid",  sttFlags:{diff:6,  negation:1, lowConf:4 }, reviewStage:"in_review"},
     {region:"北一區", reviewer:REVIEWERS[0], sla: 1,  riskScore: 84, riskLevel:"high", sttFlags:{diff:12, negation:3, lowConf:8 }, reviewStage:"returned"},
@@ -45,30 +47,35 @@
   cases.forEach((c, i) => Object.assign(c, ENRICH[i % ENRICH.length]));
 
   // 補幾筆案件，讓清單看起來像真的後台（多業務員、多通訊處、多地區）
+  // 每筆自成一個錄音編號（群組）；A0012 刻意拆 2 場次 → 同一錄音編號下 2 個案件編號（示範一對多）
   const EXTRA = [
-    {recordingNo:"A202605220001", agent:"周永禎", agentId:"A0612", branch:"台北信義通訊處", region:"北一區", product:"安心伴你行利率變動型終身壽險",   proposer:"羅美玉",  age:70, status:"reviewing", risk:"high", score:79, sla:1, stage:"in_review",  reviewer:REVIEWERS[1]},
-    {recordingNo:"A202605220002", agent:"高雅婷", agentId:"A0518", branch:"新北板橋通訊處", region:"北一區", product:"新康健終身醫療健康保險",         proposer:"葉文清",  age:73, status:"reviewing", risk:"low",  score:20, sla:5, stage:"waiting",    reviewer:REVIEWERS[0]},
-    {recordingNo:"A202605220003", agent:"鄭子涵", agentId:"A0742", branch:"桃園中壢通訊處", region:"北二區", product:"鑫美鑫多元利率變動型終身壽險",   proposer:"許雅芳",  age:81, status:"reviewing", risk:"mid",  score:51, sla:3, stage:"in_review",  reviewer:REVIEWERS[2]},
-    {recordingNo:"A202605210008", agent:"楊志豪", agentId:"A0331", branch:"新竹竹科通訊處", region:"北二區", product:"長長久久終身健康保險",             proposer:"何宗翰",  age:68, status:"reviewing", risk:"high", score:88, sla:0, stage:"in_review",  reviewer:REVIEWERS[2]},
-    {recordingNo:"A202605210009", agent:"蔡明宏", agentId:"A0247", branch:"台中西屯通訊處", region:"中區",   product:"新美滿人生終身保險",                proposer:"呂淑芬",  age:76, status:"reviewing", risk:"mid",  score:62, sla:2, stage:"waiting",    reviewer:REVIEWERS[3]},
-    {recordingNo:"A202605200005", agent:"莊雅雯", agentId:"A0805", branch:"台中北屯通訊處", region:"中區",   product:"新住院好幫手健康保險附約",         proposer:"林文德",  age:71, status:"approved",  risk:"low",  score:15, sla:9, stage:"verified",   reviewer:REVIEWERS[3]},
-    {recordingNo:"A202605200007", agent:"潘宇翔", agentId:"A0913", branch:"台南東區通訊處", region:"南區",   product:"論重病讓你安心重大傷病終身險",     proposer:"洪美鳳",  age:69, status:"returned",  risk:"high", score:76, sla:1, stage:"returned",   reviewer:REVIEWERS[4]},
-    {recordingNo:"A202605200008", agent:"鄧家瑋", agentId:"A1024", branch:"高雄左營通訊處", region:"南區",   product:"高齡躍雨康復醫療健康保險附約",     proposer:"古天賜",  age:74, status:"reviewing", risk:"mid",  score:48, sla:4, stage:"waiting",    reviewer:null},
-    {recordingNo:"A202605190005", agent:"林佩君", agentId:"A0427", branch:"台北中山通訊處", region:"北一區", product:"新康健終身醫療健康保險",           proposer:"曾文聰",  age:70, status:"approved",  risk:"low",  score:9,  sla:12,stage:"verified",   reviewer:REVIEWERS[0]},
-    {recordingNo:"A202605190006", agent:"林佩君", agentId:"A0427", branch:"台北中山通訊處", region:"北一區", product:"鑫美鑫多元利率變動型終身壽險",     proposer:"邱永福",  age:77, status:"reviewing", risk:"high", score:73, sla:-1,stage:"in_review",    reviewer:REVIEWERS[1]},
+    {recordingNo:"A0010", caseNo:"A0010-1", sessionNo:1, date:"2026/05/22", agent:"周永禎", agentId:"A0612", branch:"台北信義通訊處", region:"北一區", product:"安心伴你行利率變動型終身壽險",   proposer:"羅美玉",  age:70, status:"reviewing", risk:"high", score:79, sla:1, stage:"in_review",  reviewer:REVIEWERS[1]},
+    {recordingNo:"A0011", caseNo:"A0011-1", sessionNo:1, date:"2026/05/22", agent:"高雅婷", agentId:"A0518", branch:"新北板橋通訊處", region:"北一區", product:"新康健終身醫療健康保險",         proposer:"葉文清",  age:73, status:"reviewing", risk:"low",  score:20, sla:5, stage:"waiting",    reviewer:REVIEWERS[0]},
+    {recordingNo:"A0012", caseNo:"A0012-1", sessionNo:1, date:"2026/05/22", agent:"鄭子涵", agentId:"A0742", branch:"桃園中壢通訊處", region:"北二區", product:"鑫美鑫多元利率變動型終身壽險",   proposer:"許雅芳",  age:81, status:"reviewing", risk:"mid",  score:51, sla:3, stage:"in_review",  reviewer:REVIEWERS[2]},
+    {recordingNo:"A0012", caseNo:"A0012-2", sessionNo:2, date:"2026/05/22", agent:"鄭子涵", agentId:"A0742", branch:"桃園中壢通訊處", region:"北二區", product:"鑫美鑫多元利率變動型終身壽險",   proposer:"許志成",  age:78, status:"reviewing", risk:"low",  score:23, sla:3, stage:"waiting",    reviewer:REVIEWERS[2]},
+    {recordingNo:"A0013", caseNo:"A0013-1", sessionNo:1, date:"2026/05/21", agent:"楊志豪", agentId:"A0331", branch:"新竹竹科通訊處", region:"北二區", product:"長長久久終身健康保險",             proposer:"何宗翰",  age:68, status:"reviewing", risk:"high", score:88, sla:0, stage:"in_review",  reviewer:REVIEWERS[2]},
+    {recordingNo:"A0014", caseNo:"A0014-1", sessionNo:1, date:"2026/05/21", agent:"蔡明宏", agentId:"A0247", branch:"台中西屯通訊處", region:"中區",   product:"新美滿人生終身保險",                proposer:"呂淑芬",  age:76, status:"reviewing", risk:"mid",  score:62, sla:2, stage:"waiting",    reviewer:REVIEWERS[3]},
+    {recordingNo:"A0015", caseNo:"A0015-1", sessionNo:1, date:"2026/05/20", agent:"莊雅雯", agentId:"A0805", branch:"台中北屯通訊處", region:"中區",   product:"新住院好幫手健康保險附約",         proposer:"林文德",  age:71, status:"approved",  risk:"low",  score:15, sla:9, stage:"verified",   reviewer:REVIEWERS[3]},
+    {recordingNo:"A0016", caseNo:"A0016-1", sessionNo:1, date:"2026/05/20", agent:"潘宇翔", agentId:"A0913", branch:"台南東區通訊處", region:"南區",   product:"論重病讓你安心重大傷病終身險",     proposer:"洪美鳳",  age:69, status:"returned",  risk:"high", score:76, sla:1, stage:"returned",   reviewer:REVIEWERS[4]},
+    {recordingNo:"A0017", caseNo:"A0017-1", sessionNo:1, date:"2026/05/20", agent:"鄧家瑋", agentId:"A1024", branch:"高雄左營通訊處", region:"南區",   product:"高齡躍雨康復醫療健康保險附約",     proposer:"古天賜",  age:74, status:"reviewing", risk:"mid",  score:48, sla:4, stage:"waiting",    reviewer:null},
+    {recordingNo:"A0018", caseNo:"A0018-1", sessionNo:1, date:"2026/05/19", agent:"林佩君", agentId:"A0427", branch:"台北中山通訊處", region:"北一區", product:"新康健終身醫療健康保險",           proposer:"曾文聰",  age:70, status:"approved",  risk:"low",  score:9,  sla:12,stage:"verified",   reviewer:REVIEWERS[0]},
+    {recordingNo:"A0019", caseNo:"A0019-1", sessionNo:1, date:"2026/05/19", agent:"林佩君", agentId:"A0427", branch:"台北中山通訊處", region:"北一區", product:"鑫美鑫多元利率變動型終身壽險",     proposer:"邱永福",  age:77, status:"reviewing", risk:"high", score:73, sla:-1,stage:"in_review",    reviewer:REVIEWERS[1]},
   ];
 
   EXTRA.forEach(x => {
+    const gd = x.recordingNo.slice(1);
     cases.push({
       recordingNo: x.recordingNo,
-      createdAt:   x.recordingNo.slice(1,5)+"/"+x.recordingNo.slice(5,7)+"/"+x.recordingNo.slice(7,9)+" 10:24",
-      updatedAt:   x.recordingNo.slice(1,5)+"/"+x.recordingNo.slice(5,7)+"/"+x.recordingNo.slice(7,9)+" 16:48",
-      policyNo:    x.status==="approved" ? "P-2026-"+x.recordingNo.slice(-7) : null,
+      caseNo:      x.caseNo,
+      sessionNo:   x.sessionNo || 1,
+      createdAt:   x.date + " 10:24",
+      updatedAt:   x.date + " 16:48",
+      policyNo:    x.status==="approved" ? "P-2026-"+gd : null,
       product:     x.product,
       roles: {
-        proposer: { name:x.proposer, age:x.age, idNo:"X"+x.recordingNo.slice(-9) },
-        insured:  { name:x.proposer, age:x.age, idNo:"X"+x.recordingNo.slice(-9) },
-        payer:    { name:x.proposer, age:x.age, idNo:"X"+x.recordingNo.slice(-9) },
+        proposer: { name:x.proposer, age:x.age, idNo:"X"+gd+"01" },
+        insured:  { name:x.proposer, age:x.age, idNo:"X"+gd+"01" },
+        payer:    { name:x.proposer, age:x.age, idNo:"X"+gd+"01" },
       },
       proposer: x.proposer, insured: x.proposer, insuredAge: x.age,
       agent: x.agent, agentId: x.agentId, branch: x.branch, region: x.region,
@@ -125,8 +132,8 @@
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 詳情頁逐題 STT 比對範例資料
-// 對應 cases[2] = A202605200003（退回補正、Q07/Q10 有問題）
-// 結構：detail[recordingNo] = { questions: [{ no, title, type, originalScript, segments }] }
+// 對應 cases[2] = A0004-1（退回補正、Q07/Q10 有問題）
+// 結構：detail[caseNo] = { questions: [{ no, title, type, originalScript, segments }] }
 //
 // segment.diffTokens：{ t, type } where type ∈ {same|del|add|low|negation}
 //   same    — 原稿與 ASR 相同
@@ -149,11 +156,11 @@ window.__MLI_REVIEW_DETAIL = {};
       original: text, asr: text, flags: [] };
   }
 
-  // A202605200003 — 重點異常題目
-  D["A202605200003"] = {
-    recordingNo: "A202605200003",
+  // A0004-1 — 重點異常題目
+  D["A0004-1"] = {
+    caseNo: "A0004-1",
     totalDuration: 612,
-    audioFile: "A202605200003_merged.wav",
+    audioFile: "A0004-1_merged.wav",
     summary: {
       diff: 12, negation: 3, lowConf: 8,
       coverage: 0.94,
@@ -519,12 +526,12 @@ window.__MLI_REVIEW_DETAIL = {};
 
   // 為其他 reviewing 案件補一個 default（內容會被縮減顯示）— 用 Q1, Q2 的較單純資料
   window.__MLI_CASES.forEach(c => {
-    if (D[c.recordingNo]) return;
+    if (D[c.caseNo]) return;
     if (c.status === "draft") return;
-    D[c.recordingNo] = {
-      recordingNo: c.recordingNo,
+    D[c.caseNo] = {
+      caseNo: c.caseNo,
       totalDuration: c.duration || 540,
-      audioFile: c.recordingNo + "_merged.wav",
+      audioFile: c.caseNo + "_merged.wav",
       summary: {
         diff: c.sttFlags?.diff ?? 2,
         negation: c.sttFlags?.negation ?? 0,
@@ -534,13 +541,16 @@ window.__MLI_REVIEW_DETAIL = {};
         riskScore: c.riskScore || 20,
         note: "",
       },
-      // 用 A202605200003 的 Q01 + Q02 + Q08 + Q14 範例（皆為通過題）
-      questions: [
-        D["A202605200003"].questions[0],   // Q01
-        D["A202605200003"].questions[1],   // Q02
-        D["A202605200003"].questions[7],   // Q08
-        D["A202605200003"].questions[13],  // Q14
-      ],
+      // 依風險等級挑代表題，讓「風險 ↔ AI 通過率 ↔ 詳情比對」一致：
+      //   高風險＝含 Q07+Q10 異常（2/4 通過）；中風險＝含 Q10 異常（3/4）；低風險＝全通過（4/4）
+      questions: (() => {
+        const Q = D["A0004-1"].questions;
+        const lvl = c.riskLevel || "low";
+        const idx = lvl === "high" ? [0, 6, 9, 13]
+                  : lvl === "mid"  ? [0, 1, 9, 13]
+                  :                  [0, 1, 7, 13];
+        return idx.map(i => Q[i]);
+      })(),
     };
   });
 })();
